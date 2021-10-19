@@ -1,0 +1,3 @@
+[submodule "coffer-opensbi"]
+	path = coffer-opensbi
+	url = https://github.com/Compass-All/coffer-opensbi
