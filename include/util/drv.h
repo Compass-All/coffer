@@ -1,3 +1,4 @@
+//TODO (this file should be depressed considering the new design of device tree)
 #ifndef EBI_DRV_H
 #define EBI_DRV_H
 
@@ -17,15 +18,9 @@ typedef struct {
 
 typedef struct {
 	uintptr_t drv_start;
-	uintptr_t drv_end;
+	uint32_t drv_size;
 	int using_by; // May be removed
 } drv_addr_t;
-
-extern drv_addr_t *drv_addr_list;
-uintptr_t copy_drv_with_list(uintptr_t *dst_addr, uintptr_t drv_mask);
-void inform_peripheral(struct sbi_trap_regs *regs);
-void drv_fetch(uintptr_t drv_to_fetch);
-void drv_release(uintptr_t drv_to_release);
 
 #endif // __ASSEMBLER__
 #endif // EBI_DRV_H
