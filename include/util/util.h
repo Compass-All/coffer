@@ -7,6 +7,22 @@
 #include "stddef.h"
 #include "stdint.h"
 
+// TODO (still, this address seems to be optimized)
+typedef struct {
+    uintptr_t reg_pa_start;
+    uintptr_t reg_va_start;
+    uint32_t reg_size;
+    int holder;
+} peri_addr_t;
+
+// typedef struct {
+// 	uintptr_t pmp_start;
+// 	uintptr_t pmp_size;
+// 	uintptr_t used;
+// } memseg_t;
+
+#endif // __ASSEMBLER__
+
 #if __riscv_xlen == 64
 #define STORE sd
 #define LOAD ld
@@ -51,19 +67,4 @@
 #define EAPP_CTX_REG_OFFSET(reg) (__SIZEOF_POINTER__ * (CTX_INDEX_##reg))
 #define EAPP_CTX_SIZE EAPP_CTX_REG_OFFSET(MAX)
 
-// TODO (still, this address seems to be optimized)
-typedef struct {
-    uintptr_t reg_pa_start;
-    uintptr_t reg_va_start;
-    uint32_t reg_size;
-    int holder;
-} peri_addr_t;
-
-// typedef struct {
-// 	uintptr_t pmp_start;
-// 	uintptr_t pmp_size;
-// 	uintptr_t used;
-// } memseg_t;
-
-#endif // __ASSEMBLER__
 #endif // EBI_UTIL_H

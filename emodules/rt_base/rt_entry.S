@@ -128,8 +128,6 @@ _start:
 .align 2
 2:
     sfence.vma
-    # fence.i
-    # icache.iall
 
     /* switch to trap handler */
     la      s7, trap_handler

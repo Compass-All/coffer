@@ -1,4 +1,5 @@
 #include "md2.h"
+#include "memory.h"
 
 static const uint8_t S[256] = {
     0x29, 0x2E, 0x43, 0xC9, 0xA2, 0xD8, 0x7C, 0x01, 0x3D, 0x36, 0x54, 0xA1, 0xEC, 0xF0, 0x06, 0x13, //
@@ -23,60 +24,6 @@ static const uint8_t S[256] = {
 #define CLEAR_BLOCK(p)        \
     CLEAR_64BITS((void*)(p)); \
     CLEAR_64BITS((void*)(p) + 8)
-
-#define COPY_AS_TYPE(dst, src, type) *((type*)(dst)) = *((type*)(src))
-
-static void md2_memcpy(void* dst, const void* src, size_t len)
-{
-    size_t offset = 0;
-    while (len > 0) {
-        if (len > 8) {
-            COPY_AS_TYPE(dst + offset, src + offset, uint64_t);
-            offset += 8;
-            len -= 8;
-        } else if (len > 4) {
-            COPY_AS_TYPE(dst + offset, src + offset, uint32_t);
-            offset += 4;
-            len -= 4;
-        } else if (len > 2) {
-            COPY_AS_TYPE(dst + offset, src + offset, uint16_t);
-            offset += 2;
-            len -= 2;
-        } else {
-            COPY_AS_TYPE(dst + offset, src + offset, uint8_t);
-            ++offset;
-            --len;
-        }
-    }
-}
-
-static void md2_memset(void* dst, uint8_t byte, size_t len)
-{
-    size_t offset = 0;
-    uint64_t fill = byte;
-    fill |= fill << 8;
-    fill |= fill << 16;
-    fill |= fill << 32;
-    while (len > 0) {
-        if (len > 8) {
-            *((uint64_t*)(dst + offset)) = fill;
-            offset += 8;
-            len -= 8;
-        } else if (len > 4) {
-            *((uint32_t*)(dst + offset)) = fill & 0xFFFFFFFF;
-            offset += 4;
-            len -= 4;
-        } else if (len > 2) {
-            *((uint16_t*)(dst + offset)) = fill & 0xFFFF;
-            offset += 2;
-            len -= 2;
-        } else {
-            *((uint8_t*)(dst + offset)) = byte;
-            ++offset;
-            --len;
-        }
-    }
-}
 
 int md2_init(md2ctx_t* ctx)
 {
@@ -175,13 +122,13 @@ int md2_update(md2ctx_t* ctx, const void* data, size_t size)
 
     if (ctx->last.used_cnt != 0) {
         if (ctx->last.used_cnt + size < MD2_BLOCK_SIZE) {
-            md2_memcpy(&ctx->last.buf[ctx->last.used_cnt], data,
+            memcpy(&ctx->last.buf[ctx->last.used_cnt], data,
                 size);
             ctx->last.used_cnt += size;
             return MD2_OK;
         } else {
             copied_len = MD2_BLOCK_SIZE - ctx->last.used_cnt;
-            md2_memcpy(&ctx->last.buf[ctx->last.used_cnt], data,
+            memcpy(&ctx->last.buf[ctx->last.used_cnt], data,
                 copied_len);
             ret_state = md2_process_block(ctx, ctx->last.buf);
             if (ret_state != MD2_OK) {
@@ -202,7 +149,7 @@ int md2_update(md2ctx_t* ctx, const void* data, size_t size)
         data = (uint8_t*)data + MD2_BLOCK_SIZE;
         size -= MD2_BLOCK_SIZE;
     }
-    md2_memcpy(ctx->last.buf, data, size);
+    memcpy(ctx->last.buf, data, size);
     ctx->last.used_cnt = size;
 
     return MD2_OK;
@@ -217,7 +164,7 @@ int md2_final(void* md, md2ctx_t* ctx)
     }
 
     padding_len = MD2_BLOCK_SIZE - ctx->last.used_cnt;
-    md2_memset(&ctx->last.buf[ctx->last.used_cnt], (uint8_t)padding_len,
+    memset(&ctx->last.buf[ctx->last.used_cnt], (uint8_t)padding_len,
         padding_len);
     ret_state = md2_process_block(ctx, ctx->last.buf);
     if (ret_state != MD2_OK) {
@@ -225,12 +172,12 @@ int md2_final(void* md, md2ctx_t* ctx)
     }
     ctx->last.used_cnt = 0;
 
-    md2_memcpy(ctx->last.buf, ctx->checksum, MD2_BLOCK_SIZE);
+    memcpy(ctx->last.buf, ctx->checksum, MD2_BLOCK_SIZE);
     ret_state = md2_process_block(ctx, ctx->last.buf);
     if (ret_state != MD2_OK) {
         return ret_state;
     }
-    md2_memcpy(md, ctx->hash_buf, MD2_BLOCK_SIZE);
+    memcpy(md, ctx->hash_buf, MD2_BLOCK_SIZE);
     return MD2_OK;
 }
 

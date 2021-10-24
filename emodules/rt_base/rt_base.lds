@@ -4,7 +4,7 @@ ENTRY(_start)
 
 SECTIONS
 {
-  . = RT_BASE_START;
+  . = ERT_BASE_START;
   _start = .;
 
   _text_start = .;

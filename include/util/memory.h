@@ -1,6 +1,9 @@
 #ifndef EBI_MEMORY_H
 #define EBI_MEMORY_H
 
+#ifndef __ASSEMBLER__
+
+#include <stddef.h>
 #include <stdint.h>
 #ifndef ROUNDUP
 #define ROUNDUP(a, b) ((((a)-1) / (b) + 1) * (b))
@@ -19,7 +22,7 @@
 #define EPTE_SHIFT 10
 
 /* Based on 64 bits Sv39 Page */
-#define SATP_MODE_SV39 8
+#define SATP_MODE_SV39 8UL
 #define SATP_MODE_SHIFT 60
 #define EPAGE_SHIFT 12
 #define EPAGE_SIZE (1 << EPAGE_SHIFT)
@@ -39,10 +42,7 @@
 #define NUM_OF_PAGE(size) \
     (((PAGE_UP(size)) >> EPAGE_SHIFT) & ((1 << (64 - EPAGE_SHIFT)) - 1))
 
-#define ERT_VA_START 0xC0000000
 #define EMEM_SIZE PARTITION_SIZE
-#define ERT_MEM_SIZE 0x200000
-#define ERT_STACK_SIZE 0x8000
 #define EUSR_MEM_SIZE (EMEM_SIZE - ERT_MEM_SIZE)
 
 // virtual page number masks
@@ -54,7 +54,7 @@
 #define INVERSE_MAP_ENTRY_NUM 1024
 #define PAGE_DIR_POOL 256
 
-#ifndef __ASSEMBLER__
+#define flush_tlb() asm volatile("sfence.vma")
 
 typedef struct pte {
     uint32_t pte_v : 1;

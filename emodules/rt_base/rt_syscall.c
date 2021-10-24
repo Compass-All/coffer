@@ -1,0 +1,73 @@
+#include "rt_syscall.h"
+#include "m3/page_pool.h"
+#include "m3/page_table.h"
+#include "rt_console.h"
+#include <sys/stat.h>
+#include <util/drv.h>
+#include <util/memory.h>
+
+uintptr_t usr_heap_top;
+
+int rt_fstat(uintptr_t fd, uintptr_t sstat)
+{
+    struct stat* stat = (struct stat*)sstat;
+    /* now only support stdio */
+    if (fd > 4 || fd < 0) {
+        return -1;
+    }
+    stat->st_dev = 26;
+    stat->st_ino = 6;
+    stat->st_nlink = 1;
+    stat->st_mode = S_IWUSR | S_IRUSR | S_IRGRP;
+    stat->st_uid = 1000;
+    stat->st_gid = 5;
+    stat->st_rdev = 34819;
+    stat->st_size = 0;
+    stat->st_blksize = 1024;
+    stat->st_blocks = 0;
+    return 0;
+}
+
+int rt_brk(uintptr_t addr)
+{
+    uintptr_t n_pages; //, pa;
+    if (addr == 0)
+        return usr_heap_top;
+    em_debug("####### brk start, usr_heap_top: 0x%lx########\n", usr_heap_top);
+    em_debug("addr: 0x%lx\n", addr);
+    if (addr > PAGE_UP(usr_heap_top)) { // currently freeing does not work
+        em_debug("ebi_brk cp 1\n");
+        n_pages = PAGE_UP(addr - usr_heap_top) >> EPAGE_SHIFT;
+        em_debug("ebi_brk cp 2 n_pages = 0x%lx\n", n_pages);
+        alloc_page(PAGE_UP(usr_heap_top), n_pages,
+            PTE_U | PTE_R | PTE_W, IDX_USR);
+        em_debug("ebi_brk cp 3\n");
+    }
+    usr_heap_top = addr;
+    em_debug("####### brk end########\n");
+    flush_tlb();
+    return addr;
+}
+
+int rt_write(uintptr_t fd, uintptr_t content)
+{
+    /* stdout */
+    // drv_fetch(DRV_CONSOLE);
+    // cmd_handler console_handler = (cmd_handler)drv_addr_list[DRV_CONSOLE].drv_start;
+    // if (fd == 1) {
+    //     char* str = (char*)content;
+    //     while (*str) {
+    //         console_handler(CONSOLE_CMD_PUT, *str, 0, 0);
+    //         str++;
+    //     }
+    // }
+    // drv_release(DRV_CONSOLE);
+    // TODO implementation
+    return 0;
+}
+
+int rt_close(uintptr_t fd)
+{
+    // TODO implementation
+    return 0;
+}

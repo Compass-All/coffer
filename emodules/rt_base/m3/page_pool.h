@@ -1,17 +1,35 @@
 #pragma once
 
+#include <stddef.h>
+#include <stdint.h>
+
+// See address definitions in config.mk
+
 #define IDX_USR 0
 #define IDX_RT 1
 #define NUM_POOL 2
 
 #define ERT_MEM_SHIFT 21
 #define ERT_MEM_MASK (~(-1UL << ERT_MEM_SHIFT))
-#define ERT_STACK_TOP 0xB0000000 // 0xb000_0000
-#define ERT_STACK_SIZE 0x8000
+
 #define EUSR_MEM_SIZE (EMEM_SIZE - ERT_MEM_SIZE)
-#define EUSR_STACK_SIZE 0x10000
-// #define EUSR_HEAP_STACK_RATIO 100
 #define INVERSE_MAP_ENTRY_NUM 1024
-#define EUSR_STACK_END 0x3fffff0000UL // 0x3f_ffff_0000
-#define EUSR_STACK_START (EUSR_STACK_END - EUSR_STACK_SIZE)
-#define EUSR_HEAP_START 0x10000000UL // 0x1000_0000
+#define EUSR_STACK_START (EUSR_STACK_TOP - EUSR_STACK_SIZE)
+
+#define NEXT_PAGE(page) *((uintptr_t*)page)
+#define LIST_EMPTY(list) ((list)->count == 0 || (list)->head == 0)
+#define LIST_INIT(list)    \
+    {                      \
+        (list)->count = 0; \
+        (list)->head = 0;  \
+        (list)->tail = 0;  \
+    }
+
+typedef struct page_list {
+    uintptr_t head;
+    uintptr_t tail;
+    unsigned int count;
+} page_list_t;
+
+void page_pool_init(uintptr_t pool_addr, size_t pool_size, int idx);
+uintptr_t page_pool_get_pa(int idx);
