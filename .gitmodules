@@ -1,3 +1,3 @@
 [submodule "coffer-opensbi"]
-	path = coffer-opensbi
-	url = git@github.com:Compass-All/coffer-opensbi
+    path = coffer-opensbi
+    url = git@github.com:Compass-All/coffer-opensbi.git
