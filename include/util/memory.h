@@ -21,9 +21,7 @@
 #define PTE_ATTR_MASK 0xFFFFFC00
 #define EPTE_SHIFT 10
 
-/* Based on 64 bits Sv39 Page */
-#define SATP_MODE_SV39 8UL
-#define SATP_MODE_SHIFT 60
+
 #define EPAGE_SHIFT 12
 #define EPAGE_SIZE (1 << EPAGE_SHIFT)
 #define EMEGA_PAGE_SHIFT 21

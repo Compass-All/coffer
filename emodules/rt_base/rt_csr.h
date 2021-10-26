@@ -33,3 +33,7 @@
 
 #define SIP_SSIP 0x00000002UL
 #define SIP_STIP 0x00000020UL
+
+/* Based on 64 bits Sv39 Page */
+#define SATP_MODE_SV39 8UL
+#define SATP_MODE_SHIFT 60
