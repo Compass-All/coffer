@@ -14,10 +14,10 @@ extern uintptr_t enclave_id;
 extern uintptr_t usr_heap_top;
 extern uintptr_t va_top;
 
-#define PUSH(usr_sp, val)            \
-    do {                             \
-        (usr_sp) -= 8;               \
-        *(uintptr_t*)(usr_sp) = val; \
+#define PUSH(usr_sp, val)               \
+    do {                                \
+        (usr_sp) -= __SIZEOF_POINTER__; \
+        *(uintptr_t*)(usr_sp) = val;    \
     } while (0)
 
 #define __pa(x) usr_get_pa((x) + enc_va_pa_offset)
@@ -47,13 +47,13 @@ static uintptr_t init_usr_stack(uintptr_t usr_sp)
 
 static inline void attest_payload(void* payload_start, size_t payload_size)
 {
-    // uint64_t begin_cycle, end_cycle;
-    // uint8_t md2hash[MD2_BLOCK_SIZE];
+    uint64_t begin_cycle, end_cycle;
+    uint8_t md2hash[MD2_BLOCK_SIZE];
 
-    // begin_cycle = read_csr(cycle);
-    // md2(payload_start, payload_size, md2hash);
-    // end_cycle = read_csr(cycle);
-    // em_debug("MD2: 0x%x in %ld cycles\n", end_cycle - begin_cycle);
+    begin_cycle = read_csr(cycle);
+    md2(payload_start, payload_size, md2hash);
+    end_cycle = read_csr(cycle);
+    em_debug("MD2: 0x%x in %ld cycles\n", end_cycle - begin_cycle);
 }
 
 // Memory mapping setup
