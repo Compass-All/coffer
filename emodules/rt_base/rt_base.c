@@ -161,7 +161,7 @@ static void init_map_alloc_pages(drv_addr_t* drv_list,
  * payload_pa_start => -----------------  LOW ADDR
  *
  */
-void init_mem(uintptr_t _, uintptr_t id, uintptr_t payload_pa_start,
+void init_mem(uintptr_t base_pa_start, uintptr_t id, uintptr_t payload_pa_start,
     uintptr_t payload_size, drv_addr_t drv_list[MAX_DRV],
     uintptr_t argc, uintptr_t argv)
 {
@@ -175,12 +175,8 @@ void init_mem(uintptr_t _, uintptr_t id, uintptr_t payload_pa_start,
     uintptr_t usr_sp = EUSR_STACK_TOP;
     uintptr_t drv_sp = ERT_STACK_TOP;
 
-    extern uintptr_t _start;
-    em_debug("_start = 0x%lx\n", &_start);
-    em_debug("_ = 0x%lx\n", _);
-
     // Update VA/PA offset
-    enc_va_pa_offset = ERT_VA_START - (uintptr_t)&_start;
+    enc_va_pa_offset = ERT_VA_START - base_pa_start;
     em_debug("\033[1;33moffset: 0x%lx\n\033[0m", enc_va_pa_offset);
     // `va_top' will increase by EMEM_SIZE after `page_pool_init'
     va_top = ERT_VA_START + PARTITION_SIZE; // Resv for base module
@@ -272,11 +268,13 @@ void prepare_boot(uintptr_t usr_pc, uintptr_t usr_sp)
     sstatus &= ~SSTATUS_SPP;
     write_csr(sstatus, sstatus);
     usr_sp = init_usr_stack(usr_sp);
+    em_debug("After init usr_stack\n");
 
     // Allow S-mode traps/interrupts
     uintptr_t sie = SIE_SEIE | SIE_SSIE;
     write_csr(sie, sie);
 
+    em_debug("End of prepare_boot\n");
     // Set U-mode entry
     write_csr(sepc, usr_pc);
     write_csr(sscratch, usr_sp);

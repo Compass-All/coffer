@@ -121,17 +121,13 @@ _start:
     /* temporary stack */
     la      sp, _temp_stack_end
     /* setup new page table */
-    jal     debug_log
     jal     init_mem
     mv      sp, a1
     sfence.vma
-    jal     debug_log
     csrw    satp, a0
 .align 2
 2:
-    jal     debug_log
     sfence.vma
-    jal     debug_log
 
     /* switch to trap handler */
     la      s7, trap_handler
@@ -144,9 +140,3 @@ _start:
     csrrw   sp, sscratch, sp
 
     sret
-
-debug_log:
-    SAVE_CONTEXT
-    jal show_csr
-    RESTORE_CONTEXT
-    ret
