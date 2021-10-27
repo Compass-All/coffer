@@ -113,7 +113,7 @@ ret_to_usr:
     .globl  _start
 _start:
     la      s7, 2f
-    sub     s7, s7, a2      // s7 = 2f - mem_start (mem_start = a2)
+    sub     s7, s7, a0      // s7 = 2f - mem_start (mem_start = a2)
     li      s6, ERT_VA_START
     add     s7, s6, s7
     csrw    stvec, s7
@@ -121,13 +121,17 @@ _start:
     /* temporary stack */
     la      sp, _temp_stack_end
     /* setup new page table */
+    jal     debug_log
     jal     init_mem
     mv      sp, a1
     sfence.vma
+    jal     debug_log
     csrw    satp, a0
 .align 2
 2:
+    jal     debug_log
     sfence.vma
+    jal     debug_log
 
     /* switch to trap handler */
     la      s7, trap_handler
@@ -140,3 +144,9 @@ _start:
     csrrw   sp, sscratch, sp
 
     sret
+
+debug_log:
+    SAVE_CONTEXT
+    jal show_csr
+    RESTORE_CONTEXT
+    ret
