@@ -47,14 +47,11 @@ static uintptr_t init_usr_stack(uintptr_t usr_sp)
 
 static inline void attest_payload(void* payload_start, size_t payload_size)
 {
-    uint64_t begin_cycle, end_cycle;
     uint8_t md2hash[MD2_BLOCK_SIZE];
     int i;
 
-    begin_cycle = read_csr(cycle);
     md2(payload_start, payload_size, md2hash);
-    end_cycle = read_csr(cycle);
-    em_debug("MD2: in %ld cycles\n", end_cycle - begin_cycle);
+    em_debug("MD2:\n");
     for (i = 0; i < MD2_BLOCK_SIZE; ++i) {
         em_debug("%x\n", md2hash[i]);
     }

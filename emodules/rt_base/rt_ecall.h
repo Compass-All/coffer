@@ -38,6 +38,8 @@
     SBI_ECALL_3(MAP_REGISTER, pt_root_addr, inv_map_addr, va_pa_offset_addr)
 #define ecall_mem_alloc(va) \
     SBI_ECALL_1(MEM_ALLOC, va)
+#define ecall_puts(str) \
+    SBI_ECALL_1(PUTS, str)
 
 #ifdef __INTELLISENSE__
 #pragma diag_pop

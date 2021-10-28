@@ -52,13 +52,15 @@ int rt_brk(uintptr_t addr)
 int rt_write(uintptr_t fd, uintptr_t content)
 {
     // FIXME Workaround version
-    char* str = (char*)content;
-    if (fd == 1) {
-        while (*str) {
-            ecall_putchar(*str);
-            str++;
-        }
-    }
+    uintptr_t content_pa = usr_get_pa(content);
+    ecall_puts(content_pa);
+    // char* str = (char*)content;
+    // if (fd == 1) {
+    //     while (*str) {
+    //         ecall_putchar(*str);
+    //         str++;
+    //     }
+    // }
     return 0;
 }
 

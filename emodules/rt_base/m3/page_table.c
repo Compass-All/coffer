@@ -24,7 +24,7 @@ trie_t* get_trie_root(void)
 // First look up PA. If PA exists in the table, update it; otherwise
 // insert a new entry.
 // When updating, `count' must match with the previous one.
-// Eeturns the newly inserted entry
+// Returns the newly inserted entry
 static inverse_map_t* insert_inverse_map(uintptr_t pa, uintptr_t va,
     uint32_t count)
 {
