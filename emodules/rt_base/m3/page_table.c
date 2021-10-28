@@ -18,7 +18,7 @@ pte_t* get_pt_root(void)
 
 trie_t* get_trie_root(void)
 {
-    return (trie_t*)(get_pt_root() + EPAGE_SIZE * PAGE_DIR_POOL);
+    return (trie_t*)((void*)get_pt_root() + EPAGE_SIZE * PAGE_DIR_POOL);
 }
 
 // First look up PA. If PA exists in the table, update it; otherwise
@@ -71,7 +71,7 @@ static uintptr_t page_insert(uintptr_t va, uintptr_t pa, int levels,
     uint32_t p = 0, i = 0;
     page_directory* page_table = (page_directory*)get_pt_root();
     /*
-     * [L2, L1, L0] PPN for each level, used fot trie to get offset of 
+     * [L2, L1, L0] PPN for each level, used fot trie to get offset of
      * page_directory_pool
      * Note: l[0] = L1, l[2] = l[0]
      */
@@ -184,7 +184,7 @@ uintptr_t usr_get_pa(uintptr_t va)
     for (i = 0; i < 3; ++i) {
         tmp_entry = root[l[i]];
         if (!tmp_entry.pte_v) {
-            em_debug("va:0x%lx is not valid!!!\n", va);
+            em_error("va:0x%lx is not valid!!!\n", va);
             return 0;
         }
         if ((tmp_entry.pte_r | tmp_entry.pte_w | tmp_entry.pte_x)) {
