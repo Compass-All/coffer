@@ -53,6 +53,7 @@ dkms.conf
 
 # vscode
 .vscode/
+.idea/
 
 # build directory
 build/
@@ -60,3 +61,6 @@ build/
 # Scripts
 *.sh
 *.py
+
+# macos auxiliary files
+.DS_STORE

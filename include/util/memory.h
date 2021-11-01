@@ -68,10 +68,12 @@ typedef struct pte {
     uintptr_t __unused_value : 10;
 } pte_t;
 
+typedef pte_t page_directory[1 << EPT_LEVEL_BITS];
+
 typedef struct inverse_map {
-    uintptr_t pa;
-    uintptr_t va;
-    uint32_t count;
+    uintptr_t pa; // physical addr
+    uintptr_t va; // virtual addr
+    uint32_t count; // page counts
 } inverse_map_t;
 
 #endif // __ASSEMBLER__

@@ -3,8 +3,6 @@
 #include "page_pool.h"
 #include <stddef.h>
 
-typedef pte_t page_directory[1 << EPT_LEVEL_BITS];
-
 size_t enc_va_pa_offset;
 uintptr_t pt_root_pa;
 inverse_map_t inv_map[INVERSE_MAP_ENTRY_NUM];
