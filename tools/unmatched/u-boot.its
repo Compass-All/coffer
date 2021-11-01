@@ -1,0 +1,43 @@
+/dts-v1/;
+
+/ {
+	description = "Configuration to load OpenSBI before U-Boot";
+
+	images {
+		uboot {
+			description = "U-Boot";
+			data = /incbin/("../u-boot-nodtb.bin");
+			type = "standalone";
+			os = "U-Boot";
+			arch = "riscv";
+			compression = "none";
+			load = <0x80200000>;
+		};
+		opensbi {
+			description = "RISC-V OpenSBI";
+			data = /incbin/("../../coffer-opensbi/build/platform/generic/firmware/fw_dynamic.bin");
+			type = "firmware";
+			os = "opensbi";
+			arch = "riscv";
+			compression = "none";
+			load = <0x80000000>;
+			entry = <0x80000000>;
+		};
+		fdt_1 {
+			description = "hifive-unmatched-a00";
+			data = /incbin/("hifive-unmatched-a00.dtb");
+			type = "flat_dt";
+			compression = "none";
+		};
+	};
+	configurations {
+		default = "config_1";
+
+		config_1 {
+			description = "hifive-unmatched-a00";
+			firmware = "opensbi";
+			loadables = "uboot";
+			fdt = "fdt_1";
+		};
+	};
+};
