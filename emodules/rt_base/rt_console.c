@@ -1,5 +1,6 @@
 #include "rt_console.h"
 #include "base_util/memory.h"
+#include "m3/page_table.h"
 #include "rt_csr.h"
 #include <ctype.h>
 #include <stdarg.h>
@@ -14,7 +15,9 @@
 
 typedef uint8_t fmt_flag_t;
 
+extern size_t enc_va_pa_offset;
 #define rt_get_pa(va) (read_csr(satp) ? (va)-enc_va_pa_offset : (va))
+static char _print_buf[256];
 
 #define flush_buffer_if_overflow(buf, pos, width)  \
     do {                                           \
@@ -36,13 +39,14 @@ typedef uint8_t fmt_flag_t;
         }                                                  \
     } while (0)
 
-static void putstring(const char* s)
+static void putstring(char* s)
 {
     // while (*s) {
     //     ecall_putchar(*s++);
     // }
-    extern size_t enc_va_pa_offset;
-    uintptr_t pa = rt_get_pa((uintptr_t)s);
+    char* tmp = _print_buf;
+    while((*tmp++=*s++));
+    uintptr_t pa = rt_get_pa((uintptr_t)_print_buf);
     ecall_puts(pa);
 }
 
