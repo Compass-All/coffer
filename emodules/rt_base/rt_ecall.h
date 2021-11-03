@@ -1,7 +1,6 @@
 #pragma once
 
 #ifdef __INTELLISENSE__
-#pragma diag_push
 // Suppress intellisense warning for unknown registers (1118)
 #pragma diag_suppress 1118
 #endif
@@ -41,6 +40,14 @@
 #define ecall_puts(str) \
     SBI_ECALL_1(PUTS, str)
 
-#ifdef __INTELLISENSE__
-#pragma diag_pop
-#endif
+#define SBI_EXT_0_1_CONSOLE_PUTCHAR 0x1
+
+#define ecall_putchar(ch)                                                           \
+    ({                                                                              \
+        register uintptr_t a0 asm("a0") = (uintptr_t)(ch);                          \
+        register uintptr_t a7 asm("a7") = (uintptr_t)(SBI_EXT_0_1_CONSOLE_PUTCHAR); \
+        asm volatile("ecall"                                                        \
+                     : "+r"(a0)                                                     \
+                     : "r"(a7)                                                      \
+                     : "memory");                                                   \
+    })

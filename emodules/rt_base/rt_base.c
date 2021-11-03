@@ -1,10 +1,10 @@
 #include "base_util/elf.h"
 #include "base_util/md2.h"
+#include "base_util/memory.h"
 #include "m3/page_pool.h"
 #include "m3/page_table.h"
 #include "rt_console.h"
 #include "rt_csr.h"
-#include "rt_drv.h"
 #include "rt_ecall.h"
 #include <util/drv.h>
 #include <util/memory.h>
@@ -20,7 +20,7 @@ extern uintptr_t va_top;
         *(uintptr_t*)(usr_sp) = val;    \
     } while (0)
 
-#define __pa(x) usr_get_pa((x) + enc_va_pa_offset)
+#define __va(x) usr_get_pa((x) + enc_va_pa_offset)
 
 #define MAP_BASE_SECTION(sec_name, pte_flags)                                       \
     do {                                                                            \
@@ -34,8 +34,14 @@ extern uintptr_t va_top;
             pte_flags, 0);                                                          \
         em_debug(#sec_name ": 0x%x - 0x%x -> 0x%x\n",                               \
             sec_name##_start, sec_name##_end,                                       \
-            __pa(sec_name##_start));                                                \
+            __va(sec_name##_start));                                                \
     } while (0)
+
+#define RT_BASE_STACK_SIZE 0x1000
+
+uint8_t rt_base_stack[RT_BASE_STACK_SIZE];
+
+void* const rt_base_stack_top = (void*)rt_base_stack + RT_BASE_STACK_SIZE;
 
 static uintptr_t init_usr_stack(uintptr_t usr_sp)
 {
@@ -63,33 +69,16 @@ static void init_map_alloc_pages(drv_addr_t* drv_list,
     uintptr_t usr_avail_start, size_t usr_avail_size,
     uintptr_t base_avail_start, size_t base_avail_size)
 {
-    // uintptr_t drv_pa_start, drv_pa_end;
-    // size_t n_drv_pages;
     uintptr_t usr_stack_start;
     size_t n_usr_stack_pages, n_base_stack_pages;
     uintptr_t drv_sp;
-
-    // TODO Drivers
-    // em_debug("drv_list = 0x%lx\n", drv_list);
-    // if (drv_list[0].drv_start) {
-    //     drv_pa_start = PAGE_DOWN(drv_list[0].drv_start - enc_va_pa_offset);
-    //     drv_pa_end = PAGE_UP(((uintptr_t)drv_list) + MAX_DRV * sizeof(drv_addr_t));
-    //     n_drv_pages = (drv_pa_end - drv_pa_start) >> EPAGE_SHIFT;
-    //     em_debug("drv_pa_end = 0x%x drv_pa_start = 0x%x\n", drv_pa_end,
-    //         drv_pa_start);
-    //     em_debug("n_drv_pages = %d\n", n_drv_pages);
-    //     map_page(PAGE_DOWN(drv_list[0].drv_start), drv_pa_start,
-    //         n_drv_pages, PTE_V | PTE_R | PTE_X | PTE_W, 0);
-    //     em_debug("\033[1;33mdrv: 0x%x - 0x%x -> 0x%x\n\033[0m",
-    //         drv_pa_start, drv_pa_end, __pa(drv_pa_start));
-    // }
 
     // Remaining user memory
     map_page(enc_va_pa_offset + usr_avail_start, usr_avail_start,
         usr_avail_size >> EPAGE_SHIFT, PTE_V | PTE_W | PTE_R, 0);
     em_debug("usr.remain: 0x%x - 0x%x -> 0x%x\n", usr_avail_start,
         usr_avail_start + PAGE_DOWN(usr_avail_size),
-        __pa(usr_avail_start));
+        __va(usr_avail_start));
 
     // Allocate user stack (r/w)
     n_usr_stack_pages = (PAGE_UP(EUSR_STACK_SIZE) >> EPAGE_SHIFT) + 1;
@@ -107,7 +96,7 @@ static void init_map_alloc_pages(drv_addr_t* drv_list,
     map_page(enc_va_pa_offset + page_table_start, page_table_start,
         (page_table_size) >> EPAGE_SHIFT, PTE_V | PTE_W | PTE_R, 0);
     em_debug("page_table and trie: 0x%x - 0x%x -> 0x%x\n", page_table_start,
-        page_table_start + page_table_size, __pa(page_table_start));
+        page_table_start + page_table_size, __va(page_table_start));
     // `.rodata', `.bss', `.init.data`, `.data' sections
     MAP_BASE_SECTION(rodata, PTE_V | PTE_R);
     MAP_BASE_SECTION(bss, PTE_V | PTE_W | PTE_R);
@@ -120,7 +109,7 @@ static void init_map_alloc_pages(drv_addr_t* drv_list,
         PTE_V | PTE_W | PTE_R, 0);
     em_debug("drv.remain: 0x%x - 0x%x -> 0x%x\n", base_avail_start,
         base_avail_start + PAGE_DOWN(base_avail_size),
-        __pa(base_avail_start));
+        __va(base_avail_start));
 
     // Allocate base stack (r/w)
     n_base_stack_pages = (PAGE_UP(ERT_STACK_SIZE)) >> EPAGE_SHIFT;
@@ -158,10 +147,68 @@ static void init_map_alloc_pages(drv_addr_t* drv_list,
  * payload_pa_start => -----------------  LOW ADDR
  *
  */
+
+void _init_mem(uintptr_t base_pa_start, uintptr_t argv)
+{
+    uintptr_t* ptr = (uintptr_t*)base_pa_start;
+    uintptr_t usr_pa_start = base_pa_start + PARTITION_SIZE;
+    uintptr_t argc;
+    uintptr_t satp, sstatus, sepc;
+    uintptr_t pa;
+    size_t base_size, payload_size;
+
+    enclave_id = *ptr++;
+    base_size = *ptr++;
+    payload_size = *ptr++;
+    argc = *ptr++;
+    attest_payload((void*)usr_pa_start, payload_size);
+
+    // Initialize base page pool
+    va_top = ERT_VA_START;
+    enc_va_pa_offset = ERT_VA_START - base_pa_start;
+    pa = PAGE_UP((uintptr_t)ptr + base_size);
+    pt_root_pa = pa;
+    pa += PAGE_UP(PAGE_DIR_POOL * EPAGE_SIZE) + PAGE_UP(sizeof(trie_t));
+    page_pool_init(pa, PAGE_DOWN(usr_pa_start - pa), IDX_RT);
+
+    // Initialize user page pool
+    pa = usr_pa_start + PAGE_UP(payload_size);
+    page_pool_init(pa, PAGE_DOWN(PARTITION_UP(pa) - pa), IDX_USR);
+    sepc = elf_load(usr_pa_start, payload_size, &usr_heap_top);
+    if (sepc == -1) {
+        em_error("ELF load failed!\n");
+        ecall_exit_enclave(-1);
+        __builtin_unreachable();
+    }
+
+    // init_mem_alloc_pages
+
+    satp = (uintptr_t)get_pt_root() >> EPAGE_SHIFT;
+    satp |= (uintptr_t)SATP_MODE_SV39 << SATP_MODE_SHIFT;
+    sstatus = read_csr(sstatus);
+    sstatus |= SSTATUS_SUM;
+    write_csr(sstatus, sstatus);
+
+    // Inform M-mode of locations of page table and inverse mapping
+    ecall_map_register(&pt_root_pa, &inv_map, &enc_va_pa_offset);
+    va_top += PARTITION_SIZE;
+
+    asm volatile("fence rw, rw");
+    flush_tlb();
+    em_debug("End of init_mem\n");
+
+    asm volatile("mv a0, %0" ::"r"(satp));
+    asm volatile("mv a1, %0" ::"r"(ERT_STACK_TOP));
+    asm volatile("mv a2, %0" ::"r"(sepc));
+    asm volatile("mv a3, %0" ::"r"(EUSR_STACK_TOP));
+    asm volatile("mv a4, %0" ::"r"(argc));
+}
+
 void init_mem(uintptr_t base_pa_start, uintptr_t id, uintptr_t payload_pa_start,
     uintptr_t payload_size, drv_addr_t drv_list[MAX_DRV],
     uintptr_t argc, uintptr_t argv)
 {
+    em_debug("### STACK TOP @0x%lx\n", rt_base_stack_top);
     uintptr_t page_table_start, page_table_size;
     uintptr_t trie_start, trie_size;
     uintptr_t base_avail_start, base_avail_size;
@@ -180,26 +227,17 @@ void init_mem(uintptr_t base_pa_start, uintptr_t id, uintptr_t payload_pa_start,
     attest_payload((void*)payload_pa_start, payload_size);
     enclave_id = id;
 
-    // Transform driver addresses into VA
-    em_debug("drv_list[0].drv_start = 0x%lx\n", drv_list[0].drv_start);
-    // TODO drivers
-    // for (i = 0; i < MAX_DRV && drv_list[i].drv_start; i++) {
-    //     drv_list[i].drv_start += enc_va_pa_offset;
-    //     // drv_list[i].drv_end += enc_va_pa_offset;
-    //     // em_debug("drv_list[%d].drv_start: 0x%x, drv_end: 0x%x\n", i,
-    //     //     drv_list[i].drv_start, drv_list[i].drv_end);
-    // }
-    // drv_addr_list = (drv_addr_t*)((void*)drv_list + enc_va_pa_offset);
-
     // Setup page table, trie and base memory space
     page_table_start = PAGE_UP((uintptr_t)drv_list /* + MAX_DRV * sizeof(drv_addr_t)*/);
     page_table_size = PAGE_UP(PAGE_DIR_POOL * EPAGE_SIZE);
     em_debug("page_table_start = 0x%llx\n", page_table_start);
     em_debug("page_table_size = 0x%llx\n", page_table_size);
     pt_root_pa = page_table_start;
+    memset((void*)page_table_start, 0, page_table_size);
 
     trie_start = page_table_start + page_table_size;
     trie_size = PAGE_UP(sizeof(trie_t));
+    memset((void*)trie_start, 0, trie_size);
 
     base_avail_start = trie_start + trie_size;
     base_avail_size = PAGE_DOWN(PARTITION_UP(base_avail_start) - base_avail_start);
@@ -221,7 +259,7 @@ void init_mem(uintptr_t base_pa_start, uintptr_t id, uintptr_t payload_pa_start,
     if (usr_pc == -1) {
         em_error("ELF load error\n");
     } else {
-        em_debug("ELF load done\n");
+        em_debug("ELF load done. sepc=0x%lx\n", usr_pc);
     }
 
     init_map_alloc_pages(drv_list, page_table_start,
@@ -245,10 +283,10 @@ void init_mem(uintptr_t base_pa_start, uintptr_t id, uintptr_t payload_pa_start,
     flush_tlb();
     em_debug("End of init_mem\n");
 
-    asm volatile("mv a0, %0" ::"r"((uintptr_t)(satp)));
-    asm volatile("mv a1, %0" ::"r"((uintptr_t)(drv_sp)));
-    asm volatile("mv a2, %0" ::"r"((uintptr_t)(usr_pc)));
-    asm volatile("mv a3, %0" ::"r"((uintptr_t)(usr_sp)));
+    asm volatile("mv a0, %0" ::"r"(satp));
+    asm volatile("mv a1, %0" ::"r"(drv_sp));
+    asm volatile("mv a2, %0" ::"r"(usr_pc));
+    asm volatile("mv a3, %0" ::"r"(usr_sp));
 }
 
 // Below code is invoked after `satp' configuration.
@@ -256,9 +294,6 @@ void init_mem(uintptr_t base_pa_start, uintptr_t id, uintptr_t payload_pa_start,
 void prepare_boot(uintptr_t usr_pc, uintptr_t usr_sp)
 {
     em_debug("Begin prepare_boot\n");
-    init_drivers();
-    em_debug("After init_drivers\n");
-
     // Allow S-mode to access U-mode memory
     uintptr_t sstatus = read_csr(sstatus);
     sstatus |= SSTATUS_SUM;

@@ -5,15 +5,15 @@
 
 static pte_attr_t get_pte_attr(word_t pflags)
 {
-    // uintptr_t res = PTE_V;
-    // if (pt & PF_R)
-    //     res |= PTE_R;
-    // if (pt & PF_W)
-    //     res |= PTE_W;
-    // if (pt & PF_X)
-    //     res |= PTE_X;
-    // return res;
-    return PTE_V | PTE_R | PTE_X | PTE_W;
+    uintptr_t res = PTE_V;
+    if (pflags & PF_R)
+        res |= PTE_R;
+    if (pflags & PF_W)
+        res |= PTE_W;
+    if (pflags & PF_X)
+        res |= PTE_X;
+    return res;
+    // return PTE_V | PTE_R | PTE_X | PTE_W;
 }
 
 static int elf_check(ehdr_t* ehdr, size_t elf_size)
@@ -73,6 +73,9 @@ static int elf_map(uintptr_t elf_addr)
     em_debug("phnum = %d\n", ehdr->e_phnum);
     for (i = 0; i < ehdr->e_phnum; ++i) {
         em_debug("phdr[%d].p_type: %d\n", i, phdr[i].p_type);
+        em_debug("phdr[%d].p_offset: %x\n", i, phdr[i].p_offset);
+        em_debug("phdr[%d].p_vaddr: %x\n", i, phdr[i].p_vaddr);
+        em_debug("phdr[%d].p_filesz: %x\n", i, phdr[i].p_filesz);
         if (phdr[i].p_type != PT_LOAD) {
             continue;
         }

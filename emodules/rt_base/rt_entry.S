@@ -119,7 +119,7 @@ _start:
     csrw    stvec, s7
 
     /* temporary stack */
-    la      sp, _temp_stack_end
+    la      sp, rt_base_stack_top
     /* setup new page table */
     jal     init_mem
     mv      sp, a1

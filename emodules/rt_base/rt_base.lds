@@ -28,7 +28,9 @@ SECTIONS
   .rodata : {
     *(.rdata)
     *(.rodata)
+    *(.rodata.*)
     *(.srodata)
+    *(.srodata.*)
   }
   _rodata_end = .;
 
@@ -38,6 +40,7 @@ SECTIONS
   .data : {
     *(.data)
     *(.data.*)
+    *(.sdata)
   }
   _data_end = .;
 

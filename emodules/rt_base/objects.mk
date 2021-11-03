@@ -1,7 +1,6 @@
 emodule-objs-y =
 emodule-objs-y += rt_base.o
 emodule-objs-y += rt_console.o
-emodule-objs-y += rt_drv.o
 emodule-objs-y += rt_entry.o
 emodule-objs-y += rt_syscall.o
 emodule-objs-y += rt_trap.o
