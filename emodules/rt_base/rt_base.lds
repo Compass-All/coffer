@@ -28,6 +28,7 @@ SECTIONS
   .rodata : {
     *(.rdata)
     *(.rodata)
+    *(.srodata)
   }
   _rodata_end = .;
 

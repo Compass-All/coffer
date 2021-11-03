@@ -30,16 +30,16 @@ static inverse_map_t* insert_inverse_map(uintptr_t pa, uintptr_t va,
 
     em_debug("pa: 0x%lx, va: 0x%lx, count: %d\n", pa, va, count);
     for (; inv_map[i].pa && i < INVERSE_MAP_ENTRY_NUM; i++) {
-        if (pa == inv_map[i].pa) { // already exists; should update
-            em_debug("updating entry; original va: 0x%lx, count: %d\n",
-                va, count);
-            if (count != inv_map[i].count) {
-                em_error("Count does not match! original count: %d\n",
-                    inv_map[i].count);
-                return NULL;
-            }
-            inv_map[i].va = va;
-        }
+        // if (pa == inv_map[i].pa) { // already exists; should update
+        //     em_debug("updating entry; original va: 0x%lx, count: %d\n",
+        //         va, count);
+        //     if (count != inv_map[i].count) {
+        //         em_error("Count does not match! original count: %d\n",
+        //             inv_map[i].count);
+        //         return NULL;
+        //     }
+        //     inv_map[i].va = va;
+        // }
     }
     if (i == INVERSE_MAP_ENTRY_NUM) { // Out of entry
         em_error("NO ENOUGH ENTRY!!!\n");
