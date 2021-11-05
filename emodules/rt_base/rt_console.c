@@ -2,7 +2,6 @@
 #include "base_util/memory.h"
 #include "m3/page_table.h"
 #include "rt_csr.h"
-#include <ctype.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -16,8 +15,9 @@
 typedef uint8_t fmt_flag_t;
 
 extern size_t enc_va_pa_offset;
+static char _print_buf[CONSOLE_BUF_SIZE + 1];
+
 #define rt_get_pa(va) (read_csr(satp) ? (va)-enc_va_pa_offset : (va))
-static char _print_buf[256];
 
 #define flush_buffer_if_overflow(buf, pos, width)  \
     do {                                           \
@@ -45,12 +45,12 @@ static void putstring(char* s)
     //     ecall_putchar(*s++);
     // }
     char* tmp = _print_buf;
-    while((*tmp++=*s++));
+    while ((*tmp++ = *s++))
+        ;
     uintptr_t pa = rt_get_pa((uintptr_t)_print_buf);
     ecall_puts(pa);
 }
 
-/* TODO wip to replace below function *
 static void print_s(char* buf, int* i, char* str, int fmt_width, fmt_flag_t flags)
 {
     int len = 0, t = 0;
@@ -72,8 +72,78 @@ static void print_s(char* buf, int* i, char* str, int fmt_width, fmt_flag_t flag
         }
         memcpy(&buf[*i], &str[t], cur_len);
         *i += cur_len;
-        flush_buffer_if_overflow(buf, *i, cur_len);
+        t += cur_len;
+        flush_buffer_if_overflow(buf, *i, CONSOLE_BUF_SIZE);
     }
+
+    if (fmt_width > len && !(flags & FLAG_PAD_RIGHT)) {
+        pad_fmt(buf, *i, fmt_width - len, flags);
+    }
+}
+
+static void print_dec(char* buf, int* i, uint64_t num, int fmt_width, fmt_flag_t flags)
+{
+    int len = 0, t = 0;
+    uint64_t tmp = num;
+
+    if (num == 0) {
+        flush_buffer_if_overflow(buf, *i, 1);
+        buf[(*i)++] = '0';
+        return;
+    }
+
+    while (tmp) {
+        ++len;
+        tmp /= 10;
+    }
+
+    if (fmt_width > len && flags & FLAG_PAD_RIGHT) {
+        pad_fmt(buf, *i, fmt_width - len, flags);
+    }
+
+    flush_buffer_if_overflow(buf, *i, len);
+    for (t = *i + len; t > *i;) {
+        buf[--t] = '0' + num % 10;
+        num /= 10;
+    }
+    *i += len;
+
+    if (fmt_width > len && !(flags & FLAG_PAD_RIGHT)) {
+        pad_fmt(buf, *i, fmt_width - len, flags);
+    }
+}
+
+static void print_hex(char* buf, int* i, uint64_t num, int fmt_width, fmt_flag_t flags, bool is_upper)
+{
+    int len = 0, t = 0;
+    uint64_t tmp = num;
+
+    if (num == 0) {
+        flush_buffer_if_overflow(buf, *i, 1);
+        buf[(*i)++] = '0';
+        return;
+    }
+
+    while (tmp) {
+        ++len;
+        tmp >>= 4;
+    }
+
+    if (fmt_width > len && flags & FLAG_PAD_RIGHT) {
+        pad_fmt(buf, *i, fmt_width - len, flags);
+    }
+
+    flush_buffer_if_overflow(buf, *i, len);
+    for (t = *i + len; t > *i;) {
+        tmp = num & 0xF;
+        if (tmp < 10) {
+            buf[--t] = '0' + tmp;
+        } else {
+            buf[--t] = (is_upper ? 'A' : 'a') + tmp - 10;
+        }
+        num >>= 4;
+    }
+    *i += len;
 
     if (fmt_width > len && !(flags & FLAG_PAD_RIGHT)) {
         pad_fmt(buf, *i, fmt_width - len, flags);
@@ -82,9 +152,9 @@ static void print_s(char* buf, int* i, char* str, int fmt_width, fmt_flag_t flag
 
 static void rt_print(const char* fmt, va_list vl)
 {
-    char buf[CONSOLE_BUF_SIZE + 1];
+    static char buf[CONSOLE_BUF_SIZE + 1];
     fmt_flag_t fmt_flags = 0;
-    int acnt, fmt_width;
+    int acnt = 0, fmt_width;
     int i = 0;
     uint64_t num;
     char* s;
@@ -111,7 +181,7 @@ static void rt_print(const char* fmt, va_list vl)
             }
 
             // Parse width
-            for (; isdigit(*fmt); ++fmt) {
+            for (; *fmt >= '0' && *fmt <= '9'; ++fmt) {
                 fmt_width *= 10;
                 fmt_width += *fmt - '0';
             }
@@ -120,43 +190,49 @@ static void rt_print(const char* fmt, va_list vl)
             case 's':
                 s = va_arg(vl, char*);
                 acnt += sizeof(char*);
-                print_s(buf, &i, s, fmt_width, fmt_flags);
+                print_s(buf, &i, s ? s : "(null)", fmt_width, fmt_flags);
                 break;
 
             case 'd':
                 num = va_arg(vl, int);
                 acnt += sizeof(int);
-                // print_dec(&buf, &i, num, fmt_width, fmt_flags, 0);
+                if (((int)num) < 0) {
+                    flush_buffer_if_overflow(buf, i, 1);
+                    buf[i++] = '-';
+                    print_dec(buf, &i, -num, fmt_width - 1, fmt_flags);
+                } else {
+                    print_dec(buf, &i, num, fmt_width, fmt_flags);
+                }
                 break;
 
             case 'x':
                 num = va_arg(vl, unsigned int);
                 acnt += sizeof(unsigned int);
-                // print_hex(&buf, &i, num, fmt_width, fmt_flags, 0);
+                print_hex(buf, &i, num, fmt_width, fmt_flags, false);
                 break;
 
             case 'X':
                 num = va_arg(vl, unsigned int);
                 acnt += sizeof(unsigned int);
-                // print_hex(&buf, &i, num, fmt_width, fmt_flags, 1);
+                print_hex(buf, &i, num, fmt_width, fmt_flags, true);
                 break;
 
             case 'u':
                 num = va_arg(vl, unsigned int);
                 acnt += sizeof(unsigned int);
-                // print_dec(&buf, &i, num, fmt_width, fmt_flags, 0);
+                print_dec(buf, &i, num, fmt_width, fmt_flags);
                 break;
 
             case 'p':
                 num = va_arg(vl, uintptr_t);
                 acnt += sizeof(uintptr_t);
-                // print_hex(&buf, &i, num, fmt_width, fmt_flags, 0);
+                print_hex(buf, &i, num, fmt_width, fmt_flags, false);
                 break;
 
             case 'P':
                 num = va_arg(vl, uintptr_t);
                 acnt += sizeof(uintptr_t);
-                // print_hex(&buf, &i, num, fmt_width, fmt_flags, 1);
+                print_hex(buf, &i, num, fmt_width, fmt_flags, true);
                 break;
 
             case 'l':
@@ -170,20 +246,30 @@ static void rt_print(const char* fmt, va_list vl)
                     switch (*(fmt + 2)) {
                     case 'u':
                         fmt += 2;
+                        print_dec(buf, &i, num, fmt_width, fmt_flags);
                         break;
 
                     case 'x':
                         fmt += 2;
+                        print_hex(buf, &i, num, fmt_width, fmt_flags, false);
                         break;
 
                     case 'X':
                         fmt += 2;
+                        print_hex(buf, &i, num, fmt_width, fmt_flags, true);
                         break;
 
                     case 'd':
                         ++fmt;
                     default:
                         ++fmt;
+                        if (((int64_t)num) < 0) {
+                            flush_buffer_if_overflow(buf, i, 1);
+                            buf[i++] = '-';
+                            print_dec(buf, &i, -num, fmt_width - 1, fmt_flags);
+                        } else {
+                            print_dec(buf, &i, num, fmt_width, fmt_flags);
+                        }
                         break;
                     }
                 } else {
@@ -192,28 +278,42 @@ static void rt_print(const char* fmt, va_list vl)
                     switch (*(fmt + 1)) {
                     case 'u':
                         ++fmt;
+                        print_dec(buf, &i, num, fmt_width, fmt_flags);
                         break;
 
                     case 'x':
                         ++fmt;
+                        print_hex(buf, &i, num, fmt_width, fmt_flags, false);
                         break;
 
                     case 'X':
                         ++fmt;
+                        print_hex(buf, &i, num, fmt_width, fmt_flags, true);
                         break;
 
                     case 'd':
                         ++fmt;
                     default:
+                        if (((int32_t)num) < 0) {
+                            flush_buffer_if_overflow(buf, i, 1);
+                            buf[i++] = '-';
+                            print_dec(buf, &i, -num, fmt_width - 1, fmt_flags);
+                        } else {
+                            print_dec(buf, &i, num, fmt_width, fmt_flags);
+                        }
                         break;
                     }
                 }
-                // ...
                 break;
+
             case 'c':
                 acnt += sizeof(int);
                 flush_buffer_if_overflow(buf, i, 1);
                 buf[i++] = (char)(va_arg(vl, int));
+                break;
+
+            default:
+                // Ignore formatting
                 break;
             }
         } else {
@@ -224,105 +324,12 @@ static void rt_print(const char* fmt, va_list vl)
     }
     flush_buffer_if_overflow(buf, i, CONSOLE_BUF_SIZE + 1);
 }
-//*/
-
-static int rt_vsnprintf(char* out, size_t n, const char* s, va_list vl)
-{
-    bool format = false;
-    bool longarg = false;
-    size_t pos = 0;
-    for (; *s; s++) {
-        if (format) {
-            switch (*s) {
-            case 'l':
-                longarg = true;
-                break;
-            case 'p':
-                longarg = true;
-                if (++pos < n)
-                    out[pos - 1] = '0';
-                if (++pos < n)
-                    out[pos - 1] = 'x';
-            case 'x': {
-                long num = longarg ? va_arg(vl, long)
-                                   : va_arg(vl, int);
-                for (int i = 2 * (longarg ? sizeof(long) : sizeof(int)) - 1;
-                     i >= 0; i--) {
-                    int d = (num >> (4 * i)) & 0xF;
-                    if (++pos < n)
-                        out[pos - 1] = (d < 10 ? '0' + d
-                                               : 'a' + d - 10);
-                }
-                longarg = false;
-                format = false;
-                break;
-            }
-            case 'd': {
-                long num = longarg ? va_arg(vl, long)
-                                   : va_arg(vl, int);
-                if (num < 0) {
-                    num = -num;
-                    if (++pos < n)
-                        out[pos - 1] = '-';
-                }
-                long digits = 1;
-                for (long nn = num; nn /= 10; digits++)
-                    ;
-                for (int i = digits - 1; i >= 0; i--) {
-                    if (pos + i + 1 < n)
-                        out[pos + i] = '0' + (num % 10);
-                    num /= 10;
-                }
-                pos += digits;
-                longarg = false;
-                format = false;
-                break;
-            }
-            case 's': {
-                const char* s2 = va_arg(vl, const char*);
-                while (*s2) {
-                    if (++pos < n)
-                        out[pos - 1] = *s2;
-                    s2++;
-                }
-                longarg = false;
-                format = false;
-                break;
-            }
-            case 'c': {
-                if (++pos < n)
-                    out[pos - 1] = (char)va_arg(vl, int);
-                longarg = false;
-                format = false;
-                break;
-            }
-            default:
-                break;
-            }
-        } else if (*s == '%')
-            format = true;
-        else if (++pos < n)
-            out[pos - 1] = *s;
-    }
-    if (pos < n)
-        out[pos] = 0;
-    else if (n)
-        out[n - 1] = 0;
-    return pos;
-}
-
-static void rt_vprintf(const char* s, va_list vl)
-{
-    char buf[256];
-    rt_vsnprintf(buf, sizeof(buf), s, vl);
-    putstring(buf);
-}
 
 void rt_printf(const char* s, ...)
 {
     va_list vl;
 
     va_start(vl, s);
-    rt_vprintf(s, vl);
+    rt_print(s, vl);
     va_end(vl);
 }
