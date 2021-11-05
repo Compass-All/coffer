@@ -99,6 +99,7 @@ static void init_map_alloc_pages(drv_addr_t* drv_list,
         page_table_start + page_table_size, __va(page_table_start));
     // `.rodata', `.bss', `.init.data`, `.data' sections
     MAP_BASE_SECTION(rodata, PTE_V | PTE_R);
+    MAP_BASE_SECTION(srodata, PTE_V | PTE_R);
     MAP_BASE_SECTION(bss, PTE_V | PTE_W | PTE_R);
     MAP_BASE_SECTION(init_data, PTE_V | PTE_W | PTE_R);
     MAP_BASE_SECTION(data, PTE_V | PTE_W | PTE_R);
@@ -148,6 +149,7 @@ static void init_map_alloc_pages(drv_addr_t* drv_list,
  *
  */
 
+/* WIP *
 void _init_mem(uintptr_t base_pa_start, uintptr_t argv)
 {
     uintptr_t* ptr = (uintptr_t*)base_pa_start;
@@ -203,6 +205,7 @@ void _init_mem(uintptr_t base_pa_start, uintptr_t argv)
     asm volatile("mv a3, %0" ::"r"(EUSR_STACK_TOP));
     asm volatile("mv a4, %0" ::"r"(argc));
 }
+//*/
 
 void init_mem(uintptr_t base_pa_start, uintptr_t id, uintptr_t payload_pa_start,
     uintptr_t payload_size, drv_addr_t drv_list[MAX_DRV],

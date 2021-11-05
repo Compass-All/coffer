@@ -11,6 +11,7 @@ SECTIONS
   .text : {
     *(.text.init)
     *(.text)
+		. = ALIGN(8);
   }
   _text_end = .;
 
@@ -19,6 +20,7 @@ SECTIONS
   _init_data_start = .;
   .init.data : {
     *(.init.data .init.data.*)
+		. = ALIGN(8);
   }
   _init_data_end = .;
 
@@ -29,10 +31,19 @@ SECTIONS
     *(.rdata)
     *(.rodata)
     *(.rodata.*)
-    *(.srodata)
-    *(.srodata.*)
+		. = ALIGN(8);
   }
   _rodata_end = .;
+
+  . = ALIGN(0x1000);
+
+  _srodata_start = .;
+  .srodata : {
+    *(.srodata)
+    *(.srodata.*)
+    . = ALIGN(8);
+  }
+  _srodata_end = .;
 
   . = ALIGN(0x1000);
 
@@ -41,6 +52,7 @@ SECTIONS
     *(.data)
     *(.data.*)
     *(.sdata)
+    . = ALIGN(8);
   }
   _data_end = .;
 
@@ -51,23 +63,10 @@ SECTIONS
     *(.bss)
     *(.bss.*)
     *(.sbss*)
+		. = ALIGN(8);
   }
   _bss_end = .;
   
   . = ALIGN(0x1000);
-
-  _drv_console_start = .;
-  .drv_enclave_console :
-  {
-    *(.drv_enclave_console)
-  }
-  _drv_console_end = .;
-
   _end = .;
-  . = ALIGN(0x1000);
-
-  _temp_stack_start = .;
-  . = . + 0x1000;
-  _temp_stack_end = .;
-
 }
