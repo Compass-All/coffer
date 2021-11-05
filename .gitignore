@@ -1,6 +1,7 @@
 Image
 root.bin
 *.gdb
+*.log
 
 # Prerequisites
 *.d
