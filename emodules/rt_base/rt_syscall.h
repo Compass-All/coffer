@@ -41,6 +41,8 @@
 #define SYS_time 1062
 #define SYS_getmainvars 2011
 
+#define SYS_debug 1234
+
 #ifndef __ASSEMBLER__
 #include <stdint.h>
 // #include <sys/time.h>
@@ -48,6 +50,7 @@
 // #define EFAULT -1
 // #define ERR_DRV_NOT_FND -111
 
+int rt_debug();
 int rt_fstat(uintptr_t fd, uintptr_t sstat);
 int rt_brk(uintptr_t addr);
 int rt_write(uintptr_t fd, uintptr_t content);

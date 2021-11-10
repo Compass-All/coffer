@@ -60,6 +60,10 @@ void handle_syscall(uintptr_t* regs, uintptr_t scause, uintptr_t sepc,
               arg_1 = regs[CTX_INDEX_a1], retval = 0;
     em_debug("which: %d\n", which);
     switch (which) {
+    case SYS_debug:
+        em_debug("SYS_debug\n");
+        retval = rt_debug();
+        break;
     case SYS_fstat:
         retval = rt_fstat(arg_0, arg_1);
         break;

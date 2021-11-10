@@ -5,8 +5,15 @@
 #include <sys/stat.h>
 #include <util/drv.h>
 #include <util/memory.h>
+#include "dma_tmp/dma.h"
 
 uintptr_t usr_heap_top;
+
+int rt_debug()
+{
+    dma_debug();
+    return 0;
+}
 
 int rt_fstat(uintptr_t fd, uintptr_t sstat)
 {
