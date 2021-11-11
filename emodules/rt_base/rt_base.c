@@ -1,6 +1,7 @@
 #include "base_util/elf.h"
 #include "base_util/md2.h"
 #include "base_util/memory.h"
+#include "m3/inv_map.h"
 #include "m3/page_pool.h"
 #include "m3/page_table.h"
 #include "rt_console.h"
@@ -257,6 +258,8 @@ void init_mem(uintptr_t base_pa_start, uintptr_t id, uintptr_t payload_pa_start,
     em_debug("User page pool initialization done\n");
     // check_pte_all_zero(); // Is it necessary?
     em_debug("\033[1;33mroot: 0x%llx\n\033[0m", get_pt_root());
+
+    inv_map_init();
 
     usr_pc = elf_load(payload_pa_start, payload_size, &usr_heap_top);
     if (usr_pc == -1) {

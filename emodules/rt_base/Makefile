@@ -78,9 +78,11 @@ target-objs-y = $(foreach obj,$(emodule-objs-y),$(target_dir)/lib/$(obj))
 
 target_subdirs = $(foreach d,$(filter-out ./,$(dir $(emodule-objs-y))),$(target_dir)/lib/$(d))
 
-.PHONY: all
-
 all: $(target)
+
+.PHONY: lds
+
+lds: $(target_dir)/$(MODULE).ld
 
 $(target): $(target_dir)/$(MODULE).elf
 	$(OBJCOPY) -O binary --set-section-flags .bss=alloc,load,contents $< $@
