@@ -18,6 +18,10 @@
 #define PDMA_EXEC_DST_OFFSET		0x110
 #define PDMA_EXEC_SRC_OFFSET		0x118
 
+#define PDMA_ERROR					-1
+#define PDMA_NO_AVAIL				-2
+#define PDMA_RUNNING				-3
+
 // n represents PDMA channel ID, ranging from 0 to 3
 #define PDMA_CONTROL(n)		(PDMA_BASE_ADDR + PDMA_OFFSET + (0x1000 * n) \
 							 + PDMA_CONTROL_OFFSET)
@@ -43,7 +47,7 @@ typedef struct {
 	uintptr_t dst_addr;
 
 	uintptr_t size;
-} dma_data;
+} pdma_data;
 
 typedef struct {
 	uint32_t claim			: 1;	// 0
@@ -54,7 +58,7 @@ typedef struct {
 	uint32_t __reserved2	: 14;	// [29:16]
 	uint32_t done 			: 1;	// 30
 	uint32_t error 		: 1;	// 31
-} dma_control;
+} pdma_control;
 
 typedef struct {
 	uint32_t __reserved1	: 2;	// [1:0]
@@ -63,6 +67,6 @@ typedef struct {
 	uint32_t __reserved2	: 20;	// [23:4]
 	uint32_t wsize			: 4;	// [27:24]
 	uint32_t rsize			: 4;	// [31:27]
-} dma_config;
+} pdma_config;
 
-void dma_debug();
+void pdma_debug();
