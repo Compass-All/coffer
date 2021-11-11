@@ -38,7 +38,7 @@ int rt_brk(uintptr_t addr)
     if (addr > PAGE_UP(usr_heap_top)) { // currently freeing does not work
         em_debug("ebi_brk cp 1\n");
         n_pages = PAGE_UP(addr - usr_heap_top) >> EPAGE_SHIFT;
-        em_debug("ebi_brk cp 2 n_pages = 0x%lx\n", n_pages);
+        em_debug("ebi_brk cp 2 n_pages = 0x%ld\n", n_pages);
         alloc_page(PAGE_UP(usr_heap_top), n_pages,
             PTE_U | PTE_R | PTE_W, IDX_USR);
         em_debug("ebi_brk cp 3\n");
@@ -65,6 +65,12 @@ int rt_write(uintptr_t fd, uintptr_t content)
 }
 
 int rt_close(uintptr_t fd)
+{
+    // TODO implementation
+    return 0;
+}
+
+int rt_gettimeofday(struct timeval* tv, struct timezone* tz)
 {
     // TODO implementation
     return 0;

@@ -43,7 +43,7 @@
 
 #ifndef __ASSEMBLER__
 #include <stdint.h>
-// #include <sys/time.h>
+#include <sys/time.h>
 
 // #define EFAULT -1
 // #define ERR_DRV_NOT_FND -111
@@ -52,5 +52,5 @@ int rt_fstat(uintptr_t fd, uintptr_t sstat);
 int rt_brk(uintptr_t addr);
 int rt_write(uintptr_t fd, uintptr_t content);
 int rt_close(uintptr_t fd);
-// int rt_gettimeofday(struct timeval* tv, struct timezone* tz);
+int rt_gettimeofday(struct timeval* tv, struct timezone* tz);
 #endif // __ASSEMBLER__
