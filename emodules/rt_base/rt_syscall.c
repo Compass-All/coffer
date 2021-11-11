@@ -11,7 +11,7 @@ uintptr_t usr_heap_top;
 
 int rt_debug()
 {
-    dma_debug();
+    pdma_debug();
     return 0;
 }
 
