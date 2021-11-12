@@ -18,6 +18,7 @@
  * 
  * TODO: change all register operations to readx/writex
  * 		 in order to avoid cache influences
+ * 		 (currently work around via keyword 'volatile')
  * 
  */
 
@@ -139,9 +140,9 @@ static void print_pdma_status()
 static void print_pdma_status_id(int id)
 {
 	volatile pdma_control ctrl = *(pdma_control *)PDMA_CONTROL(id);
-	uintptr_t src = PDMA_EXEC_SRC(id);
-	uintptr_t dst = PDMA_EXEC_DST(id);
-	uintptr_t size = PDMA_EXEC_BYTES(id);
+	uintptr_t src = *(uintptr_t *)PDMA_EXEC_SRC(id);
+	uintptr_t dst = *(uintptr_t *)PDMA_EXEC_DST(id);
+	uintptr_t size = *(uintptr_t *)PDMA_EXEC_BYTES(id);
 
 	em_debug("INFO channel %d: \n", id);
 	em_debug("claim: %d, run: %d, done: %d\n",
@@ -163,15 +164,20 @@ static void pdma_test1()
 
 static void pdma_test2()
 {
-	volatile int buffer1[256];
-	volatile int buffer2[256];
+	volatile int *buffer1 = (int *)0x108000000UL;
+	volatile int *buffer2 = (int *)0x108001000UL;
+
+	map_page((uintptr_t)buffer1, (uintptr_t)buffer1, 1,
+				PTE_V | PTE_W | PTE_R | PTE_D, 0);
+	map_page((uintptr_t)buffer2, (uintptr_t)buffer2, 1,
+				PTE_V | PTE_W | PTE_R | PTE_D, 0);
 	
 	int id;
 	pdma_data data;
 	
-	data.src_addr = (uintptr_t)&buffer1;
-	data.dst_addr = (uintptr_t)&buffer2;
-	data.size = 0x10;
+	data.src_addr = (uintptr_t)buffer1;
+	data.dst_addr = (uintptr_t)buffer2;
+	data.size = 40;
 
 	for (int i = 0; i < 256; i++) {
 		buffer1[i] = 1;

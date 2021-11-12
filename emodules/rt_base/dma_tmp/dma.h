@@ -44,7 +44,7 @@
 							 + PDMA_EXEC_SRC_OFFSET)
 
 typedef struct {
-	uintptr_t src_addr;
+	uintptr_t src_addr; // source PA
 	uintptr_t dst_addr;
 
 	uintptr_t size;
