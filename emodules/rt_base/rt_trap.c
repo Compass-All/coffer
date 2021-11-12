@@ -79,10 +79,9 @@ void handle_syscall(uintptr_t* regs, uintptr_t scause, uintptr_t sepc,
         retval = rt_brk(arg_0);
         em_debug("retval = 0x%lx\n", retval);
         break;
-    // case SYS_gettimeofday:
-    //     retval = rt_gettimeofday((struct timeval*)arg_0,
-    //         (struct timezone*)arg_1);
-    //     break;
+    case SYS_gettimeofday:
+        retval = rt_gettimeofday((struct timeval*)arg_0, (struct timezone*)arg_1);
+        break;
     case SYS_exit:
         em_debug("SYS_exit\n");
         ecall_exit_enclave(arg_0);

@@ -9,7 +9,7 @@
 #define ROUNDUP(a, b) ((((a)-1) / (b) + 1) * (b))
 #endif
 
-#define PARTITION_SHIFT 21 // 2 MB for each parition
+#define PARTITION_SHIFT 21 // 2 MB for each partition
 #define PARTITION_SIZE (1UL << PARTITION_SHIFT)
 
 #define PARTITION_UP(addr) (ROUNDUP(addr, PARTITION_SIZE))
@@ -20,7 +20,6 @@
 
 #define PTE_ATTR_MASK 0xFFFFFC00
 #define EPTE_SHIFT 10
-
 
 #define EPAGE_SHIFT 12
 #define EPAGE_SIZE (1 << EPAGE_SHIFT)
@@ -74,6 +73,7 @@ typedef struct inverse_map {
     uintptr_t pa; // physical addr
     uintptr_t va; // virtual addr
     uint32_t count; // page counts
+    uint16_t prev, next;
 } inverse_map_t;
 
 #endif // __ASSEMBLER__

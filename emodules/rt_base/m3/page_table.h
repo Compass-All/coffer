@@ -25,7 +25,6 @@ typedef struct trie {
 
 extern uintptr_t pt_root_pa;
 extern size_t enc_va_pa_offset;
-extern inverse_map_t inv_map[INVERSE_MAP_ENTRY_NUM];
 
 pte_t* get_pt_root(void);
 trie_t* get_trie_root(void);

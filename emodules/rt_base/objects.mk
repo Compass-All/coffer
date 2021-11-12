@@ -7,6 +7,7 @@ emodule-objs-y += rt_trap.o
 emodule-objs-y += base_util/elf.o
 emodule-objs-y += base_util/md2.o
 emodule-objs-y += base_util/memory.o
+emodule-objs-y += m3/inv_map.o
 emodule-objs-y += m3/page_pool.o
 emodule-objs-y += m3/page_table.o
 emodule-objs-y += dma_tmp/dma.o

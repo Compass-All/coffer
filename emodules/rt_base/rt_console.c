@@ -8,6 +8,7 @@
 #include <stdint.h>
 
 #define CONSOLE_BUF_SIZE 256
+#define CONSOLE_USE_ECALL_PUTS
 
 #define FLAG_PAD_RIGHT 1
 #define FLAG_PAD_ZERO 2
@@ -41,14 +42,17 @@ static char _print_buf[CONSOLE_BUF_SIZE + 1];
 
 static void putstring(char* s)
 {
-    // while (*s) {
-    //     ecall_putchar(*s++);
-    // }
+#ifdef CONSOLE_USE_ECALL_PUTS
     char* tmp = _print_buf;
     while ((*tmp++ = *s++))
         ;
     uintptr_t pa = rt_get_pa((uintptr_t)_print_buf);
     ecall_puts(pa);
+#else
+    while (*s) {
+        ecall_putchar(*s++);
+    }
+#endif
 }
 
 static void print_s(char* buf, int* i, char* str, int fmt_width, fmt_flag_t flags)
@@ -70,10 +74,10 @@ static void print_s(char* buf, int* i, char* str, int fmt_width, fmt_flag_t flag
         if (len - t < cur_len) {
             cur_len = len - t;
         }
+        flush_buffer_if_overflow(buf, *i, cur_len);
         memcpy(&buf[*i], &str[t], cur_len);
         *i += cur_len;
         t += cur_len;
-        flush_buffer_if_overflow(buf, *i, CONSOLE_BUF_SIZE);
     }
 
     if (fmt_width > len && !(flags & FLAG_PAD_RIGHT)) {
@@ -86,12 +90,6 @@ static void print_dec(char* buf, int* i, uint64_t num, int fmt_width, fmt_flag_t
     int len = 0, t = 0;
     uint64_t tmp = num;
 
-    if (num == 0) {
-        flush_buffer_if_overflow(buf, *i, 1);
-        buf[(*i)++] = '0';
-        return;
-    }
-
     while (tmp) {
         ++len;
         tmp /= 10;
@@ -101,12 +99,17 @@ static void print_dec(char* buf, int* i, uint64_t num, int fmt_width, fmt_flag_t
         pad_fmt(buf, *i, fmt_width - len, flags);
     }
 
-    flush_buffer_if_overflow(buf, *i, len);
-    for (t = *i + len; t > *i;) {
-        buf[--t] = '0' + num % 10;
-        num /= 10;
+    if (num == 0) {
+        flush_buffer_if_overflow(buf, *i, 1);
+        buf[(*i)++] = '0';
+    } else {
+        flush_buffer_if_overflow(buf, *i, len);
+        for (t = *i + len; t > *i;) {
+            buf[--t] = '0' + num % 10;
+            num /= 10;
+        }
+        *i += len;
     }
-    *i += len;
 
     if (fmt_width > len && !(flags & FLAG_PAD_RIGHT)) {
         pad_fmt(buf, *i, fmt_width - len, flags);
@@ -118,12 +121,6 @@ static void print_hex(char* buf, int* i, uint64_t num, int fmt_width, fmt_flag_t
     int len = 0, t = 0;
     uint64_t tmp = num;
 
-    if (num == 0) {
-        flush_buffer_if_overflow(buf, *i, 1);
-        buf[(*i)++] = '0';
-        return;
-    }
-
     while (tmp) {
         ++len;
         tmp >>= 4;
@@ -133,17 +130,22 @@ static void print_hex(char* buf, int* i, uint64_t num, int fmt_width, fmt_flag_t
         pad_fmt(buf, *i, fmt_width - len, flags);
     }
 
-    flush_buffer_if_overflow(buf, *i, len);
-    for (t = *i + len; t > *i;) {
-        tmp = num & 0xF;
-        if (tmp < 10) {
-            buf[--t] = '0' + tmp;
-        } else {
-            buf[--t] = (is_upper ? 'A' : 'a') + tmp - 10;
+    if (num == 0) {
+        flush_buffer_if_overflow(buf, *i, 1);
+        buf[(*i)++] = '0';
+    } else {
+        flush_buffer_if_overflow(buf, *i, len);
+        for (t = *i + len; t > *i;) {
+            tmp = num & 0xF;
+            if (tmp < 10) {
+                buf[--t] = '0' + tmp;
+            } else {
+                buf[--t] = (is_upper ? 'A' : 'a') + tmp - 10;
+            }
+            num >>= 4;
         }
-        num >>= 4;
+        *i += len;
     }
-    *i += len;
 
     if (fmt_width > len && !(flags & FLAG_PAD_RIGHT)) {
         pad_fmt(buf, *i, fmt_width - len, flags);
@@ -322,7 +324,7 @@ static void rt_print(const char* fmt, va_list vl)
             buf[i++] = *fmt;
         }
     }
-    flush_buffer_if_overflow(buf, i, CONSOLE_BUF_SIZE + 1);
+    flush_buffer_if_overflow(buf, i, CONSOLE_BUF_SIZE);
 }
 
 void rt_printf(const char* s, ...)

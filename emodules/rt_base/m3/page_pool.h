@@ -32,4 +32,4 @@ typedef struct page_list {
 } page_list_t;
 
 void page_pool_init(uintptr_t pool_addr, size_t pool_size, int idx);
-uintptr_t page_pool_get_pa(int idx);
+uintptr_t page_pool_get_pa(int idx, size_t n_pages);
