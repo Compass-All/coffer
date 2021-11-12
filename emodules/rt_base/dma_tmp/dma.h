@@ -21,6 +21,7 @@
 #define PDMA_ERROR					-1
 #define PDMA_NO_AVAIL				-2
 #define PDMA_RUNNING				-3
+#define PDMA_NOT_CLAIMED			-4
 
 // n represents PDMA channel ID, ranging from 0 to 3
 #define PDMA_CONTROL(n)		(PDMA_BASE_ADDR + PDMA_OFFSET + (0x1000 * n) \
@@ -57,16 +58,38 @@ typedef struct {
 	uint32_t error_ie		: 1;	// 15
 	uint32_t __reserved2	: 14;	// [29:16]
 	uint32_t done 			: 1;	// 30
-	uint32_t error 		: 1;	// 31
+	uint32_t error 			: 1;	// 31
 } pdma_control;
 
 typedef struct {
 	uint32_t __reserved1	: 2;	// [1:0]
 	uint32_t repeat 		: 1;	// 2
-	uint32_t order 		: 1;	// 3
+	uint32_t order 			: 1;	// 3
 	uint32_t __reserved2	: 20;	// [23:4]
 	uint32_t wsize			: 4;	// [27:24]
 	uint32_t rsize			: 4;	// [31:27]
 } pdma_config;
+
+static inline uint64_t __raw_readq(const volatile void *addr)
+{
+	uint64_t val;
+
+	asm volatile("ld %0, 0(%1)" : "=r"(val) : "r"(addr));
+	return val;
+}
+
+static inline void __raw_writeq(uint64_t val, volatile void *addr)
+{
+	asm volatile("sd %0, 0(%1)" : : "r"(val), "r"(addr));
+}
+
+#define __io_br()	do {} while (0)
+#define __io_ar()	__asm__ __volatile__ ("fence i,r" : : : "memory");
+#define __io_bw()	__asm__ __volatile__ ("fence w,o" : : : "memory");
+#define __io_aw()	do {} while (0)
+
+#define readq(c)	({ uint64_t __v; __io_br(); __v = __raw_readq(c); __io_ar(); __v; })
+#define writeq(v,c)	({ __io_bw(); __raw_writeq((v),(c)); __io_aw(); })
+
 
 void pdma_debug();
