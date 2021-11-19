@@ -11,7 +11,8 @@ uintptr_t usr_heap_top;
 
 int rt_debug()
 {
-    pdma_debug();
+    // pdma_debug();
+    SBI_ECALL_0(GOTO_BACKEND);
     return 0;
 }
 
