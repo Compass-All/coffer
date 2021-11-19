@@ -1,9 +1,19 @@
 #include "be_dma.h"
 #include "../rt_base/rt_ecall.h"
 
-void backend_dma_driver_entry() __attribute__((section(".text.init")));
-void backend_dma_driver_entry()
+void be_entry(uintptr_t* regs, uintptr_t scause, uintptr_t sepc,
+    uintptr_t stval)
 {
-	ecall_puts("hello from backend\n");
+	ecall_putchar('h');
+	ecall_putchar('\n');
+	return;
+}
+
+
+void be_interrupt_entry(uintptr_t* regs, uintptr_t scause, uintptr_t sepc,
+    uintptr_t stval)
+{
+	ecall_putchar('h');
+	ecall_putchar('\n');
 	return;
 }
