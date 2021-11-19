@@ -1,6 +1,95 @@
-#include "dma.h"
+#include "fe_dma.h"
+#include "../../be_dma/be_dma.h"
 #include "../rt_console.h"
 #include "../m3/page_table.h"
+
+#define VIRT_QUEUE_LEN 4
+#define VIRT_QUEUE_MOD (VIRT_QUEUE_LEN + 1)
+
+// currently RingBuffer is PDMA specific. should be generalized later
+struct RingBuffer {
+	uint32_t head;
+	uint32_t tail;
+	pdma_data buffer[VIRT_QUEUE_LEN];
+} virtqueue;
+
+inline int is_empty()
+{
+	return (virtqueue.head == virtqueue.tail);
+}
+
+inline int is_full()
+{
+	return ((virtqueue.head + 1) % VIRT_QUEUE_MOD == virtqueue.tail);
+}
+
+// this function can be used as the call back function
+int queue_consume()
+{
+	if (is_empty()) {
+		em_error("ERROR read: virtqueue is empty\n");
+		return -1;
+	}
+
+	// consuming
+	virtqueue.tail = (virtqueue.tail + 1) % VIRT_QUEUE_MOD;
+
+	return 0;
+}
+
+int queue_write(pdma_data *data)
+{
+	if (is_full()) {
+		em_error("ERROR write: virtqueue if full\n");
+		return -1;
+	}
+
+	// writing
+	virtqueue.buffer[virtqueue.head] = *data;
+	virtqueue.head = (virtqueue.head + 1) % VIRT_QUEUE_MOD;
+
+	return 0;
+}
+
+static void dump_virtqueue()
+{
+	pdma_data *ptr;
+	int i;
+	uint32_t len = ((virtqueue.head % VIRT_QUEUE_MOD)
+		- (virtqueue.tail % VIRT_QUEUE_MOD));
+
+	em_debug("------------\n");
+	em_debug("head: %u, tail %u\n", virtqueue.head, virtqueue.tail);
+	for (i = 0, ptr = &virtqueue.buffer[virtqueue.tail % VIRT_QUEUE_MOD];
+			i < len; i++, ptr++) {
+		em_debug("%d: dst: 0x%lx, src: 0x%lx, size: 0x%lx\n",
+			i, ptr->dst_addr, ptr->src_addr, ptr->size);
+	}
+	em_debug("------------\n");
+}
+
+void pdma_debug()
+{
+	pdma_data data1;
+	data1.dst_addr = 0x1;
+	data1.src_addr = 0x2;
+	data1.size = 0x3;
+
+	queue_write(&data1);
+	dump_virtqueue();
+	queue_write(&data1);
+	queue_write(&data1);
+	queue_write(&data1);
+	dump_virtqueue();
+	queue_consume();
+	dump_virtqueue();
+	queue_consume();
+	queue_consume();
+	queue_consume();
+	dump_virtqueue();
+
+	return;
+}
 
 /**
  * PDMA State Machine
@@ -220,8 +309,7 @@ static void pdma_test2()
 	}
 
 }
-
-void pdma_debug()
+__attribute__ ((__unused__)) void pdma_debug_unused()
 {
 	pdma_init();
 	pdma_test1();
