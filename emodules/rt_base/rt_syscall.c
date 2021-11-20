@@ -35,7 +35,7 @@ int rt_brk(uintptr_t addr)
         return usr_heap_top;
     em_debug("####### brk start, usr_heap_top: 0x%lx########\n", usr_heap_top);
     em_debug("addr: 0x%lx\n", addr);
-    if (addr > PAGE_UP(usr_heap_top)) { // currently freeing does not work
+    if (addr >= PAGE_UP(usr_heap_top)) { // currently freeing does not work
         em_debug("ebi_brk cp 1\n");
         n_pages = PAGE_UP(addr - usr_heap_top) >> EPAGE_SHIFT;
         em_debug("ebi_brk cp 2 n_pages = 0x%ld\n", n_pages);

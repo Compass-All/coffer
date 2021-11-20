@@ -7,7 +7,8 @@
 size_t enc_va_pa_offset;
 uintptr_t pt_root_pa;
 
-#define rt_get_pa(va) (read_csr(satp) ? (va)-enc_va_pa_offset : (va))
+// #define rt_get_pa(va) (read_csr(satp) ? (va)-enc_va_pa_offset : (va))
+#define rt_get_pa(va) (read_csr(satp) ? usr_get_pa(va) : (va))
 
 pte_t* get_pt_root(void)
 {
@@ -82,7 +83,7 @@ static uintptr_t page_insert(uintptr_t va, uintptr_t pa, int levels,
     for (; i < levels - 1; i++) {
         if (!root->next[p][l[i]]) {
             root->next[p][l[i]] = ++root->cnt;
-            em_debug("\033[1;33mpage cnt:%d\033[0m\n", root->cnt);
+            em_debug("\033[1;33mpage cnt:%d, i=%d\033[0m\n", root->cnt, i);
 
             tmp_pte = &page_table[p][l[i]];
             tmp_pte->ppn = rt_get_pa((uintptr_t)&page_table[root->cnt][0]) >> 12;
@@ -126,6 +127,7 @@ void map_page(uintptr_t va, uintptr_t pa, size_t n_pages, pte_attr_t attr,
         inv_map_insert(pa, va, n_pages);
     }
 
+    em_debug("pa=0x%llx, va=0x%llx, count=0x%x\n", pa, va, n_pages);
     while (n_pages > 0) {
         page_insert(va, pa, 3, attr);
         va += EPAGE_SIZE;
@@ -139,43 +141,27 @@ void map_page(uintptr_t va, uintptr_t pa, size_t n_pages, pte_attr_t attr,
 }
 
 uintptr_t alloc_page(uintptr_t usr_va, uintptr_t n_pages,
-    pte_attr_t attr, char id)
+    pte_attr_t attr, char idx)
 {
-    uintptr_t pa = 0; //, prev_pa = 0;
-    // inverse_map_t* inv_map_entry = NULL;
-    size_t i;
+    uintptr_t pa = -1;
+    size_t n_alloc, i;
 
-    em_debug("va = 0x%lx, n = %d\n", usr_va, n_pages);
-    pa = page_pool_get_pa(id, n_pages);
-    if (pa == -1) {
-        em_error("Failed to allocate PA from pool\n");
+    while (n_pages > 0) {
+        em_debug("va = 0x%llx, n = %d\n", usr_va, n_pages);
+        n_alloc = page_pool_get_pa(idx, &pa, n_pages);
+        if (pa == -1) {
+            em_error("Failed to allocate PA from pool\n");
+            return 0;
+        }
+        em_debug("Before inv_map_insert\n");
+        inv_map_insert(pa, usr_va, n_alloc);
+        em_debug("After inv_map_insert\n");
+        em_debug("pa=0x%llx, va=0x%llx, count=%llu\n", pa, usr_va, n_alloc);
+        for (i = 0; i < n_alloc; ++i) {
+            page_insert(usr_va + i * EPAGE_SIZE, pa + i * EPAGE_SIZE, 3, attr);
+        }
+        n_pages -= n_alloc;
     }
-    em_debug("Before inv_map_insert\n");
-    inv_map_insert(pa, usr_va, n_pages);
-    em_debug("After inv_map_insert\n");
-    for (i = 0; i < n_pages; ++i) {
-        page_insert(usr_va + i * EPAGE_SIZE, pa + i * EPAGE_SIZE, 3, attr);
-    }
-    // while (n_pages >= 1) {
-    //     pa = page_pool_get_pa(id);
-    //     if (pa == prev_pa + EPAGE_SIZE && PARTITION_DOWN(pa) == PARTITION_DOWN(prev_pa)) {
-    //         if (!inv_map_entry) {
-    //             em_error("inv_map_entry is NULL!\n");
-    //             return 0;
-    //         }
-    //         inv_map_entry->count++;
-    //     } else {
-    //         inv_map_entry = insert_inverse_map(pa, usr_va, 1);
-    //         if (!inv_map_entry) {
-    //             em_error("inv_map_entry is NULL!\n");
-    //             return 0;
-    //         }
-    //     }
-    //     page_insert(usr_va, pa, 3, attr);
-    //     prev_pa = pa;
-    //     usr_va += EPAGE_SIZE;
-    //     n_pages--;
-    // }
 
     if (read_csr(satp)) {
         flush_tlb();

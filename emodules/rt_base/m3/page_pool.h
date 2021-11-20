@@ -31,5 +31,5 @@ typedef struct page_list {
     unsigned int count;
 } page_list_t;
 
-void page_pool_init(uintptr_t pool_addr, size_t pool_size, int idx);
-uintptr_t page_pool_get_pa(int idx, size_t n_pages);
+void page_pool_init(uintptr_t pool_addr, uintptr_t pa_start, size_t pool_size, int idx);
+size_t page_pool_get_pa(int idx, uintptr_t* vpa, size_t n_pages);

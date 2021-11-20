@@ -1,4 +1,5 @@
 #include "rt_trap.h"
+#include "m3/page_table.h"
 #include "rt_console.h"
 #include "rt_csr.h"
 #include "rt_ecall.h"
@@ -37,7 +38,12 @@ void handle_interrupt(uintptr_t* regs, uintptr_t scause, uintptr_t sepc,
 void handle_exception(uintptr_t* regs, uintptr_t scause, uintptr_t sepc,
     uintptr_t stval)
 {
-    em_error("Unhandled exception %d! sepc=0x%llx, stval=0x%llx!\n", scause, sepc, stval);
+    uintptr_t pa;
+    em_error("Unhandled exception %lld! sepc=0x%llx, stval=0x%llx!\n", scause, sepc, stval);
+    if (stval) {
+        pa = usr_get_pa(stval);
+        em_error("address access: va=0x%llx, pa=0x%llx\n", stval, pa);
+    }
     // dump_umode_regs(regs);
     ecall_exit_enclave(-1);
     __builtin_unreachable();

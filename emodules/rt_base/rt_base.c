@@ -227,7 +227,7 @@ void init_mem(uintptr_t base_pa_start, uintptr_t id, uintptr_t payload_pa_start,
     enc_va_pa_offset = ERT_VA_START - base_pa_start;
     em_debug("\033[1;33moffset: 0x%lx\n\033[0m", enc_va_pa_offset);
     // `va_top' will increase by EMEM_SIZE after `page_pool_init'
-    va_top = ERT_VA_START + PARTITION_SIZE; // Resv for base module
+    va_top = ERT_VA_START;
     attest_payload((void*)payload_pa_start, payload_size);
     enclave_id = id;
 
@@ -247,17 +247,18 @@ void init_mem(uintptr_t base_pa_start, uintptr_t id, uintptr_t payload_pa_start,
     base_avail_size = PAGE_DOWN(PARTITION_UP(base_avail_start) - base_avail_start);
     em_debug("base_avail_start = 0x%lx\n", base_avail_start);
     em_debug("base_avail_size = %lx\n", base_avail_size);
-    page_pool_init(base_avail_start, base_avail_size, IDX_RT);
+    page_pool_init(base_avail_start, base_pa_start, base_avail_size, IDX_RT);
 
     // Setup user memory space
     usr_avail_start = PAGE_UP(payload_pa_start + payload_size);
     usr_avail_size = PAGE_DOWN(PARTITION_SIZE - payload_size % PARTITION_SIZE);
-    page_pool_init(usr_avail_start, usr_avail_size, IDX_USR);
+    page_pool_init(usr_avail_start, base_pa_start, usr_avail_size, IDX_USR);
     em_debug("Initializing user page pool: 0x%llx, size: 0x%llx\n",
         usr_avail_start, usr_avail_size);
     em_debug("User page pool initialization done\n");
     // check_pte_all_zero(); // Is it necessary?
     em_debug("\033[1;33mroot: 0x%llx\n\033[0m", get_pt_root());
+    va_top += PARTITION_UP(usr_avail_start - base_pa_start);
 
     inv_map_init();
 
@@ -283,7 +284,7 @@ void init_mem(uintptr_t base_pa_start, uintptr_t id, uintptr_t payload_pa_start,
     // Inform M-mode of locations of page table and inverse mapping
     ecall_map_register(&pt_root_pa, &inv_map, &enc_va_pa_offset);
     em_debug("After ecall map_register\n");
-    va_top += EMEM_SIZE;
+    // va_top += EMEM_SIZE;
     // flush_dcache_range(payload_pa_start, payload_pa_start + EMEM_SIZE);
     asm volatile("fence rw, rw");
     flush_tlb();

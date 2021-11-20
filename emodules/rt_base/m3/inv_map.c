@@ -50,6 +50,7 @@ inverse_map_t* inv_map_insert(uintptr_t pa, uintptr_t va, uint32_t count)
 {
     uint16_t i = inv_map_head, j;
 
+    em_debug("pa=0x%llx, va=0x%llx, count=%llu\n", pa, va, count);
     em_debug("Checkpoint 0, inv_map_tail=%d\n", inv_map_tail);
     // 0. First entry
     if (inv_map_tail == INVALID_IDX) {

@@ -29,6 +29,6 @@ extern size_t enc_va_pa_offset;
 pte_t* get_pt_root(void);
 trie_t* get_trie_root(void);
 void map_page(uintptr_t va, uintptr_t pa, size_t n_pages, pte_attr_t attr, char do_insert_inverse_map);
-uintptr_t alloc_page(uintptr_t va, uintptr_t n_pages, pte_attr_t attr, char id);
+uintptr_t alloc_page(uintptr_t va, uintptr_t n_pages, pte_attr_t attr, char idx);
 uintptr_t usr_get_pa(uintptr_t va);
 uintptr_t ioremap(pte_t* root, uintptr_t pa, size_t size);
