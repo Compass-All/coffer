@@ -7,8 +7,7 @@
 size_t enc_va_pa_offset;
 uintptr_t pt_root_pa;
 
-// #define rt_get_pa(va) (read_csr(satp) ? (va)-enc_va_pa_offset : (va))
-#define rt_get_pa(va) (read_csr(satp) ? usr_get_pa(va) : (va))
+#define rt_get_pa(va) (read_csr(satp) ? (va)-enc_va_pa_offset : (va))
 
 pte_t* get_pt_root(void)
 {
@@ -67,33 +66,35 @@ static uintptr_t page_insert(uintptr_t va, uintptr_t pa, int levels,
     pte_attr_t attr)
 {
     trie_t* root = get_trie_root();
-    uint32_t p = 0, i = 0;
+    uint32_t p = 0, i;
     page_directory* page_table = (page_directory*)get_pt_root();
     /*
      * [L2, L1, L0] PPN for each level, used fot trie to get offset of
      * page_directory_pool
-     * Note: l[0] = L1, l[2] = l[0]
+     * Note: vpn[0] = L1, vpn[2] = vpn[0]
      */
 
-    uintptr_t l[] = { (va & MASK_L2) >> 30, (va & MASK_L1) >> 21,
-        (va & MASK_L0) >> 12 };
+    uintptr_t vpn[] = { (va & MASK_L0) >> 12, (va & MASK_L1) >> 21, (va & MASK_L2) >> 30 };
     pte_t* tmp_pte;
 
     // for a three level page table, only two PPNs need to point to next level
-    for (; i < levels - 1; i++) {
-        if (!root->next[p][l[i]]) {
-            root->next[p][l[i]] = ++root->cnt;
-            em_debug("\033[1;33mpage cnt:%d, i=%d\033[0m\n", root->cnt, i);
+    for (i = levels - 1; i > 0; --i) {
+        if (!root->next[p][vpn[i]]) {
+            root->next[p][vpn[i]] = ++root->cnt;
+            em_debug("\033[1;33mpage cnt:%d\033[0m\n", root->cnt);
 
-            tmp_pte = &page_table[p][l[i]];
+            tmp_pte = &page_table[p][vpn[i]];
+            if (*(uintptr_t*)tmp_pte) {
+                em_error("Invalid PTE 0x%llx\n", *(uintptr_t*)tmp_pte);
+            }
             tmp_pte->ppn = rt_get_pa((uintptr_t)&page_table[root->cnt][0]) >> 12;
             tmp_pte->pte_v = 1;
         }
 
-        p = root->next[p][l[i]];
+        p = root->next[p][vpn[i]];
     }
     // Set items for the leaf page table entry
-    tmp_pte = &page_table[p][l[levels - 1]];
+    tmp_pte = &page_table[p][vpn[0]];
     tmp_pte->ppn = pa >> 12;
     if (levels == 2) {
         tmp_pte->ppn = (tmp_pte->ppn | MASK_OFFSET) ^ MASK_OFFSET;
@@ -161,6 +162,7 @@ uintptr_t alloc_page(uintptr_t usr_va, uintptr_t n_pages,
             page_insert(usr_va + i * EPAGE_SIZE, pa + i * EPAGE_SIZE, 3, attr);
         }
         n_pages -= n_alloc;
+        usr_va += n_alloc * EPAGE_SIZE;
     }
 
     if (read_csr(satp)) {
@@ -171,13 +173,13 @@ uintptr_t alloc_page(uintptr_t usr_va, uintptr_t n_pages,
 
 uintptr_t usr_get_pa(uintptr_t va)
 {
-    uintptr_t l[] = { (va & MASK_L2) >> 30, (va & MASK_L1) >> 21,
+    uintptr_t vpn[] = { (va & MASK_L2) >> 30, (va & MASK_L1) >> 21,
         (va & MASK_L0) >> 12 };
     pte_t* root = get_pt_root();
     pte_t tmp_entry;
     int i;
     for (i = 0; i < 3; ++i) {
-        tmp_entry = root[l[i]];
+        tmp_entry = root[vpn[i]];
         if (!tmp_entry.pte_v) {
             em_error("va:0x%lx is not valid!!!\n", va);
             return 0;
