@@ -14,12 +14,12 @@ void handle_interrupt(uintptr_t* regs, uintptr_t scause, uintptr_t sepc,
 {
     switch (scause) {
     case IRQ_S_TIMER:
-        em_debug("IRQ_S_TIMER sepc=0x%08x, stval=0x%08x!\n", sepc,
+        em_debug("IRQ_S_TIMER sepc=0x%08x, stval=0x%08x\n", sepc,
             stval);
         clear_csr(sip, SIP_STIP);
         break;
     case IRQ_S_SOFT:
-        em_debug("IRQ_S_SOFT sepc=0x%08x, stval=0x%08x!\n", sepc,
+        em_debug("IRQ_S_SOFT sepc=0x%08x, stval=0x%08x\n", sepc,
             stval);
         clear_csr(sip, SIP_SSIP);
         break;
@@ -29,7 +29,7 @@ void handle_interrupt(uintptr_t* regs, uintptr_t scause, uintptr_t sepc,
         clear_csr(sie, 1 << IRQ_S_EXT);
         break;
     default:
-        em_error("Unknown interrupt %d! sepc=0x%lx, stval=0x%lx\n", scause, sepc, stval);
+        em_error("Unknown interrupt %d! sepc=0x%llx, stval=0x%llx\n", scause, sepc, stval);
         ecall_exit_enclave(-1);
         __builtin_unreachable();
     }
@@ -52,8 +52,6 @@ void handle_exception(uintptr_t* regs, uintptr_t scause, uintptr_t sepc,
 void handle_syscall(uintptr_t* regs, uintptr_t scause, uintptr_t sepc,
     uintptr_t stval)
 {
-    em_debug("sepc: 0x%lx\n", sepc);
-
     uintptr_t sstatus = read_csr(sstatus);
     // sstatus |= SSTATUS_SUM;
     // write_csr(sstatus, sstatus);
@@ -64,7 +62,6 @@ void handle_syscall(uintptr_t* regs, uintptr_t scause, uintptr_t sepc,
 
     uintptr_t which = regs[CTX_INDEX_a7], arg_0 = regs[CTX_INDEX_a0],
               arg_1 = regs[CTX_INDEX_a1], retval = 0;
-    em_debug("which: %d\n", which);
     switch (which) {
     case SYS_fstat:
         retval = rt_fstat(arg_0, arg_1);

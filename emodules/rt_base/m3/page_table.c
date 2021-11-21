@@ -7,7 +7,7 @@
 size_t enc_va_pa_offset;
 uintptr_t pt_root_pa;
 
-#define rt_get_pa(va) (read_csr(satp) ? (va)-enc_va_pa_offset : (va))
+#define VA_PA_OFFSET() (MMU_ENABLED() ? enc_va_pa_offset : 0)
 
 pte_t* get_pt_root(void)
 {
@@ -18,41 +18,6 @@ trie_t* get_trie_root(void)
 {
     return (trie_t*)((void*)get_pt_root() + EPAGE_SIZE * PAGE_DIR_POOL);
 }
-
-// First look up PA. If PA exists in the table, update it; otherwise
-// insert a new entry.
-// When updating, `count' must match with the previous one.
-// Returns the newly inserted entry
-// static inverse_map_t* insert_inverse_map(uintptr_t pa, uintptr_t va,
-//     uint32_t count)
-// {
-//     int i = 0;
-
-//     em_debug("pa: 0x%lx, va: 0x%lx, count: %d\n", pa, va, count);
-//     for (; inv_map[i].pa && i < INVERSE_MAP_ENTRY_NUM; i++) {
-//         // if (pa == inv_map[i].pa) { // already exists; should update
-//         //     em_debug("updating entry; original va: 0x%lx, count: %d\n",
-//         //         va, count);
-//         //     if (count != inv_map[i].count) {
-//         //         em_error("Count does not match! original count: %d\n",
-//         //             inv_map[i].count);
-//         //         return NULL;
-//         //     }
-//         //     inv_map[i].va = va;
-//         // }
-//     }
-//     if (i == INVERSE_MAP_ENTRY_NUM) { // Out of entry
-//         em_error("NO ENOUGH ENTRY!!!\n");
-//         return NULL;
-//     }
-
-//     // New entry
-//     inv_map[i].pa = pa;
-//     inv_map[i].va = va;
-//     inv_map[i].count = count;
-
-//     return &inv_map[i];
-// }
 
 /**
  * Insert a va-pa pair to page table, maintained via a trie
@@ -136,7 +101,7 @@ void map_page(uintptr_t va, uintptr_t pa, size_t n_pages, pte_attr_t attr,
         n_pages--;
     }
 
-    if (read_csr(satp)) {
+    if (MMU_ENABLED()) {
         flush_tlb();
     }
 }
@@ -148,16 +113,12 @@ uintptr_t alloc_page(uintptr_t usr_va, uintptr_t n_pages,
     size_t n_alloc, i;
 
     while (n_pages > 0) {
-        em_debug("va = 0x%llx, n = %d\n", usr_va, n_pages);
         n_alloc = page_pool_get_pa(idx, &pa, n_pages);
         if (pa == -1) {
             em_error("Failed to allocate PA from pool\n");
             return 0;
         }
-        em_debug("Before inv_map_insert\n");
         inv_map_insert(pa, usr_va, n_alloc);
-        em_debug("After inv_map_insert\n");
-        em_debug("pa=0x%llx, va=0x%llx, count=%llu\n", pa, usr_va, n_alloc);
         for (i = 0; i < n_alloc; ++i) {
             page_insert(usr_va + i * EPAGE_SIZE, pa + i * EPAGE_SIZE, 3, attr);
         }
@@ -165,7 +126,7 @@ uintptr_t alloc_page(uintptr_t usr_va, uintptr_t n_pages,
         usr_va += n_alloc * EPAGE_SIZE;
     }
 
-    if (read_csr(satp)) {
+    if (MMU_ENABLED()) {
         flush_tlb();
     }
     return pa;

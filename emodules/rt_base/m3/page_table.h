@@ -14,8 +14,8 @@
 #define PTE_D 0x080 // Dirty
 #define PTE_SOFT 0x300 // Reserved for software
 
-#define VA_PA_OFFSET() ((read_csr(satp) & (SATP_MODE_SV39 << SATP_MODE_SHIFT)) ? enc_va_pa_offset : 0)
-#define VA_PA_OFFSET_NOMMU() (enc_va_pa_offset - VA_PA_OFFSET())
+#define MMU_ENABLED() ((read_csr(satp) & (SATP_MODE_SV39 << SATP_MODE_SHIFT)) != 0)
+#define rt_get_pa(va) (MMU_ENABLED() ? (va)-enc_va_pa_offset : (va))
 
 typedef uint16_t pte_attr_t;
 

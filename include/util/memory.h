@@ -39,9 +39,6 @@
 #define NUM_OF_PAGE(size) \
     (((PAGE_UP(size)) >> EPAGE_SHIFT) & ((1 << (64 - EPAGE_SHIFT)) - 1))
 
-#define EMEM_SIZE PARTITION_SIZE
-#define EUSR_MEM_SIZE (EMEM_SIZE - ERT_MEM_SIZE)
-
 // virtual page number masks
 #define MASK_OFFSET 0xfff
 #define MASK_L0 0x1ff000

@@ -284,8 +284,6 @@ void init_mem(uintptr_t base_pa_start, uintptr_t id, uintptr_t payload_pa_start,
     // Inform M-mode of locations of page table and inverse mapping
     ecall_map_register(&pt_root_pa, &inv_map, &enc_va_pa_offset);
     em_debug("After ecall map_register\n");
-    // va_top += EMEM_SIZE;
-    // flush_dcache_range(payload_pa_start, payload_pa_start + EMEM_SIZE);
     asm volatile("fence rw, rw");
     flush_tlb();
     em_debug("End of init_mem\n");

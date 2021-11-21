@@ -41,8 +41,6 @@ static uint16_t inv_map_next_avail(void)
     }
     inv_map[inv_map[i].next].prev = inv_map_head;
     INV_MAP_HEAD.prev = inv_map[i].next;
-    em_debug("Next entry at #%d\n", i);
-    em_debug("INV_MAP_HEAD.prev = %d\n", INV_MAP_HEAD.prev);
     return i;
 }
 
@@ -50,8 +48,6 @@ inverse_map_t* inv_map_insert(uintptr_t pa, uintptr_t va, uint32_t count)
 {
     uint16_t i = inv_map_head, j;
 
-    em_debug("pa=0x%llx, va=0x%llx, count=%llu\n", pa, va, count);
-    em_debug("Checkpoint 0, inv_map_tail=%d\n", inv_map_tail);
     // 0. First entry
     if (inv_map_tail == INVALID_IDX) {
         inv_map_tail = inv_map_head;
@@ -59,7 +55,6 @@ inverse_map_t* inv_map_insert(uintptr_t pa, uintptr_t va, uint32_t count)
         goto assign_va_pa;
     }
 
-    em_debug("Checkpoint 1\n");
     // 1. Check if the new entry should be the head
     if (pairwise_less(pa, va, INV_MAP_HEAD.pa, INV_MAP_HEAD.va)) {
         if (addr_check(pa, INV_MAP_HEAD.pa, count) && addr_check(va, INV_MAP_HEAD.va, count)) {
@@ -77,7 +72,6 @@ inverse_map_t* inv_map_insert(uintptr_t pa, uintptr_t va, uint32_t count)
         goto assign_va_pa;
     }
 
-    em_debug("Checkpoint 2: i=%d\n", i);
     // 2. Check if joinable to the end
     for (; i != INVALID_IDX && inv_map[i].pa < pa; i = inv_map[i].next) {
         if (addr_check(inv_map[i].pa, pa, count) && addr_check(inv_map[i].va, va, count)) {
@@ -86,7 +80,6 @@ inverse_map_t* inv_map_insert(uintptr_t pa, uintptr_t va, uint32_t count)
         }
     }
 
-    em_debug("Checkpoint 3\n");
     // 3. Find a new position
     while (i != INVALID_IDX && inv_map[i].pa == pa && inv_map[i].va < va) {
         i = inv_map[i].next;
@@ -105,7 +98,6 @@ inverse_map_t* inv_map_insert(uintptr_t pa, uintptr_t va, uint32_t count)
         goto assign_va_pa;
     }
 
-    em_debug("Checkpoint 4: j=%d\n", j);
     // 4. Check if joinable to the beginning
     for (; i != INVALID_IDX; i = inv_map[i].next) {
         if (addr_check(pa, inv_map[i].pa, count) && addr_check(va, inv_map[i].va, count)) {
@@ -134,7 +126,6 @@ inverse_map_t* inv_map_insert(uintptr_t pa, uintptr_t va, uint32_t count)
     inv_map[j].prev = i;
 
 assign_va_pa:
-    em_debug("Checkpoint 5: inv_map[%d].next = %d\n", i, inv_map[i].next);
     inv_map[i].pa = pa;
     inv_map[i].va = va;
 ret:
