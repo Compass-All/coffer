@@ -112,6 +112,7 @@ ret_to_usr:
     .section ".text.init"
     .globl  _start
 _start:
+    add     s7, s7, zero
     la      s7, 2f
     sub     s7, s7, a0      // s7 = 2f - mem_start (mem_start = a2)
     li      s6, ERT_VA_START
