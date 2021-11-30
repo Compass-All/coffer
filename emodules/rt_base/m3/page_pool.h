@@ -35,4 +35,4 @@ typedef struct page_list_entry {
     } while (0)
 
 void page_pool_init(uintptr_t pool_addr, uintptr_t pa_start, size_t pool_size, int idx);
-size_t page_pool_get_pa(int idx, uintptr_t* vpa, size_t n_pages);
+size_t page_pool_get(int idx, uintptr_t* pva, size_t n_pages);

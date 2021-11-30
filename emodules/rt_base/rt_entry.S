@@ -134,6 +134,9 @@ _start:
     la      s7, trap_handler
     csrw    stvec,  s7
 
+    SAVE_CONTEXT
+    jal suspend_helper
+    RESTORE_CONTEXT
     /* go to eapp */
     mv      a0, a2
     mv      a1, a3

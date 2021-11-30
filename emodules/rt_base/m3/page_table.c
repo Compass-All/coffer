@@ -8,6 +8,7 @@ size_t enc_va_pa_offset;
 uintptr_t pt_root_pa;
 
 #define VA_PA_OFFSET() (MMU_ENABLED() ? enc_va_pa_offset : 0)
+#define get_pa(va) (read_csr(satp) ? usr_get_pa(va) : (va - enc_va_pa_offset));
 
 pte_t* get_pt_root(void)
 {
@@ -89,16 +90,15 @@ void map_page(uintptr_t va, uintptr_t pa, size_t n_pages, pte_attr_t attr,
         return;
     }
 
-    if (do_insert_inverse_map) {
-        inv_map_insert(pa, va, n_pages);
-    }
-
     em_debug("pa=0x%llx, va=0x%llx, count=0x%x\n", pa, va, n_pages);
     while (n_pages > 0) {
         page_insert(va, pa, 3, attr);
         va += EPAGE_SIZE;
         pa += EPAGE_SIZE;
         n_pages--;
+        if (do_insert_inverse_map) {
+            inv_map_insert(pa, va, 1);
+        }
     }
 
     if (MMU_ENABLED()) {
@@ -109,21 +109,22 @@ void map_page(uintptr_t va, uintptr_t pa, size_t n_pages, pte_attr_t attr,
 uintptr_t alloc_page(uintptr_t usr_va, uintptr_t n_pages,
     pte_attr_t attr, char idx)
 {
-    uintptr_t pa = -1;
+    uintptr_t pa = -1, rt_va = -1;
     size_t n_alloc, i;
 
     while (n_pages > 0) {
-        n_alloc = page_pool_get_pa(idx, &pa, n_pages);
-        if (pa == -1) {
-            em_error("Failed to allocate PA from pool\n");
+        n_alloc = page_pool_get(idx, &rt_va, n_pages);
+        if (rt_va == -1) {
+            em_error("Failed to allocate page from pool\n");
             return 0;
         }
-        inv_map_insert(pa, usr_va, n_alloc);
         for (i = 0; i < n_alloc; ++i) {
-            page_insert(usr_va + i * EPAGE_SIZE, pa + i * EPAGE_SIZE, 3, attr);
+            pa = get_pa(rt_va + i * EPAGE_SIZE);
+            inv_map_insert(pa, usr_va, 1);
+            page_insert(usr_va, pa, 3, attr);
+            usr_va += EPAGE_SIZE; 
         }
         n_pages -= n_alloc;
-        usr_va += n_alloc * EPAGE_SIZE;
     }
 
     if (MMU_ENABLED()) {

@@ -104,7 +104,6 @@ static void init_map_alloc_pages(drv_addr_t* drv_list,
     MAP_BASE_SECTION(bss, PTE_V | PTE_W | PTE_R);
     MAP_BASE_SECTION(init_data, PTE_V | PTE_W | PTE_R);
     MAP_BASE_SECTION(data, PTE_V | PTE_W | PTE_R);
-
     // Remaining base memory
     map_page(enc_va_pa_offset + base_avail_start, base_avail_start,
         PAGE_DOWN(base_avail_size) >> EPAGE_SHIFT,
@@ -117,7 +116,8 @@ static void init_map_alloc_pages(drv_addr_t* drv_list,
     n_base_stack_pages = (PAGE_UP(ERT_STACK_SIZE)) >> EPAGE_SHIFT;
     em_debug("drv stack uses %d pages\n", n_base_stack_pages);
     drv_sp = ERT_STACK_TOP - ERT_STACK_SIZE;
-    alloc_page(drv_sp, n_base_stack_pages, PTE_V | PTE_W | PTE_R, IDX_RT);
+    uintptr_t stack_pa = alloc_page(drv_sp, n_base_stack_pages, PTE_V | PTE_W | PTE_R, IDX_RT);
+    em_debug("stack_pa@0x%lx\n", stack_pa);
     drv_sp += ERT_STACK_SIZE;
     em_debug("sp: 0x%lx\nPage table root: 0x%lx\n", drv_sp,
         get_pt_root());
@@ -284,6 +284,7 @@ void init_mem(uintptr_t base_pa_start, uintptr_t id, uintptr_t payload_pa_start,
     // Inform M-mode of locations of page table and inverse mapping
     ecall_map_register(&pt_root_pa, &inv_map, &enc_va_pa_offset);
     em_debug("After ecall map_register\n");
+
     asm volatile("fence rw, rw");
     flush_tlb();
     em_debug("End of init_mem\n");
@@ -292,6 +293,10 @@ void init_mem(uintptr_t base_pa_start, uintptr_t id, uintptr_t payload_pa_start,
     asm volatile("mv a1, %0" ::"r"(drv_sp));
     asm volatile("mv a2, %0" ::"r"(usr_pc));
     asm volatile("mv a3, %0" ::"r"(usr_sp));
+}
+
+void suspend_helper(){
+    SBI_ECALL_0(SUSPEND);
 }
 
 // Below code is invoked after `satp' configuration.
@@ -312,6 +317,11 @@ void prepare_boot(uintptr_t usr_pc, uintptr_t usr_sp)
     write_csr(sie, sie);
 
     em_debug("End of prepare_boot\n");
+
+    //TODO(try suspend here?)
+   
+    // em_debug("I am back!, usr_pc = 0x%lx, usr_sp = 0x%lx\n", usr_pc, usr_sp);
+
     // Set U-mode entry
     write_csr(sepc, usr_pc);
     write_csr(sscratch, usr_sp);

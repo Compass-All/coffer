@@ -3,8 +3,6 @@
 #include "../rt_ecall.h"
 #include "page_table.h"
 
-#define get_pa(va) (read_csr(satp) ? usr_get_pa(va) : (va - enc_va_pa_offset));
-
 page_list_t page_pools[NUM_POOL];
 uintptr_t va_top;
 
@@ -70,10 +68,11 @@ static uintptr_t malloc_from_sm(page_list_t* pool, size_t n_partitions)
 
 // Returns VA of the page, -1 on failure
 // If out of memory, try to allocate memory partition(s) from SM
-static size_t page_pool_get_va(page_list_t* pool, uintptr_t* pva, size_t n_pages)
+size_t page_pool_get(int idx, uintptr_t* pva, size_t n_pages)
 {
     uintptr_t page, next;
     size_t n_alloc, i;
+    page_list_t* pool = &page_pools[idx];
 
     if (LIST_EMPTY(pool)) {
         em_debug("Pool tail = 0x%lx\n", pool->tail);
@@ -113,10 +112,10 @@ void page_pool_init(uintptr_t pool_addr, uintptr_t pa_start, size_t pool_size, i
     page_pool_put(pool, pool_addr, pa_start, pool_size >> EPAGE_SHIFT);
 }
 
-size_t page_pool_get_pa(int idx, uintptr_t* vpa, size_t n_pages)
-{
-    uintptr_t va;
-    size_t n_alloc = page_pool_get_va(&page_pools[idx], &va, n_pages);
-    *vpa = (va == -1) ? -1 : get_pa(va);
-    return n_alloc;
-}
+// size_t page_pool_get_pa(int idx, uintptr_t* vpa, size_t n_pages)
+// {
+//     uintptr_t va;
+//     size_t n_alloc = page_pool_get_va(&page_pools[idx], &va, n_pages);
+//     *vpa = (va == -1) ? -1 : get_pa(va);
+//     return n_alloc;
+// }

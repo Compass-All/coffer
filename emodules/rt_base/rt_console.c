@@ -15,7 +15,6 @@
 
 typedef uint8_t fmt_flag_t;
 
-extern size_t enc_va_pa_offset;
 static char _print_buf[CONSOLE_BUF_SIZE + 1];
 
 #define flush_buffer_if_overflow(buf, pos, width)  \

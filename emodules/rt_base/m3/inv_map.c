@@ -7,7 +7,7 @@ static uint16_t inv_map_head, inv_map_tail;
 
 #define pairwise_less(x1, y1, x2, y2) (((x1) == (x2)) ? ((y1) < (y2)) : ((x1) < (x2)))
 #define addr_shift(addr) ((addr) >> EPAGE_SHIFT)
-#define addr_check(addr1, addr2, n) (addr_shift(addr1) + (n) == addr_shift(addr2))
+#define addr_check(addr1, addr2, n) (addr_shift(addr1) + (n) == addr_shift(addr2) && PARTITION_DOWN(addr1) == PARTITION_DOWN(addr2))
 
 #define INV_MAP_HEAD (inv_map[inv_map_head])
 #define INVALID_IDX ((uint16_t)-1)
@@ -74,7 +74,7 @@ inverse_map_t* inv_map_insert(uintptr_t pa, uintptr_t va, uint32_t count)
 
     // 2. Check if joinable to the end
     for (; i != INVALID_IDX && inv_map[i].pa < pa; i = inv_map[i].next) {
-        if (addr_check(inv_map[i].pa, pa, count) && addr_check(inv_map[i].va, va, count)) {
+        if (addr_check(inv_map[i].pa, pa, inv_map[i].count) && addr_check(inv_map[i].va, va, inv_map[i].count)) {
             inv_map[i].count += count;
             goto ret;
         }
