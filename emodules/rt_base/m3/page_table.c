@@ -93,12 +93,12 @@ void map_page(uintptr_t va, uintptr_t pa, size_t n_pages, pte_attr_t attr,
     em_debug("pa=0x%llx, va=0x%llx, count=0x%x\n", pa, va, n_pages);
     while (n_pages > 0) {
         page_insert(va, pa, 3, attr);
-        va += EPAGE_SIZE;
-        pa += EPAGE_SIZE;
-        n_pages--;
         if (do_insert_inverse_map) {
             inv_map_insert(pa, va, 1);
         }
+        va += EPAGE_SIZE;
+        pa += EPAGE_SIZE;
+        n_pages--;
     }
 
     if (MMU_ENABLED()) {
