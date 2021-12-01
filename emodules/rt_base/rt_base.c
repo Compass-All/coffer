@@ -295,8 +295,9 @@ void init_mem(uintptr_t base_pa_start, uintptr_t id, uintptr_t payload_pa_start,
     asm volatile("mv a3, %0" ::"r"(usr_sp));
 }
 
-void suspend_helper(){
-    SBI_ECALL_0(SUSPEND);
+void suspend_helper()
+{
+    ecall_suspend();
 }
 
 // Below code is invoked after `satp' configuration.
@@ -318,8 +319,8 @@ void prepare_boot(uintptr_t usr_pc, uintptr_t usr_sp)
 
     em_debug("End of prepare_boot\n");
 
-    //TODO(try suspend here?)
-   
+    // TODO(try suspend here?)
+
     // em_debug("I am back!, usr_pc = 0x%lx, usr_sp = 0x%lx\n", usr_pc, usr_sp);
 
     // Set U-mode entry
