@@ -122,7 +122,7 @@ uintptr_t alloc_page(uintptr_t usr_va, uintptr_t n_pages,
             pa = get_pa(rt_va + i * EPAGE_SIZE);
             inv_map_insert(pa, usr_va, 1);
             page_insert(usr_va, pa, 3, attr);
-            usr_va += EPAGE_SIZE; 
+            usr_va += EPAGE_SIZE;
         }
         n_pages -= n_alloc;
     }
@@ -143,7 +143,7 @@ uintptr_t usr_get_pa(uintptr_t va)
     for (i = 0; i < 3; ++i) {
         tmp_entry = root[vpn[i]];
         if (!tmp_entry.pte_v) {
-            em_error("va:0x%lx is not valid!!!\n", va);
+            em_error("va:0x%llx is not valid!!!\n", va);
             return 0;
         }
         if ((tmp_entry.pte_r | tmp_entry.pte_w | tmp_entry.pte_x)) {
