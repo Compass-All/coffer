@@ -1,8 +1,6 @@
 #ifndef EBI_UTIL_H
 #define EBI_UTIL_H
 
-#define PMP_REGION_MAX 4
-
 #ifndef __ASSEMBLER__
 #include "stddef.h"
 #include "stdint.h"

@@ -30,23 +30,27 @@ int rt_fstat(uintptr_t fd, uintptr_t sstat)
 
 int rt_brk(uintptr_t addr)
 {
-    uintptr_t n_pages; //, pa;
+    uintptr_t n_pages, ret = addr;
     if (addr == 0)
         return usr_heap_top;
     em_debug("####### brk start, usr_heap_top: 0x%lx########\n", usr_heap_top);
     em_debug("addr: 0x%lx\n", addr);
-    if (addr > PAGE_UP(usr_heap_top)) { // currently freeing does not work
+    if (usr_heap_top != PAGE_DOWN(usr_heap_top)) {
+        em_error("usr_heap_top: 0x%llx not page aligned!\n", usr_heap_top);
+    }
+    addr = PAGE_UP(addr);
+    if (addr > usr_heap_top) { // currently freeing does not work
         em_debug("ebi_brk cp 1\n");
-        n_pages = PAGE_UP(addr - usr_heap_top) >> EPAGE_SHIFT;
+        n_pages = (addr - usr_heap_top) >> EPAGE_SHIFT;
         em_debug("ebi_brk cp 2 n_pages = 0x%ld\n", n_pages);
-        alloc_page(PAGE_UP(usr_heap_top), n_pages,
+        alloc_page(usr_heap_top, n_pages,
             PTE_U | PTE_R | PTE_W, IDX_USR);
         em_debug("ebi_brk cp 3\n");
     }
     usr_heap_top = addr;
     em_debug("####### brk end########\n");
     flush_tlb();
-    return addr;
+    return ret;
 }
 
 int rt_write(uintptr_t fd, uintptr_t content)
