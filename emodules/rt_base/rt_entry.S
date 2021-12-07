@@ -69,6 +69,12 @@
     STORE t6,  EAPP_CTX_REG_OFFSET(t6)(sp)
 .endm
 
+.macro WAIT_ENTER
+    SAVE_CONTEXT
+    jal suspend_helper
+    RESTORE_CONTEXT
+.endm
+
     .section ".text"
     .global trap_handler
     .align 4
@@ -133,6 +139,7 @@ _start:
     la      s7, trap_handler
     csrw    stvec,  s7
 
+    WAIT_ENTER
     /* go to eapp */
     mv      a0, a2
     mv      a1, a3
