@@ -23,7 +23,6 @@ typedef struct {
 	// at start_addr, which is responsible for initializing the following values
 
 	uint32_t id;
-	char name[32];
 	uint8_t is_sharable;
 
 	// start_addr is physical address before initializing, written by SM
