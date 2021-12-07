@@ -4,6 +4,7 @@ emodule-objs-y += rt_console.o
 emodule-objs-y += rt_entry.o
 emodule-objs-y += rt_syscall.o
 emodule-objs-y += rt_trap.o
+emodule-objs-y += rt_mod_mngr.o
 emodule-objs-y += base_util/elf.o
 emodule-objs-y += base_util/md2.o
 emodule-objs-y += base_util/memory.o
@@ -21,3 +22,4 @@ emodule-genflags += -DERT_MEM_SIZE=$(ERT_MEM_SIZE)
 emodule-genflags += -DEUSR_STACK_TOP=$(EUSR_STACK_TOP)
 emodule-genflags += -DEUSR_STACK_SIZE=$(EUSR_STACK_SIZE)
 emodule-genflags += -DEUSR_HEAP_START=$(EUSR_HEAP_START)
+emodule-genflags += -DERT_EXTRA_START=$(ERT_EXTRA_START)
