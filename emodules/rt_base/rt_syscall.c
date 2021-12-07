@@ -39,7 +39,7 @@ int rt_brk(uintptr_t addr)
         em_error("usr_heap_top: 0x%llx not page aligned!\n", usr_heap_top);
     }
     addr = PAGE_UP(addr);
-    if (addr > usr_heap_top) { // currently freeing does not work
+    if (!((addr - usr_heap_top) & (1UL << (__riscv_xlen - 1)))) { // currently freeing does not work
         em_debug("ebi_brk cp 1\n");
         n_pages = (addr - usr_heap_top) >> EPAGE_SHIFT;
         em_debug("ebi_brk cp 2 n_pages = 0x%ld\n", n_pages);
@@ -53,10 +53,11 @@ int rt_brk(uintptr_t addr)
     return ret;
 }
 
-int rt_write(uintptr_t fd, uintptr_t content)
+int rt_write(uintptr_t fd, char* content, size_t n)
 {
     // FIXME Workaround version
-    uintptr_t content_pa = usr_get_pa(content);
+    uintptr_t content_pa = usr_get_pa((uintptr_t)content);
+    content[n] = '\0';
     ecall_puts(content_pa);
     // char* str = (char*)content;
     // if (fd == 1) {
@@ -65,7 +66,7 @@ int rt_write(uintptr_t fd, uintptr_t content)
     //         str++;
     //     }
     // }
-    return 0;
+    return n;
 }
 
 int rt_close(uintptr_t fd)
@@ -77,5 +78,11 @@ int rt_close(uintptr_t fd)
 int rt_gettimeofday(struct timeval* tv, struct timezone* tz)
 {
     // TODO implementation
+    return 0;
+}
+
+int rt_faccessat(int dirfd, const char* pathname, int mode, int flags)
+{
+    em_debug("dirfd=%d, pathname=%s, mode=%x, flags=%x\n", dirfd, pathname, mode, flags);
     return 0;
 }

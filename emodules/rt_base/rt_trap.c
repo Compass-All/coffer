@@ -7,6 +7,8 @@
 #include <stdint.h>
 #include <util/util.h>
 
+#define ARG(x) (regs[CTX_INDEX_a##x])
+
 uintptr_t enclave_id;
 
 void handle_interrupt(uintptr_t* regs, uintptr_t scause, uintptr_t sepc,
@@ -60,30 +62,29 @@ void handle_syscall(uintptr_t* regs, uintptr_t scause, uintptr_t sepc,
         handle_exception(regs, scause, sepc, stval);
     }
 
-    uintptr_t which = regs[CTX_INDEX_a7], arg_0 = regs[CTX_INDEX_a0],
-              arg_1 = regs[CTX_INDEX_a1], retval = 0;
+    uintptr_t which = regs[CTX_INDEX_a7], retval = 0;
     switch (which) {
     case SYS_fstat:
-        retval = rt_fstat(arg_0, arg_1);
+        retval = rt_fstat(ARG(0), ARG(1));
         break;
     case SYS_write:
         em_debug("SYS_write\n");
-        retval = rt_write(arg_0, arg_1);
+        retval = rt_write(ARG(0), (char*)ARG(1), ARG(2));
         break;
     case SYS_close:
-        retval = rt_close(arg_0);
+        retval = rt_close(ARG(0));
         break;
     case SYS_brk:
-        em_debug("SYS_brk: arg0 = 0x%lx\n", arg_0);
-        retval = rt_brk(arg_0);
+        em_debug("SYS_brk: arg0 = 0x%lx\n", ARG(0));
+        retval = rt_brk(ARG(0));
         em_debug("retval = 0x%lx\n", retval);
         break;
     case SYS_gettimeofday:
-        retval = rt_gettimeofday((struct timeval*)arg_0, (struct timezone*)arg_1);
+        retval = rt_gettimeofday((struct timeval*)ARG(0), (struct timezone*)ARG(1));
         break;
     case SYS_exit:
         em_debug("SYS_exit\n");
-        ecall_exit_enclave(arg_0);
+        ecall_exit_enclave(ARG(0));
         __builtin_unreachable();
     default:
         em_error("syscall %d unimplemented!\n", which);
