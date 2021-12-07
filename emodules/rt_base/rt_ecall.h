@@ -42,6 +42,8 @@ extern uintptr_t enclave_id;
     SBI_ECALL_2(MEM_ALLOC, va, n_pages)
 #define ecall_puts(str) \
     SBI_ECALL_1(PUTS, str)
+#define ecall_suspend() \
+    SBI_ECALL_0(SUSPEND)
 
 #define SBI_EXT_0_1_CONSOLE_PUTCHAR 0x1
 
