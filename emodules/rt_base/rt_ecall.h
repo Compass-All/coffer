@@ -36,8 +36,8 @@ extern uintptr_t enclave_id;
     SBI_ECALL_2(EXIT, enclave_id, ret_val)
 #define ecall_peri_inform(pa, va, size) \
     SBI_ECALL_3(PERI_INFORM, pa, va, size)
-#define ecall_map_register(pt_root_addr, inv_map_addr, va_pa_offset_addr) \
-    SBI_ECALL_3(MAP_REGISTER, pt_root_addr, inv_map_addr, va_pa_offset_addr)
+// #define ecall_map_register(pt_root_addr, inv_map_addr, va_pa_offset_addr) 
+//     SBI_ECALL_3(MAP_REGISTER, pt_root_addr, inv_map_addr, va_pa_offset_addr)
 #define ecall_mem_alloc(va, n_pages) \
     SBI_ECALL_2(MEM_ALLOC, va, n_pages)
 #define ecall_puts(str) \

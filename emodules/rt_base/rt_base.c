@@ -7,7 +7,9 @@
 #include "rt_console.h"
 #include "rt_csr.h"
 #include "rt_ecall.h"
+#include "rt_mod_mngr.h"
 #include <util/drv.h>
+#include <driver/driver.h>
 #include <util/memory.h>
 #include <util/util.h>
 
@@ -62,6 +64,11 @@ static inline void attest_payload(void* payload_start, size_t payload_size)
     for (i = 0; i < MD2_BLOCK_SIZE; ++i) {
         em_debug("%x\n", md2hash[i]);
     }
+}
+
+static inline void record_register(addr_record_t *record)
+{
+    SBI_ECALL_1(MAP_REGISTER, (uintptr_t)record);
 }
 
 // Memory mapping setup
@@ -222,6 +229,7 @@ void init_mem(uintptr_t base_pa_start, uintptr_t id, uintptr_t payload_pa_start,
     // int i;
     uintptr_t usr_sp = EUSR_STACK_TOP;
     uintptr_t drv_sp = ERT_STACK_TOP;
+    addr_record_t record;
 
     // Update VA/PA offset
     enc_va_pa_offset = ERT_VA_START - base_pa_start;
@@ -281,7 +289,12 @@ void init_mem(uintptr_t base_pa_start, uintptr_t id, uintptr_t payload_pa_start,
     write_csr(sstatus, sstatus);
 
     // Inform M-mode of locations of page table and inverse mapping
-    ecall_map_register(&pt_root_pa, &inv_map, &enc_va_pa_offset);
+    // ecall_map_register(&pt_root_pa, &inv_map, &enc_va_pa_offset);
+    record.pt_root_addr = (uintptr_t)&pt_root_pa;
+    record.inverse_map_addr = (uintptr_t)&inv_map;
+    record.lmap_offset_addr = (uintptr_t)&enc_va_pa_offset;
+    record.module_table_addr = (uintptr_t)&extra_modules;
+    record_register(&record);
     em_debug("After ecall map_register\n");
     va_top += EMEM_SIZE;
     // flush_dcache_range(payload_pa_start, payload_pa_start + EMEM_SIZE);
