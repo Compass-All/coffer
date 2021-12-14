@@ -3,8 +3,16 @@
 #include <stdint.h>
 
 // Module ID Table
-#define MOD_UART	0
-#define MOD_DUMMY	1
+#define MOD_NONSHARE_DUMMY	0
+#define MOD_NONSHARE_UART	1
+
+#define MOD_SHARE_START		100
+#define MOD_SHARE_DUMMY1 	(MOD_SHARE_START + 0)
+#define MOD_SHARE_DUMMY2	(MOD_SHARE_START + 1)
+
+#define NUM_NONSHARE_EXTRA_MODULES	16
+#define NUM_SHARE_EXTRA_MODULES		16
+#define NUM_EXTRA_MODULES			(NUM_NONSHARE_EXTRA_MODULES + NUM_SHARE_EXTRA_MODULES)
 
 typedef struct {
     uintptr_t pt_root_addr;
