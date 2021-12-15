@@ -39,7 +39,8 @@ int rt_brk(uintptr_t addr)
         em_error("usr_heap_top: 0x%llx not page aligned!\n", usr_heap_top);
     }
     addr = PAGE_UP(addr);
-    if (!((addr - usr_heap_top) & (1UL << (__riscv_xlen - 1)))) { // currently freeing does not work
+    // if (!((addr - usr_heap_top) & (1UL << (__riscv_xlen - 1)))) { // currently freeing does not work
+    if (addr > usr_heap_top) { // currently freeing does not work
         em_debug("ebi_brk cp 1\n");
         n_pages = (addr - usr_heap_top) >> EPAGE_SHIFT;
         em_debug("ebi_brk cp 2 n_pages = 0x%ld\n", n_pages);
