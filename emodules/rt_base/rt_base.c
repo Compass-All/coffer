@@ -313,11 +313,19 @@ void suspend_helper()
     ecall_suspend();
 }
 
+void init_extra_modules()
+{
+    probe_extra_modules();
+}
+
 // Below code is invoked after `satp' configuration.
 
 void prepare_boot(uintptr_t usr_pc, uintptr_t usr_sp)
 {
     em_debug("Begin prepare_boot\n");
+
+    init_extra_modules();
+
     // Allow S-mode to access U-mode memory
     uintptr_t sstatus = read_csr(sstatus);
     sstatus |= SSTATUS_SUM;
