@@ -1,5 +1,6 @@
 #include <util/util.h>
 #include <util/memory.h>
+#include <ebi_ecall.h>
 
 .macro RESTORE_CONTEXT
     LOAD ra,  EAPP_CTX_REG_OFFSET(ra)(sp)
@@ -70,9 +71,9 @@
 .endm
 
 .macro WAIT_ENTER
-    SAVE_CONTEXT
-    jal suspend_helper
-    RESTORE_CONTEXT
+    li a6, SBI_EXT_EBI_SUSPEND
+    li a7, SBI_EXT_EBI
+    ecall
 .endm
 
     .section ".text"
@@ -141,8 +142,6 @@ _start:
 
     WAIT_ENTER
     /* go to eapp */
-    mv      a0, a2
-    mv      a1, a3
     jal     prepare_boot
     csrrw   sp, sscratch, sp
 

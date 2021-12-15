@@ -86,6 +86,9 @@ void handle_syscall(uintptr_t* regs, uintptr_t scause, uintptr_t sepc,
         em_debug("SYS_exit\n");
         ecall_exit_enclave(ARG(0));
         __builtin_unreachable();
+    case SYS_faccessat:
+        retval = 0;
+        break;
     default:
         em_error("syscall %d unimplemented!\n", which);
         ecall_exit_enclave(-1);
