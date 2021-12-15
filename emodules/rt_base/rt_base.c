@@ -46,11 +46,9 @@ uint8_t rt_base_stack[RT_BASE_STACK_SIZE];
 
 void* const rt_base_stack_top = (void*)rt_base_stack + RT_BASE_STACK_SIZE;
 
-static uintptr_t init_usr_stack(uintptr_t usr_sp)
+static uintptr_t init_usr_stack(uintptr_t usr_sp, uintptr_t argc)
 {
-    int i;
-    for (i = 0; i < 100; i++)
-        PUSH(usr_sp, 0);
+    PUSH(usr_sp, argc);
     return usr_sp;
 }
 
@@ -219,14 +217,13 @@ void init_mem(uintptr_t base_pa_start, uintptr_t id, uintptr_t payload_pa_start,
     uintptr_t payload_size, drv_addr_t drv_list[MAX_DRV],
     uintptr_t argc, uintptr_t argv)
 {
-    em_debug("### STACK TOP @0x%lx\n", rt_base_stack_top);
     uintptr_t page_table_start, page_table_size;
     uintptr_t trie_start, trie_size;
     uintptr_t base_avail_start, base_avail_size;
     uintptr_t usr_avail_start, usr_avail_size;
     uintptr_t satp, sstatus;
     uintptr_t usr_pc;
-    // int i;
+    uintptr_t usr_sp_pa;
     uintptr_t usr_sp = EUSR_STACK_TOP;
     uintptr_t drv_sp = ERT_STACK_TOP;
     addr_record_t record;
@@ -280,6 +277,7 @@ void init_mem(uintptr_t base_pa_start, uintptr_t id, uintptr_t payload_pa_start,
     init_map_alloc_pages(drv_list, page_table_start,
         page_table_size + trie_size, usr_avail_start,
         usr_avail_size, base_avail_start, base_avail_size);
+    usr_sp_pa = usr_get_pa(usr_sp);
 
     // Update `satp', `sstatus', allow S-mode access to U-mode memory
     em_debug("usr sp: 0x%llx\n", usr_sp);
@@ -306,11 +304,7 @@ void init_mem(uintptr_t base_pa_start, uintptr_t id, uintptr_t payload_pa_start,
     asm volatile("mv a1, %0" ::"r"(drv_sp));
     asm volatile("mv a2, %0" ::"r"(usr_pc));
     asm volatile("mv a3, %0" ::"r"(usr_sp));
-}
-
-void suspend_helper()
-{
-    ecall_suspend();
+    asm volatile("mv a4, %0" ::"r"(usr_sp_pa));
 }
 
 void init_extra_modules()
@@ -320,29 +314,24 @@ void init_extra_modules()
 
 // Below code is invoked after `satp' configuration.
 
-void prepare_boot(uintptr_t usr_pc, uintptr_t usr_sp)
+void prepare_boot(uintptr_t argc, uintptr_t argv, uintptr_t usr_pc, uintptr_t usr_sp)
 {
-    em_debug("Begin prepare_boot\n");
+    em_debug("Begin prepare_boot: argc=%lu, argv=%p\n", argc, (void*)argv);
 
     init_extra_modules();
-
+    
     // Allow S-mode to access U-mode memory
     uintptr_t sstatus = read_csr(sstatus);
     sstatus |= SSTATUS_SUM;
     sstatus &= ~SSTATUS_SPP;
     write_csr(sstatus, sstatus);
-    usr_sp = init_usr_stack(usr_sp);
+    usr_sp = init_usr_stack(usr_sp, argc);
     em_debug("After init usr_stack\n");
 
     // Allow S-mode traps/interrupts
-    uintptr_t sie = SIE_SEIE | SIE_SSIE;
-    write_csr(sie, sie);
+    write_csr(sie, SIE_SEIE | SIE_SSIE);
 
     em_debug("End of prepare_boot\n");
-
-    // TODO(try suspend here?)
-
-    // em_debug("I am back!, usr_pc = 0x%lx, usr_sp = 0x%lx\n", usr_pc, usr_sp);
 
     // Set U-mode entry
     write_csr(sepc, usr_pc);

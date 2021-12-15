@@ -110,6 +110,7 @@ uintptr_t alloc_page(uintptr_t usr_va, uintptr_t n_pages,
     pte_attr_t attr, char idx)
 {
     uintptr_t pa = -1, rt_va = -1;
+    uintptr_t tmp_pa;
     size_t n_alloc, i;
 
     while (n_pages > 0) {
@@ -119,9 +120,12 @@ uintptr_t alloc_page(uintptr_t usr_va, uintptr_t n_pages,
             return 0;
         }
         for (i = 0; i < n_alloc; ++i) {
-            pa = get_pa(rt_va + i * EPAGE_SIZE);
-            inv_map_insert(pa, usr_va, 1);
-            page_insert(usr_va, pa, 3, attr);
+            tmp_pa = get_pa(rt_va + i * EPAGE_SIZE);
+            if (pa == -1) {
+                pa = tmp_pa;
+            }
+            inv_map_insert(tmp_pa, usr_va, 1);
+            page_insert(usr_va, tmp_pa, 3, attr);
             usr_va += EPAGE_SIZE;
         }
         n_pages -= n_alloc;
