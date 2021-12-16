@@ -19,4 +19,4 @@ typedef Elf32_Word word_t;
 #error "Unexpected __riscv_xlen"
 #endif
 
-uintptr_t elf_load(uintptr_t elf_addr, size_t elf_size, uintptr_t* usr_heap_top_addr);
+uintptr_t elf_load(uintptr_t elf_addr, size_t elf_size);

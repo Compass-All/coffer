@@ -28,11 +28,12 @@ int rt_fstat(uintptr_t fd, uintptr_t sstat)
     return 0;
 }
 
-int rt_brk(uintptr_t addr)
+uintptr_t rt_brk(uintptr_t addr)
 {
     uintptr_t n_pages, ret = addr;
-    if (addr == 0)
+    if (addr == 0) {
         return usr_heap_top;
+    }
     em_debug("####### brk start, usr_heap_top: 0x%lx########\n", usr_heap_top);
     em_debug("addr: 0x%lx\n", addr);
     if (usr_heap_top != PAGE_DOWN(usr_heap_top)) {

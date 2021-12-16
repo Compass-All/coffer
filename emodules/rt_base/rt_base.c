@@ -267,12 +267,15 @@ void init_mem(uintptr_t base_pa_start, uintptr_t id, uintptr_t payload_pa_start,
 
     inv_map_init();
 
-    usr_pc = elf_load(payload_pa_start, payload_size, &usr_heap_top);
+    usr_pc = elf_load(payload_pa_start, payload_size);
     if (usr_pc == -1) {
         em_error("ELF load error\n");
     } else {
         em_debug("ELF load done. sepc=0x%lx\n", usr_pc);
     }
+    usr_heap_top = EUSR_HEAP_START;
+    em_debug("usr_heap_top = 0x%llx\n",
+        usr_heap_top);
 
     init_map_alloc_pages(drv_list, page_table_start,
         page_table_size + trie_size, usr_avail_start,
