@@ -84,6 +84,11 @@ void handle_syscall(uintptr_t* regs, uintptr_t scause, uintptr_t sepc,
         break;
     case SYS_exit:
         em_debug("SYS_exit\n");
+#ifdef COFFER_EVAL
+        extern uintptr_t start_cycle, end_cycle;
+        end_cycle = read_csr(cycle);
+        rt_printf("Cycles: %lu %lu ", start_cycle, end_cycle);
+#endif
         ecall_exit_enclave(ARG(0));
         __builtin_unreachable();
     case SYS_faccessat:
