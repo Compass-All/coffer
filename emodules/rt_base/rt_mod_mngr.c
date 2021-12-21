@@ -31,7 +31,11 @@ int module_init(uint32_t cnt, volatile extra_module_t *emod)
 
 	em_debug("emod id = %u, is_sharable: %d\n",
 		emod->id, emod->is_sharable);
-	em_debug("handler at %p\n", emod->handler);
+	em_debug("handler at 0x%p\n", emod->handler);
+	em_debug("interrupt_handler at 0x%p\n", emod->interrupt_handler);
+
+	// emod->handler(0xab);
+	// emod->interrupt_handler(0xcd);
 
 	return 0;
 }
