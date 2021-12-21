@@ -312,6 +312,7 @@ void init_mem(uintptr_t base_pa_start, uintptr_t id, uintptr_t payload_pa_start,
 
 void init_extra_modules()
 {
+    // more things...
     probe_extra_modules();
 }
 

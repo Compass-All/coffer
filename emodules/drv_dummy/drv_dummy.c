@@ -137,9 +137,22 @@ void printd(const char *s, ...)
 	va_end(vl);
 }
 
+uintptr_t handler(uint8_t arg)
+{
+	printd("[handler] arg = %x\n", arg);
+	return 0;
+}
+
 uintptr_t dummy_cmd_handler(volatile extra_module_t *emod) __attribute__((section(".text.init")));
 uintptr_t dummy_cmd_handler(volatile extra_module_t *emod)
 {
+	emod->id = MOD_NONSHARE_DUMMY;
+	emod->is_sharable = 0; // rename to type
+
+	emod->handler = handler;
+
     printd("[dummy_cmd_handler] emod ptr at 0x%lx\n", (uintptr_t)emod);
+	printd("[dummy_cmd_handler] handler @ %p\n", handler);
+
     return 0;
 }

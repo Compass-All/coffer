@@ -39,6 +39,7 @@ typedef struct {
 	uintptr_t size;
 
 	// each module should contain a peripheral list
+	// consider using region_t for peripheral list
 	peripheral_t *peri_list;
 
 	uintptr_t (*handler)(uint8_t _dummy);
