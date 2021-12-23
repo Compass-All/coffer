@@ -34,8 +34,17 @@ int module_init(uint32_t cnt, volatile extra_module_t *emod)
 	em_debug("handler at 0x%p\n", emod->handler);
 	em_debug("interrupt_handler at 0x%p\n", emod->interrupt_handler);
 
-	// emod->handler(0xab);
-	// emod->interrupt_handler(0xcd);
+	peripheral_t p = emod->peripheral;
+	for (int i = 0; i < PERI_REGION_MAX; i++) {
+		if (p.peri_region[i].size) {
+			em_debug("region %d: start = 0x%lx, size = 0x%lx\n",
+				i, p.peri_region[i].size, p.peri_region[i].start);
+		}
+	}
+
+	// module_arg_t arg; arg.cmd = 0;
+	// emod->handler(arg);
+	// emod->interrupt_handler(arg);
 
 	return 0;
 }
@@ -48,7 +57,7 @@ void probe_extra_modules()
 	for (i = 0, emod = &extra_modules[0];
 		i < NUM_EXTRA_MODULES && emod->size;
 		i++, emod++) {
-		
+
 		em_debug("emod id = %u, sharable = %u\n",
 			emod->id, emod->is_sharable);
 		em_debug("start_addr = 0x%llx, size = 0x%lx\n",
@@ -56,4 +65,21 @@ void probe_extra_modules()
 
 		module_init(mod_cnt++, emod);
 	}
+}
+
+// to be optimized: use a table to avoid searching every time
+extra_module_t *get_emod_by_id(uint32_t mod_id)
+{
+	int i;
+	extra_module_t *emod;
+
+	for (i = 0, emod = &extra_modules[0];
+		i < NUM_EXTRA_MODULES && emod->size;
+		i++, emod++) {
+		
+		if (emod->id == mod_id)
+			return emod;
+	}
+
+	return NULL;
 }

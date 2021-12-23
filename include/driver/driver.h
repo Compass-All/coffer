@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include "uart.h"
 
 // Module ID Table
 #define MOD_NONSHARE_DUMMY	0
@@ -14,6 +15,8 @@
 #define NUM_SHARE_EXTRA_MODULES		16
 #define NUM_EXTRA_MODULES			(NUM_NONSHARE_EXTRA_MODULES + NUM_SHARE_EXTRA_MODULES)
 
+#define PERI_REGION_MAX		5
+
 typedef struct {
     uintptr_t pt_root_addr;
     uintptr_t inverse_map_addr;
@@ -23,8 +26,18 @@ typedef struct {
 
 typedef struct {
 	// should imply how many addr regions are used
-	uint8_t _dummy;
+	uintptr_t start;
+	uintptr_t size;
+} peripheral_region_t;
+
+typedef struct {
+	peripheral_region_t peri_region[PERI_REGION_MAX];
 } peripheral_t;
+
+typedef struct {
+	uintptr_t cmd;
+	uintptr_t arg[3];
+} module_arg_t;
 
 typedef struct {
 	// void (*initializer)(extra_module_t *self); the initializer should always be put 
@@ -40,10 +53,10 @@ typedef struct {
 
 	// each module should contain a peripheral list
 	// consider using region_t for peripheral list
-	peripheral_t *peri_list;
+	peripheral_t peripheral;
 
-	uintptr_t (*handler)(uint8_t _dummy);
-	uintptr_t (*interrupt_handler)(uint8_t _dummy);
+	uintptr_t (*handler)(module_arg_t arg);
+	uintptr_t (*interrupt_handler)(module_arg_t arg);
 } extra_module_t;
 
 typedef int (*initializer)(volatile extra_module_t *emod);

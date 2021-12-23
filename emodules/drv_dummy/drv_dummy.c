@@ -137,19 +137,24 @@ void printd(const char *s, ...)
 	va_end(vl);
 }
 
-uintptr_t handler(uint8_t arg)
+uintptr_t handler(module_arg_t arg)
 {
-	printd("[handler] arg = %x\n", arg);
+	printd("[handler] cmd = %x\n", arg.cmd);
+
+	if (arg.cmd == 0) {
+		printd("[handler] test\n");
+	}
+
 	return 0;
 }
 
-uintptr_t interrupt_handler(uint8_t arg)
+uintptr_t interrupt_handler(module_arg_t arg)
 {
-	printd("[interrupt_handler] arg = %x\n", arg);
+	printd("[interrupt_handler] cmd = %x\n", arg.cmd);
 	return 0;
 }
 
-uintptr_t dummy_init(volatile extra_module_t *emod) __attribute__((section(".text.init")));
+__attribute__((section(".text.init")))
 uintptr_t dummy_init(volatile extra_module_t *emod)
 {
 	emod->handler = handler;

@@ -5,6 +5,8 @@
 #include <sys/stat.h>
 #include <util/drv.h>
 #include <util/memory.h>
+#include "rt_mod_mngr.h"
+#include "../drv_console/drv_console.h"
 
 uintptr_t usr_heap_top;
 
@@ -58,16 +60,22 @@ uintptr_t rt_brk(uintptr_t addr)
 int rt_write(uintptr_t fd, char* content, size_t n)
 {
     // FIXME Workaround version
-    uintptr_t content_pa = usr_get_pa((uintptr_t)content);
+    extra_module_t *emod = get_emod_by_id(MOD_NONSHARE_UART);
+    module_arg_t arg;
+    arg.cmd = CONSOLE_CMD_PUT;
+
+    // uintptr_t content_pa = usr_get_pa((uintptr_t)content);
     content[n] = '\0';
-    ecall_puts(content_pa);
-    // char* str = (char*)content;
-    // if (fd == 1) {
-    //     while (*str) {
-    //         ecall_putchar(*str);
-    //         str++;
-    //     }
-    // }
+    // ecall_puts(content_pa);
+    char* str = (char*)content;
+    if (fd == 1) {
+        while (*str) {
+            // ecall_putchar(*str);
+            arg.arg[0] = *str;
+            emod->handler(arg);
+            str++;
+        }
+    }
     return n;
 }
 

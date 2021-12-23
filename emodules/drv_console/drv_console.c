@@ -267,11 +267,25 @@ uintptr_t cmd_handler(uintptr_t cmd, uintptr_t arg0, uintptr_t arg1,
 	}
 }
 
+uintptr_t handler(module_arg_t arg)
+{
+	switch (arg.cmd) {
+	case CONSOLE_CMD_PUT:
+		sifive_uart_putc((char)arg.arg[0]);
+		return 0;
+	default:
+		return -1;
+	}
+}
+
 uintptr_t uart_init(volatile extra_module_t *emod)
 	__attribute__((section(".text.init")));
 uintptr_t uart_init(volatile extra_module_t *emod)
 {
 	printd("[uart_init] heeeeellloooooo\n");
+	// sifive_uart_init(arg0, 0, UART_DEFAULT_BAUD);
+
+	emod->handler = handler;
 
 	return 0;
 }
