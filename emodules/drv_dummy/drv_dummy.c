@@ -149,18 +149,15 @@ uintptr_t interrupt_handler(uint8_t arg)
 	return 0;
 }
 
-uintptr_t dummy_cmd_handler(volatile extra_module_t *emod) __attribute__((section(".text.init")));
-uintptr_t dummy_cmd_handler(volatile extra_module_t *emod)
+uintptr_t dummy_init(volatile extra_module_t *emod) __attribute__((section(".text.init")));
+uintptr_t dummy_init(volatile extra_module_t *emod)
 {
-	emod->id = MOD_NONSHARE_DUMMY;
-	emod->is_sharable = 0; // rename to type
-
 	emod->handler = handler;
 	emod->interrupt_handler = interrupt_handler;
 
-    printd("[dummy_cmd_handler] emod ptr at 0x%lx\n", (uintptr_t)emod);
-	printd("[dummy_cmd_handler] handler @ 0x%p\n", handler);
-	printd("[dummy_cmd_handler] interrupt_handler @ 0x%p\n", interrupt_handler);
+    printd("[dummy_init] emod ptr at 0x%lx\n", (uintptr_t)emod);
+	printd("[dummy_init] handler @ 0x%p\n", handler);
+	printd("[dummy_init] interrupt_handler @ 0x%p\n", interrupt_handler);
 
     return 0;
 }
