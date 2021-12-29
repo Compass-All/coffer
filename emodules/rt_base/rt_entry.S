@@ -133,7 +133,8 @@ _start:
     jal     init_mem
     /* 
      * after: a0 = satp, a1 = base_sp
-     *        a2 = usr_pc, a3 = usr_sp, a4 = usr_sp_pa
+     *        a2 = usr_pc, a3 = usr_sp, a4 = usr_entry_offset
+     *        a5 = usr_sp_pa
      */
     mv      sp, a1
     sfence.vma
@@ -148,7 +149,7 @@ _start:
 
     WAIT_ENTER
     /* go to eapp
-     * prepare_boot(a0 = argc, a1 = argv, a2 = usr_pc, a3 = usr_sp)
+     * prepare_boot(a0 = argc, a1 = argv, a2 = usr_pc, a3 = usr_sp, a4 = usr_entry_offset)
      */
     jal     prepare_boot
     csrrw   sp, sscratch, sp

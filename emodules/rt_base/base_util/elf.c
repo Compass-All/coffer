@@ -62,7 +62,7 @@ static int elf_map(uintptr_t elf_addr)
 {
     ehdr_t* ehdr = (ehdr_t*)elf_addr;
     phdr_t* phdr = (phdr_t*)(elf_addr + ehdr->e_phoff);
-    uintptr_t va_start, pa_start, file_end, memory_end;
+    uintptr_t va_start, pa_start, file_end;
     size_t n_pages;
     unsigned int i;
 
@@ -70,25 +70,21 @@ static int elf_map(uintptr_t elf_addr)
         if (phdr[i].p_type != PT_LOAD) {
             continue;
         }
+        em_debug("Loading ph#%u\n", i);
         va_start = phdr[i].p_vaddr;
         pa_start = elf_addr + phdr[i].p_offset;
         file_end = va_start + phdr[i].p_filesz;
-        memory_end = va_start + phdr[i].p_memsz;
         n_pages = (PAGE_UP(file_end) - PAGE_DOWN(va_start)) >> EPAGE_SHIFT;
+        em_debug("va_start=%p, file_end=%p, n_pages=%llu\n", (void*)va_start, (void*)file_end, n_pages);
         map_page(PAGE_DOWN(va_start), PAGE_DOWN(pa_start), n_pages,
             PTE_U | get_pte_attr(phdr[i].p_flags), 1);
-        if (PAGE_UP(file_end) < memory_end) {
-            n_pages = (PAGE_UP(memory_end) - PAGE_UP(file_end)) >> EPAGE_SHIFT;
-            alloc_page(PAGE_UP(file_end), n_pages,
-                PTE_U | get_pte_attr(phdr[i].p_flags), IDX_USR);
-        }
     }
     return 0;
 }
 
 uintptr_t elf_load(uintptr_t elf_addr, size_t elf_size, uintptr_t* usr_heap_top_addr)
 {
-    em_debug("Loading ELF at %lx with size=%d\n", elf_addr, elf_size);
+    em_debug("Loading ELF at %p with size=%d\n", (void*)elf_addr, elf_size);
     ehdr_t* ehdr = (ehdr_t*)elf_addr;
     if (elf_check(ehdr, elf_size)) {
         em_error("ELF check failed\n");
@@ -100,4 +96,30 @@ uintptr_t elf_load(uintptr_t elf_addr, size_t elf_size, uintptr_t* usr_heap_top_
     }
     *usr_heap_top_addr = EUSR_HEAP_START;
     return ehdr->e_entry;
+}
+
+void elf_load_finalize(uintptr_t elf_va)
+{
+    ehdr_t* ehdr = (ehdr_t*)elf_va;
+    phdr_t* phdr = (phdr_t*)(elf_va + ehdr->e_phoff);
+    uintptr_t va_start, file_end, memory_end;
+    size_t n_pages;
+    unsigned int i;
+
+    for (i = 0; i < ehdr->e_phnum; ++i) {
+        if (phdr[i].p_type != PT_LOAD) {
+            continue;
+        }
+        em_debug("Loading ph#%u\n", i);
+        va_start = phdr[i].p_vaddr;
+        file_end = PAGE_UP(va_start + phdr[i].p_filesz);
+        memory_end = PAGE_UP(va_start + phdr[i].p_memsz);
+        em_debug("file_end=%p, memory_end=%p\n", (void*)file_end, (void*)memory_end);
+        if (file_end < memory_end) {
+            n_pages = (memory_end - file_end) >> EPAGE_SHIFT;
+            em_debug("file_end=%p, memory_end=%p, n_pages=%llu\n", (void*)file_end, (void*)memory_end, n_pages);
+            alloc_page(file_end, n_pages, PTE_U | get_pte_attr(phdr[i].p_flags), IDX_USR);
+        }
+    }
+    em_debug("End\n");
 }

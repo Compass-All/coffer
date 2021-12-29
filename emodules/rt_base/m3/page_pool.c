@@ -9,32 +9,34 @@ uintptr_t va_top;
 // This function will be used both before and after MMU gets turned on
 static void page_pool_put(page_list_t* pool, uintptr_t pa, uintptr_t pa_start, size_t n_pages)
 {
+    int mmu_enabled = MMU_ENABLED() ? 1 : 0;
+    uintptr_t va = va_top + (pa - pa_start);
+    uintptr_t accessible_va = mmu_enabled ? va : pa;
+    uintptr_t va_pa_offset = va - pa;
     uintptr_t prev;
-    uintptr_t offset = pa - pa_start;
-    uintptr_t va = va_top + offset;
-    uintptr_t accessible_va = MMU_ENABLED() ? va : pa;
     size_t i;
 
     for (i = 0; i < n_pages; ++i) {
         if (!LIST_EMPTY(pool)) {
             prev = pool->tail;
-            if (!MMU_ENABLED()) {
-                prev -= enc_va_pa_offset;
+            if (!mmu_enabled) {
+                prev -= va_pa_offset;
             }
             PAGE_NEXT(prev) = va;
         } else {
-            em_debug("List empty, head set to 0x%lx, va_top: 0x%lx\n", va, va_top);
+            em_debug("List empty, head set to 0x%llx, va_top: 0x%llx\n", va, va_top);
             pool->head = va;
         }
         // em_debug("pa = 0x%llx, va = 0x%llx, accessible_va = 0x%llx\n", pa, va, accessible_va);
 
         PAGE_NEXT(accessible_va) = 0;
+        PAGE_PA(accessible_va) = pa;
         pool->tail = va;
         pool->count++;
 
         pa += EPAGE_SIZE;
         va += EPAGE_SIZE;
-        accessible_va += EPAGE_SIZE;
+        accessible_va = mmu_enabled ? va : pa;
     }
 }
 
@@ -73,6 +75,7 @@ size_t page_pool_get(int idx, uintptr_t* pva, size_t n_pages)
     uintptr_t page, next;
     size_t n_alloc, i;
     page_list_t* pool = &page_pools[idx];
+    int mmu_enabled = MMU_ENABLED() ? 1 : 0;
 
     if (LIST_EMPTY(pool)) {
         em_debug("Pool tail = 0x%lx\n", pool->tail);
@@ -92,7 +95,7 @@ size_t page_pool_get(int idx, uintptr_t* pva, size_t n_pages)
     pool->count -= n_alloc;
     for (i = 0; i < n_alloc; ++i) {
         page = pool->head;
-        if (!MMU_ENABLED()) {
+        if (!mmu_enabled) {
             page -= enc_va_pa_offset;
         }
         next = PAGE_NEXT(page);

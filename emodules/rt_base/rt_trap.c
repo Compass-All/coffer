@@ -94,6 +94,12 @@ void handle_syscall(uintptr_t* regs, uintptr_t scause, uintptr_t sepc,
     case SYS_faccessat:
         retval = 0;
         break;
+    case SYS_getuid:
+    case SYS_geteuid:
+    case SYS_getgid:
+    case SYS_getegid:
+        retval = 0;
+        break;
     default:
         em_error("syscall %d unimplemented!\n", which);
         ecall_exit_enclave(-1);

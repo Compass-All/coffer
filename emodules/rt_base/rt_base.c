@@ -157,7 +157,8 @@ void init_mem(uintptr_t id, uintptr_t base_pa_start, size_t base_size,
     uintptr_t base_avail_start, base_avail_size;
     uintptr_t usr_avail_start, usr_avail_size;
     uintptr_t satp, sstatus;
-    uintptr_t usr_pc;
+    uintptr_t usr_pc, usr_pc_pa;
+    size_t usr_entry_offset;
     uintptr_t usr_sp_pa;
     uintptr_t usr_sp = EUSR_STACK_TOP;
     uintptr_t base_sp = ERT_STACK_TOP;
@@ -201,6 +202,8 @@ void init_mem(uintptr_t id, uintptr_t base_pa_start, size_t base_size,
         __builtin_unreachable();
     } else {
         em_debug("ELF load done. sepc=0x%lx\n", usr_pc);
+        usr_pc_pa = usr_get_pa(usr_pc);
+        usr_entry_offset = usr_pc_pa - payload_pa_start;
     }
 
     // Map/allocate pages, get stack pointer PA for argv support
@@ -227,12 +230,13 @@ void init_mem(uintptr_t id, uintptr_t base_pa_start, size_t base_size,
     asm volatile("mv a1, %0" ::"r"(base_sp));
     asm volatile("mv a2, %0" ::"r"(usr_pc)); // For prepare_boot
     asm volatile("mv a3, %0" ::"r"(usr_sp)); // For prepare_boot
-    asm volatile("mv a4, %0" ::"r"(usr_sp_pa)); // For SM
+    asm volatile("mv a4, %0" ::"r"(usr_entry_offset)); // For prepare_boot
+    asm volatile("mv a5, %0" ::"r"(usr_sp_pa)); // For SM
 }
 
 // Below code is invoked after `satp' configuration.
 // `argv' is actually unused here
-void prepare_boot(uintptr_t argc, uintptr_t argv, uintptr_t usr_pc, uintptr_t usr_sp)
+void prepare_boot(uintptr_t argc, uintptr_t argv, uintptr_t usr_pc, uintptr_t usr_sp, size_t usr_entry_offset)
 {
     em_debug("Begin prepare_boot: argc=%lu, argv=%p\n", argc, (void*)argv);
     // Allow S-mode to access U-mode memory
@@ -240,6 +244,9 @@ void prepare_boot(uintptr_t argc, uintptr_t argv, uintptr_t usr_pc, uintptr_t us
     sstatus |= SSTATUS_SUM;
     sstatus &= ~SSTATUS_SPP;
     write_csr(sstatus, sstatus);
+
+    // Finalize ELF loading
+    elf_load_finalize(usr_pc - usr_entry_offset);
 
     // Push argc to stack
     PUSH(usr_sp, argc);

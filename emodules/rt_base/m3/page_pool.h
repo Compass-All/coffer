@@ -23,9 +23,11 @@ typedef struct page_list {
 
 typedef struct page_list_entry {
     uintptr_t next;
+    uintptr_t pa;
 } page_list_entry_t;
 
 #define PAGE_NEXT(page) ((page_list_entry_t*)(page))->next
+#define PAGE_PA(page) ((page_list_entry_t*)(page))->pa
 #define LIST_EMPTY(list) ((list)->count == 0 || (list)->head == 0)
 #define LIST_INIT(list)    \
     do {                   \

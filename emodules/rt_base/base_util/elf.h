@@ -20,3 +20,4 @@ typedef Elf32_Word word_t;
 #endif
 
 uintptr_t elf_load(uintptr_t elf_addr, size_t elf_size, uintptr_t* usr_heap_top_addr);
+void elf_load_finalize(uintptr_t elf_va);
