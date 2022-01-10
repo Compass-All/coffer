@@ -7,6 +7,53 @@
 #include <stdint.h>
 #include <util/util.h>
 
+// FIXME: Remove below after implementing all syscalls.
+#ifdef EMODULES_DEBUG
+static const char* syscall_name[] = {
+    [SYS_getcwd] = "getcwd",
+    [SYS_dup] = "dup",
+    [SYS_fcntl] = "fcntl",
+    [SYS_faccessat] = "faccessat",
+    [SYS_chdir] = "chdir",
+    [SYS_openat] = "openat",
+    [SYS_close] = "close",
+    [SYS_getdents] = "getdents",
+    [SYS_lseek] = "lseek",
+    [SYS_read] = "read",
+    [SYS_write] = "write",
+    [SYS_writev] = "writev",
+    [SYS_pread] = "pread",
+    [SYS_pwrite] = "pwrite",
+    [SYS_fstatat] = "fstatat",
+    [SYS_fstat] = "fstat",
+    [SYS_exit] = "exit",
+    [SYS_exit_group] = "exit_group",
+    [SYS_kill] = "kill",
+    [SYS_rt_sigaction] = "rt_sigaction",
+    [SYS_times] = "times",
+    [SYS_uname] = "uname",
+    [SYS_gettimeofday] = "gettimeofday",
+    [SYS_getpid] = "getpid",
+    [SYS_getuid] = "getuid",
+    [SYS_geteuid] = "geteuid",
+    [SYS_getgid] = "getgid",
+    [SYS_getegid] = "getegid",
+    [SYS_brk] = "brk",
+    [SYS_munmap] = "munmap",
+    [SYS_mremap] = "mremap",
+    [SYS_mmap] = "mmap",
+    [SYS_open] = "open",
+    [SYS_link] = "link",
+    [SYS_unlink] = "unlink",
+    [SYS_mkdir] = "mkdir",
+    [SYS_access] = "access",
+    [SYS_stat] = "stat",
+    [SYS_lstat] = "lstat",
+    [SYS_time] = "time",
+    [SYS_getmainvars] = "getmainvars",
+};
+#endif
+
 #define ARG(x) (regs[CTX_INDEX_a##x])
 
 uintptr_t proxy_stvec;
@@ -126,7 +173,11 @@ void handle_syscall(uintptr_t* regs, uintptr_t scause, uintptr_t sepc,
         em_debug("After: retval=%lu\n", retval);
         break;
     default:
+#ifdef EMODULES_DEBUG
+        em_error("syscall %s unimplemented!\n", syscall_name[which]);
+#else
         em_error("syscall %d unimplemented!\n", which);
+#endif
         ecall_exit_enclave(-1);
         __builtin_unreachable();
     }
