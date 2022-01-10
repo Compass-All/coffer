@@ -30,7 +30,7 @@ static void page_pool_put(page_list_t* pool, uintptr_t pa, uintptr_t pa_start, s
         // em_debug("pa = 0x%llx, va = 0x%llx, accessible_va = 0x%llx\n", pa, va, accessible_va);
 
         PAGE_NEXT(accessible_va) = 0;
-        PAGE_PA(accessible_va) = pa;
+        // PAGE_PA(accessible_va) = pa;
         pool->tail = va;
         pool->count++;
 
@@ -93,11 +93,13 @@ size_t page_pool_get(int idx, uintptr_t* pva, size_t n_pages)
 
     *pva = pool->head;
     pool->count -= n_alloc;
+    // em_debug("Tail: %p\n", (void*)pool->tail);
     for (i = 0; i < n_alloc; ++i) {
         page = pool->head;
         if (!mmu_enabled) {
             page -= enc_va_pa_offset;
         }
+        // em_debug("Page: %p / %p\n", (void*)pool->head, (void*)page);
         next = PAGE_NEXT(page);
         pool->head = next;
     }

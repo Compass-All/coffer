@@ -47,8 +47,8 @@ int rt_brk(uintptr_t addr)
         alloc_page(usr_heap_top, n_pages,
             PTE_U | PTE_R | PTE_W, IDX_USR);
         em_debug("ebi_brk cp 3\n");
+        usr_heap_top = addr;
     }
-    usr_heap_top = addr;
     em_debug("####### brk end########\n");
     flush_tlb();
     return ret;

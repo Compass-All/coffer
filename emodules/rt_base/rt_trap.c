@@ -9,7 +9,18 @@
 
 #define ARG(x) (regs[CTX_INDEX_a##x])
 
-uintptr_t enclave_id;
+uintptr_t proxy_stvec;
+
+extern uintptr_t enclave_id;
+
+static uintptr_t proxy_syscall(uintptr_t* regs)
+{
+    uintptr_t rt_stvec = read_csr(stvec);
+    write_csr(stvec, proxy_stvec);
+    SYSCALL(ARG(7), ARG(0), ARG(1), ARG(2), ARG(3), ARG(4), ARG(5));
+    write_csr(stvec, rt_stvec);
+    return ARG(0); // a0 stores the return value
+}
 
 void handle_interrupt(uintptr_t* regs, uintptr_t scause, uintptr_t sepc,
     uintptr_t stval)
@@ -79,9 +90,9 @@ void handle_syscall(uintptr_t* regs, uintptr_t scause, uintptr_t sepc,
         retval = rt_brk(ARG(0));
         em_debug("retval = 0x%lx\n", retval);
         break;
-    case SYS_gettimeofday:
-        retval = rt_gettimeofday((struct timeval*)ARG(0), (struct timezone*)ARG(1));
-        break;
+    // case SYS_gettimeofday:
+    //     retval = rt_gettimeofday((struct timeval*)ARG(0), (struct timezone*)ARG(1));
+    //     break;
     case SYS_exit:
         em_debug("SYS_exit\n");
 #ifdef COFFER_EVAL
@@ -92,6 +103,7 @@ void handle_syscall(uintptr_t* regs, uintptr_t scause, uintptr_t sepc,
         ecall_exit_enclave(ARG(0));
         __builtin_unreachable();
     case SYS_faccessat:
+        em_debug("SYS_faccessat       ##########  FAKE  ###########\n");
         retval = 0;
         break;
     case SYS_getuid:
@@ -99,6 +111,19 @@ void handle_syscall(uintptr_t* regs, uintptr_t scause, uintptr_t sepc,
     case SYS_getgid:
     case SYS_getegid:
         retval = 0;
+        break;
+    case SYS_read:
+        em_error("Trying to read from file #%lu to buffer %p w/ count=%lu\n", ARG(0), (void*)ARG(1), ARG(2));
+        ecall_exit_enclave(-1);
+        __builtin_unreachable();
+    case SYS_open:
+        em_error("Trying to open file at %s w/ flags=0x%lx and mode=0x%lx\n", (char*)ARG(0), ARG(1), ARG(2));
+        ecall_exit_enclave(-1);
+        __builtin_unreachable();
+    case SYS_gettimeofday:
+        em_debug("Proxying SYS_gettimeofday to host...\n");
+        retval = proxy_syscall(regs);
+        em_debug("After: retval=%lu\n", retval);
         break;
     default:
         em_error("syscall %d unimplemented!\n", which);

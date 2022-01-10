@@ -2,7 +2,7 @@
 
 #include "rt_ecall.h"
 
-// #define EMODULES_DEBUG
+#define EMODULES_DEBUG
 
 void rt_printf(const char* fmt, ...);
 

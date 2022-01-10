@@ -11,7 +11,9 @@
 #include <util/memory.h>
 #include <util/util.h>
 
-extern uintptr_t enclave_id;
+uintptr_t enclave_id;
+
+extern uintptr_t proxy_stvec;
 extern uintptr_t usr_heap_top;
 extern uintptr_t va_top;
 
@@ -151,7 +153,7 @@ static void setup_pages(uintptr_t pt_trie_start, size_t pt_trie_size,
  */
 
 void init_mem(uintptr_t id, uintptr_t base_pa_start, size_t base_size,
-    uintptr_t payload_pa_start, size_t payload_size)
+    uintptr_t payload_pa_start, size_t payload_size, uintptr_t host_stvec)
 {
     uintptr_t pt_trie_start, pt_trie_size;
     uintptr_t base_avail_start, base_avail_size;
@@ -162,6 +164,8 @@ void init_mem(uintptr_t id, uintptr_t base_pa_start, size_t base_size,
     uintptr_t usr_sp_pa;
     uintptr_t usr_sp = EUSR_STACK_TOP;
     uintptr_t base_sp = ERT_STACK_TOP;
+
+    proxy_stvec = host_stvec;
 
     // Update VA/PA offset
     enc_va_pa_offset = ERT_VA_START - base_pa_start;

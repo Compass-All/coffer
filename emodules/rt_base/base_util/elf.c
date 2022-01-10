@@ -75,7 +75,7 @@ static int elf_map(uintptr_t elf_addr)
         pa_start = elf_addr + phdr[i].p_offset;
         file_end = va_start + phdr[i].p_filesz;
         n_pages = (PAGE_UP(file_end) - PAGE_DOWN(va_start)) >> EPAGE_SHIFT;
-        em_debug("va_start=%p, file_end=%p, n_pages=%llu\n", (void*)va_start, (void*)file_end, n_pages);
+        em_debug("va_start=%p, file_end=%p, n_pages=%llu, p_flags = %d\n", (void*)va_start, (void*)file_end, n_pages, phdr[i].p_flags);
         map_page(PAGE_DOWN(va_start), PAGE_DOWN(pa_start), n_pages,
             PTE_U | get_pte_attr(phdr[i].p_flags), 1);
     }
