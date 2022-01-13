@@ -136,7 +136,7 @@ uintptr_t interrupt_handler(module_arg_t arg)
 }
 
 extra_module_t uart_module = {
-    .id = 1,
+    .id = MOD_NONSHARE_UART,
     .is_sharable = 0,
     .handler = handler,
     .interrupt_handler = interrupt_handler
