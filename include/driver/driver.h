@@ -6,6 +6,7 @@
 // Module ID Table
 #define MOD_NONSHARE_DUMMY	0
 #define MOD_NONSHARE_UART	1
+#define MOD_NONSHARE_MMC	2
 
 #define MOD_SHARE_START		100
 #define MOD_SHARE_DUMMY1 	(MOD_SHARE_START + 0)
