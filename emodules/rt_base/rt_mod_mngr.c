@@ -5,19 +5,37 @@
 #include "rt_console.h"
 
 #define get_nth_mod_va(n) (ERT_EXTRA_START + n * PARTITION_SIZE)
+static uintptr_t reg_va_top = ERT_PERI_REG_START;
 
 extra_module_t extra_modules[NUM_EXTRA_MODULES];
 uint32_t mod_cnt = 0;
 
-// emod->start_addr changed from pa to va after invoking
-// this function
-static int setup_page_table(uintptr_t pa, uint32_t cnt, volatile extra_module_t *emod)
+// emod->start_addr and emod->peripheral changed
+// from pa to va after invoking this function
+static int setup_page_table(uintptr_t pa, uint32_t cnt,
+	volatile extra_module_t *emod)
 {
-	uintptr_t va = get_nth_mod_va(cnt);
-	map_page(va, pa, PAGE_UP(emod->size) >> EPAGE_SHIFT,
+	// setup the page mapping of the modules
+	uintptr_t module_va = get_nth_mod_va(cnt);
+	map_page(module_va, pa, PAGE_UP(emod->size) >> EPAGE_SHIFT,
 		PTE_V | PTE_W | PTE_R | PTE_X, 1);
 
-	emod->start_addr = va;
+	emod->start_addr = module_va;
+
+	// setup the page mapping of the peripheral registers
+	for (int i = 0; i < PERI_REGION_MAX; i++) {
+		if (emod->peripheral.peri_region[i].size) {
+			uintptr_t reg_pa = emod->peripheral.peri_region[i].start;
+			uintptr_t reg_size = emod->peripheral.peri_region[i].size;
+			map_page(reg_va_top, reg_pa, PAGE_UP(reg_size) >> EPAGE_SHIFT,
+				PTE_V | PTE_W | PTE_R, 1);
+
+			// update to va
+			emod->peripheral.peri_region[i].start = reg_va_top;
+
+			reg_va_top += PAGE_UP(reg_size) + EPAGE_SIZE;
+		}
+	}
 
 	return 0;
 }

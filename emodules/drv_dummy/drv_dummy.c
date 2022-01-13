@@ -154,11 +154,23 @@ uintptr_t interrupt_handler(module_arg_t arg)
 	return 0;
 }
 
+extra_module_t dummy_module = {
+	.id = 0,
+	.is_sharable = 0,
+	.handler = handler,
+	.interrupt_handler = interrupt_handler
+};
+
 __attribute__((section(".text.init")))
 uintptr_t dummy_init(volatile extra_module_t *emod)
 {
-	emod->handler = handler;
-	emod->interrupt_handler = interrupt_handler;
+	if (emod->id != dummy_module.id
+	 || emod->is_sharable != dummy_module.is_sharable) {
+		return -1;
+	}
+
+	emod->handler = dummy_module.handler;
+	emod->interrupt_handler = dummy_module.interrupt_handler;
 
     printd("[dummy_init] emod ptr at 0x%lx\n", (uintptr_t)emod);
 	printd("[dummy_init] handler @ 0x%p\n", handler);

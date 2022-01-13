@@ -1,22 +1,24 @@
 // See LICENSE for license details.
 
-#ifndef _DRV_ENCLAVE_CONSOLE_H
-#define _DRV_ENCLAVE_CONSOLE_H
+#ifndef _DRV_UART_H
+#define _DRV_UART_H
 
-#include <stdint.h>
 #include <driver/driver.h>
-
-#define CONSOLE_CMD_INIT MOD_NONSHARE_UART_REG_SIZE
-#define CONSOLE_CMD_PUT MOD_NONSHARE_UART_REG_ADDR
-#define CONSOLE_CMD_GET MOD_NONSHARE_UART_CMD_DESTORY
-#define CONSOLE_CMD_DESTORY MOD_NONSHARE_UART_CMD_GET
-#define CONSOLE_REG_ADDR MOD_NONSHARE_UART_CMD_PUT
-#define CONSOLE_REG_SIZE MOD_NONSHARE_UART_CMD_INIT
+#include <stdint.h>
 
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef unsigned int u32;
 typedef unsigned long u64;
+
+#define UART_REG_ADDR MOD_NONSHARE_UART_REG_ADDR
+#define UART_REG_SIZE MOD_NONSHARE_UART_REG_SIZE
+
+int sifive_uart_init(void* base, u32 in_freq, u32 baudrate);
+int sifive_uart_getc(void);
+void sifive_uart_putc(char ch);
+
+#ifndef __MY_KMOD__
 
 static inline void __raw_writeb(u8 val, volatile void *addr)
 {
@@ -78,6 +80,7 @@ static inline u64 __raw_readq(const volatile void *addr)
 
 /* clang-format off */
 
+
 #define __io_rbr()		do {} while (0)
 #define __io_rar()		do {} while (0)
 #define __io_rbw()		do {} while (0)
@@ -112,6 +115,8 @@ static inline u64 __raw_readq(const volatile void *addr)
 #if __riscv_xlen != 32
 #define readq(c)	({ u64 __v; __io_br(); __v = __raw_readq(c); __io_ar(); __v; })
 #define writeq(v,c)	({ __io_bw(); __raw_writeq((v),(c)); __io_aw(); })
+#endif
+
 #endif
 
 /* clang-format on */

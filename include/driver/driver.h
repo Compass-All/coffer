@@ -15,7 +15,7 @@
 #define NUM_SHARE_EXTRA_MODULES		16
 #define NUM_EXTRA_MODULES			(NUM_NONSHARE_EXTRA_MODULES + NUM_SHARE_EXTRA_MODULES)
 
-#define PERI_REGION_MAX		5
+#define PERI_REGION_MAX		16
 
 typedef struct {
     uintptr_t pt_root_addr;

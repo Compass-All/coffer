@@ -62,7 +62,7 @@ int rt_write(uintptr_t fd, char* content, size_t n)
     // FIXME Workaround version
     extra_module_t *emod = get_emod_by_id(MOD_NONSHARE_UART);
     module_arg_t arg;
-    arg.cmd = CONSOLE_CMD_PUT;
+    arg.cmd = MOD_NONSHARE_UART_CMD_PUTC;
 
     // uintptr_t content_pa = usr_get_pa((uintptr_t)content);
     content[n] = '\0';
@@ -78,6 +78,16 @@ int rt_write(uintptr_t fd, char* content, size_t n)
     }
     return n;
 }
+
+// int rt_read(uintptr_t fd, char* buf, size_t count)
+// {
+//     char *str = (char *)buf;
+//     if (fd == 0) {
+//         for (int i = 0; i < count; i++) {
+// // 
+//         }
+//     }
+// }
 
 int rt_close(uintptr_t fd)
 {
