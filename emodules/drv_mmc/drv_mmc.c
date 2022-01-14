@@ -197,9 +197,6 @@ uint16_t crc16_ccitt(uint16_t cksum, const unsigned char *buf, int len)
  * @r1b:	if true, receive additional bytes for busy signal token
  * @return 0 if OK, -ETIMEDOUT if no card response is received, -ve on error
  * 
- * dependencies:
- * 		- dm_spi_xfer(...)
- * 
  */
 static int mmc_spi_sendcmd (
 	struct udevice *dev,
@@ -301,9 +298,6 @@ static int mmc_spi_sendcmd (
  * @bsize:	size of the actual data (excluding token and crc) in bytes
  * @return 0 if OK, -ECOMM if crc error, -ETIMEDOUT on other errors
  * 
- * dependencies:
- * 		- CONFIG_MMC_SPI_CRC_ON
- * 		- dm_spi_xfer
  */
 static int mmc_spi_readdata (
 	struct udevice *dev,
@@ -364,10 +358,6 @@ static int mmc_spi_readdata (
  * @bsize:	size of actual data (excluding token and crc) in bytes
  * @multi:	indicate a transfer by multiple block write command (CMD25)
  * @return 0 if OK, -ECOMM if crc error, -ETIMEDOUT on other errors
- * 
- * dependencies:
- * 		- CONFIG_MMC_SPI_CRC_ON
- * 		- dm_spi_xfer
  * 
  */
 static int mmc_spi_writedata(struct udevice *dev, const void *xbuf,
@@ -440,10 +430,6 @@ static int mmc_spi_writedata(struct udevice *dev, const void *xbuf,
 	return ret;
 }
 
-/*
-	dependencies:
-		- dm_spi_xfer(...);
-*/
 
 static int dm_mmc_spi_request (
 	struct udevice *dev,

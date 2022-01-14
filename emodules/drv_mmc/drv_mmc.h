@@ -1,5 +1,7 @@
 #pragma once
 
+#include "spi.h"
+
 #define SPI_MODE_0				(0|0)			/* (original MicroWire) */
 #define MMC_MODE_SPI		BIT(27)
 
@@ -302,3 +304,8 @@ static inline u8 crc7_byte(u8 crc, u8 data)
 	return crc7_syndrome_table[(crc << 1) ^ data];
 }
 
+static inline int dm_spi_xfer(struct udevice *dev, unsigned int bitlen,
+			   const void *dout, void *din, unsigned long flags)
+{
+	return sifive_spi_xfer(dev, bitlen, dout, din, flags);
+}
