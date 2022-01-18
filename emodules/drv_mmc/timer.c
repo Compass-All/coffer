@@ -2,6 +2,7 @@
 #include <ebi_ecall.h>
 #include <stdint.h>
 #include <types.h>
+#include "debug.h"
 
 #define SBI_ECALL(__extid, __funid, __arg0, __arg1, __arg2)     \
     ({                                                          \
@@ -31,7 +32,7 @@ u64 get_timer(u64 base)
 
 void udelay(u64 usec)
 {
-	ulong endtime = get_timer(0) + usec;
+	ulong endtime = get_timer(0) + usec * 10000UL;
 	signed long diff;
 
 	do {
