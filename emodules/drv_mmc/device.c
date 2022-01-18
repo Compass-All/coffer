@@ -10,10 +10,7 @@ struct dm_spi_slave_plat slave_plat = {
 	.max_hz = MMC_SPI_MAX_CLOCK,
 	.mode = 0,
 };
-struct udevice mmc_sd = {
-	.slave_plat = &slave_plat,
-	.spi = &spi,
-};
+struct udevice mmc_sd;
 
 static void dump_reg(char *name, u64 offset)
 {
@@ -40,6 +37,9 @@ int reg_map_setup(volatile extra_module_t *emod)
 	uintptr_t base = emod->peripheral.peri_region[0].start;
 
 	spi.regs = (void *)base;
+
+	mmc_sd.slave_plat = &slave_plat;
+	mmc_sd.spi = &spi;
 
 	test();
 	
