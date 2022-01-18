@@ -1,6 +1,7 @@
 #pragma once
 
 #include <types.h>
+#include "device.h"
 #include "io.h"
 #include "timer.h"
 #include "debug.h"
@@ -217,11 +218,6 @@ struct dm_spi_slave_plat {
 	uint mode;
 };
 
-// dummy udevice
-struct udevice {
-	struct sifive_spi *spi;
-	struct dm_spi_slave_plat *slave_plat;
-};
 
 int sifive_spi_xfer(struct udevice *dev, unsigned int bitlen,
 			   const void *dout, void *din, unsigned long flags);

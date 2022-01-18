@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include "uart.h"
+#include "mmc.h"
 
 // Module ID Table
 #define MOD_NONSHARE_DUMMY	0

@@ -29,11 +29,14 @@ static int setup_page_table(uintptr_t pa, uint32_t cnt,
 			uintptr_t reg_size = emod->peripheral.peri_region[i].size;
 			map_page(reg_va_top, reg_pa, PAGE_UP(reg_size) >> EPAGE_SHIFT,
 				PTE_V | PTE_W | PTE_R, 1);
+			em_debug("peripheral region %d\n", i);
+			em_debug("size = 0x%llx\n", reg_size);
 
 			// update to va
 			emod->peripheral.peri_region[i].start = reg_va_top;
 
 			reg_va_top += PAGE_UP(reg_size) + EPAGE_SIZE;
+			em_debug("reg_va_top updated to 0x%llx\n", reg_va_top);
 		}
 	}
 

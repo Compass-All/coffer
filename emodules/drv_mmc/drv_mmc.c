@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <driver/driver.h>
 #include "debug.h"
+#include "device.h"
 
 #include <errno.h>
 #include <stdarg.h>
@@ -551,6 +552,7 @@ __attribute__((section(".text.init")))
 uintptr_t mmc_init(volatile extra_module_t *emod)
 {
 	emod_setup(emod);
+	reg_map_setup(emod);
 
 	return 0;
 }
