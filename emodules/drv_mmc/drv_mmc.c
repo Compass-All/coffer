@@ -591,7 +591,7 @@ static int mmc_read_blocks(void *dst, u64 start,
 	return blkcnt;
 }
 
-void test()
+static void test()
 {
 	char buffer[2048];
 	for (int i = 0; i < 2048; i++) {
