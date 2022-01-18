@@ -188,19 +188,19 @@ BUILD_WAIT_FOR_BIT(32, u32, readl)
  * @memory_map:		Address of read-only SPI flash access.
  * @flags:		Indication of SPI flags.
  */
-struct spi_slave {
-	uint max_hz;
-	uint mode;
-	unsigned int wordlen;
-	unsigned int max_read_size;
-	unsigned int max_write_size;
-	void *memory_map;
+// struct spi_slave {
+// 	uint max_hz;
+// 	uint mode;
+// 	unsigned int wordlen;
+// 	unsigned int max_read_size;
+// 	unsigned int max_write_size;
+// 	void *memory_map;
 
-	u8 flags;
+// 	u8 flags;
 #define SPI_XFER_BEGIN		BIT(0)	/* Assert CS before transfer */
 #define SPI_XFER_END		BIT(1)	/* Deassert CS after transfer */
 #define SPI_XFER_ONCE		(SPI_XFER_BEGIN | SPI_XFER_END)
-};
+// };
 
 struct sifive_spi {
 	void		*regs;		/* base address of the registers */

@@ -89,32 +89,32 @@ static const uint16_t crc16_tab[] = {
 };
 
 // ------------------------------
-__attribute__((unused))
-static int mmc_spi_probe (
-	struct spi_slave *spi,
-	struct mmc_config *cfg,
-	struct mmc *mmc
-)
-{
-	char name[] = "mmc-spi";
+// __attribute__((unused))
+// static int mmc_spi_probe (
+// 	struct spi_slave *spi,
+// 	struct mmc_config *cfg,
+// 	struct mmc *mmc
+// )
+// {
+// 	char name[] = "mmc-spi";
 
-	if (!spi->max_hz)
-		spi->max_hz = MMC_SPI_MAX_CLOCK;
-	spi->mode = SPI_MODE_0;
-	spi->wordlen = 8;
+// 	if (!spi->max_hz)
+// 		spi->max_hz = MMC_SPI_MAX_CLOCK;
+// 	spi->mode = SPI_MODE_0;
+// 	spi->wordlen = 8;
 
-	cfg->name = name;
-	cfg->host_caps = MMC_MODE_SPI;
-	cfg->voltages = MMC_SPI_VOLTAGE;
-	cfg->f_min = MMC_SPI_MIN_CLOCK;
-	cfg->f_max = spi->max_hz;
-	cfg->part_type = PART_TYPE_DOS;
-	cfg->b_max = CONFIG_SYS_MMC_MAX_BLK_COUNT;
+// 	cfg->name = name;
+// 	cfg->host_caps = MMC_MODE_SPI;
+// 	cfg->voltages = MMC_SPI_VOLTAGE;
+// 	cfg->f_min = MMC_SPI_MIN_CLOCK;
+// 	cfg->f_max = spi->max_hz;
+// 	cfg->part_type = PART_TYPE_DOS;
+// 	cfg->b_max = CONFIG_SYS_MMC_MAX_BLK_COUNT;
 
-	mmc->cfg = cfg;
+// 	mmc->cfg = cfg;
 
-	return 0;
-}
+// 	return 0;
+// }
 
 u8 crc7(u8 crc, const u8 *buffer, size_t len)
 {
@@ -171,9 +171,14 @@ static int mmc_spi_sendcmd (
 	cmdo[4] = cmdarg >> 8;
 	cmdo[5] = cmdarg;
 	cmdo[6] = (crc7(0, &cmdo[1], 5) << 1) | 0x01;
+
+	debug("############################ flag 1\n");
+
 	ret = dm_spi_xfer(dev, sizeof(cmdo) * 8, cmdo, NULL, SPI_XFER_BEGIN);
 	if (ret)
 		return ret;
+
+	debug("############################ flag 2\n");
 
 	ret = dm_spi_xfer(dev, 1 * 8, NULL, &r, 0);
 	if (ret)
@@ -253,7 +258,7 @@ static int mmc_spi_readdata (
 )
 {
 	u16 crc;
-	u8 *buf = xbuf, r1;
+	u8 *buf = xbuf, r1 = 0;
 	int i, ret = 0;
 
 	while (bcnt--) {
@@ -490,8 +495,8 @@ static int dm_mmc_spi_request (
 	      cmd->response[2], cmd->response[3]);
 
 	if (data) {
-		debug("%s: data flags=0x%x blocks=%d block_size=%d\n",
-		      __func__, data->flags, data->blocks, data->blocksize);
+		debug("data flags=0x%x blocks=%d block_size=%d\n",
+		      data->flags, data->blocks, data->blocksize);
 		multi = (cmd->cmdidx == MMC_CMD_WRITE_MULTIPLE_BLOCK);
 		if (data->flags == MMC_DATA_READ)
 			ret = mmc_spi_readdata(dev, data->dest,
@@ -548,11 +553,68 @@ static int emod_setup(volatile extra_module_t *emod)
 
 // ------------------------------
 
+static int mmc_read_blocks(void *dst, u64 start,
+			   u64 blkcnt)
+{
+	struct mmc_cmd cmd;
+	struct mmc_data data;
+
+	if (blkcnt > 1)
+		cmd.cmdidx = MMC_CMD_READ_MULTIPLE_BLOCK;
+	else
+		cmd.cmdidx = MMC_CMD_READ_SINGLE_BLOCK;
+
+	cmd.cmdarg = start;
+
+	cmd.resp_type = MMC_RSP_R1;
+
+	data.dest = dst;
+	data.blocks = blkcnt;
+	data.blocksize = 512;
+	data.flags = MMC_DATA_READ;
+
+	if (dm_mmc_spi_request(&mmc_sd, &cmd, &data))
+		return 0;
+
+	if (blkcnt > 1) {
+		cmd.cmdidx = MMC_CMD_STOP_TRANSMISSION;
+		cmd.cmdarg = 0;
+		cmd.resp_type = MMC_RSP_R1b;
+		if (dm_mmc_spi_request(&mmc_sd, &cmd, NULL)) {
+// #if !defined(CONFIG_SPL_BUILD) || defined(CONFIG_SPL_LIBCOMMON_SUPPORT)
+// 			pr_err("mmc fail to send stop cmd\n");
+// #endif
+			return 0;
+		}
+	}
+
+	return blkcnt;
+}
+
+void test()
+{
+	char buffer[2048];
+	for (int i = 0; i < 2048; i++) {
+		buffer[i] = 0;
+	}
+
+	mmc_read_blocks(buffer, 512, 1);
+
+	for (int i = 0; i < 520; i += 16) {
+		u32 *ptr = (u32 *)&buffer[i];
+		debug("0x%lx, 0x%lx, 0x%lx, 0x%lx\n",
+			ptr[0], ptr[1], ptr[2], ptr[3]);
+	}
+
+}
+
 __attribute__((section(".text.init")))
 uintptr_t mmc_init(volatile extra_module_t *emod)
 {
 	emod_setup(emod);
 	reg_map_setup(emod);
+
+	test();
 
 	return 0;
 }

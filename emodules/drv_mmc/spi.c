@@ -121,6 +121,9 @@ int sifive_spi_xfer(struct udevice *dev, unsigned int bitlen,
 	struct sifive_spi *spi = dev->spi;
 	struct dm_spi_slave_plat *slave_plat = dev->slave_plat;
 	
+	debug("############# flag1 ############\n");
+
+
 	const u8 *tx_ptr = dout;
 	u8 *rx_ptr = din;
 	u32 remaining_len;
@@ -134,7 +137,11 @@ int sifive_spi_xfer(struct udevice *dev, unsigned int bitlen,
 			return ret;
 	}
 
+	debug("############# flag2 ############\n");
+
 	sifive_spi_prep_transfer(spi, slave_plat, rx_ptr);
+
+	debug("############# flag3 ############\n");
 
 	remaining_len = bitlen / 8;
 
@@ -170,8 +177,12 @@ int sifive_spi_xfer(struct udevice *dev, unsigned int bitlen,
 		remaining_len -= n_words;
 	}
 
+	debug("############# flag4 ############\n");
+
 	if (flags & SPI_XFER_END)
 		sifive_spi_clear_cs(spi);
+
+	debug("############# flag5 ############\n");
 
 	return 0;
 }

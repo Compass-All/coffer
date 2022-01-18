@@ -58,6 +58,23 @@
 /* R1 bit 7 is always zero, reuse this bit for error */
 #define R1_SPI_ERROR			BIT(7)
 
+#define MMC_RSP_PRESENT (1 << 0)
+#define MMC_RSP_136	(1 << 1)		/* 136 bit response */
+#define MMC_RSP_CRC	(1 << 2)		/* expect valid crc */
+#define MMC_RSP_BUSY	(1 << 3)		/* card may send busy */
+#define MMC_RSP_OPCODE	(1 << 4)		/* response contains opcode */
+
+#define MMC_RSP_NONE	(0)
+#define MMC_RSP_R1	(MMC_RSP_PRESENT|MMC_RSP_CRC|MMC_RSP_OPCODE)
+#define MMC_RSP_R1b	(MMC_RSP_PRESENT|MMC_RSP_CRC|MMC_RSP_OPCODE| \
+			MMC_RSP_BUSY)
+#define MMC_RSP_R2	(MMC_RSP_PRESENT|MMC_RSP_136|MMC_RSP_CRC)
+#define MMC_RSP_R3	(MMC_RSP_PRESENT)
+#define MMC_RSP_R4	(MMC_RSP_PRESENT)
+#define MMC_RSP_R5	(MMC_RSP_PRESENT|MMC_RSP_CRC|MMC_RSP_OPCODE)
+#define MMC_RSP_R6	(MMC_RSP_PRESENT|MMC_RSP_CRC|MMC_RSP_OPCODE)
+#define MMC_RSP_R7	(MMC_RSP_PRESENT|MMC_RSP_CRC|MMC_RSP_OPCODE)
+
 /*
  * Read and write blocks start with these tokens and end with crc;
  * on error, read tokens act like a subset of R2_SPI_* values.
@@ -135,21 +152,21 @@ struct mmc_data {
 	uint blocksize;
 };
 
-struct mmc_config {
-	const char *name;
-	const struct mmc_ops *ops;
-	uint host_caps;
-	uint voltages;
-	uint f_min;
-	uint f_max;
-	uint b_max;
-	unsigned char part_type;
-	struct udevice *pwr_dev;
-};
+// struct mmc_config {
+// 	const char *name;
+// 	const struct mmc_ops *ops;
+// 	uint host_caps;
+// 	uint voltages;
+// 	uint f_min;
+// 	uint f_max;
+// 	uint b_max;
+// 	unsigned char part_type;
+// 	struct udevice *pwr_dev;
+// };
 
-struct mmc {
-	const struct mmc_config *cfg;	/* provided configuration */
-};
+// struct mmc {
+// 	const struct mmc_config *cfg;	/* provided configuration */
+// };
 
 extern const u8 crc7_syndrome_table[256];
 static inline u8 crc7_byte(u8 crc, u8 data)
@@ -160,5 +177,13 @@ static inline u8 crc7_byte(u8 crc, u8 data)
 static inline int dm_spi_xfer(struct udevice *dev, unsigned int bitlen,
 			   const void *dout, void *din, unsigned long flags)
 {
-	return sifive_spi_xfer(dev, bitlen, dout, din, flags);
+	int ret = 0;
+
+	debug("############ flag1\n");
+
+	ret = sifive_spi_xfer(dev, bitlen, dout, din, flags);
+
+	debug("############ flag2\n");
+
+	return ret;
 }
