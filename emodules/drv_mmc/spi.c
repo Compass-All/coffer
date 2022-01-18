@@ -1,5 +1,7 @@
 #include "spi.h"
 #include "drv_mmc.h"
+#include "debug.h"
+#include <stddef.h>
 
 static void sifive_spi_prep_device(struct sifive_spi *spi,
 				   struct dm_spi_slave_plat *slave_plat)
@@ -26,6 +28,11 @@ static int sifive_spi_set_cs(struct sifive_spi *spi,
 	writel(cs_mode, spi->regs + SIFIVE_SPI_REG_CSMODE);
 
 	return 0;
+}
+
+static void sifive_spi_clear_cs(struct sifive_spi *spi)
+{
+	writel(SIFIVE_SPI_CSMODE_MODE_AUTO, spi->regs + SIFIVE_SPI_REG_CSMODE);
 }
 
 static void sifive_spi_prep_transfer(struct sifive_spi *spi,
@@ -99,12 +106,21 @@ static int sifive_spi_wait(struct sifive_spi *spi, u32 bit)
 				 bit, true, 100, false);
 }
 
+#define min(x, y) ({				\
+	typeof(x) _min1 = (x);			\
+	typeof(y) _min2 = (y);			\
+	(void) (&_min1 == &_min2);		\
+	_min1 < _min2 ? _min1 : _min2; })
+
 int sifive_spi_xfer(struct udevice *dev, unsigned int bitlen,
 			   const void *dout, void *din, unsigned long flags)
 {
-	struct udevice *bus = dev->parent;
-	struct sifive_spi *spi = dev_get_priv(bus);
-	struct dm_spi_slave_plat *slave_plat = dev_get_parent_plat(dev);
+	// struct udevice *bus = dev->parent;
+	// struct sifive_spi *spi = dev_get_priv(bus);
+	// struct dm_spi_slave_plat *slave_plat = dev_get_parent_plat(dev);
+	struct sifive_spi *spi = dev->spi;
+	struct dm_spi_slave_plat *slave_plat = dev->slave_plat;
+	
 	const u8 *tx_ptr = dout;
 	u8 *rx_ptr = din;
 	u32 remaining_len;

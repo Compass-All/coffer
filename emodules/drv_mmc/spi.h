@@ -2,6 +2,8 @@
 
 #include <types.h>
 #include "io.h"
+#include "timer.h"
+#include "debug.h"
 
 /* register offsets */
 #define SIFIVE_SPI_REG_SCKDIV            0x00 /* Serial clock divisor */
@@ -74,6 +76,7 @@
 #define SIFIVE_SPI_PROTO_DUAL		2 /* 2 lines I/O protocol transfer */
 #define SIFIVE_SPI_PROTO_SINGLE		1 /* 1 line I/O protocol transfer */
 
+#define BIT(nr)			(1UL << (nr))
 /* SPI mode flags */
 #define SPI_CPHA	BIT(0)	/* clock phase (1 = SPI_CLOCK_PHASE_SECOND) */
 #define SPI_CPOL	BIT(1)	/* clock polarity (1 = SPI_POLARITY_HIGH) */
@@ -97,6 +100,10 @@
 #define SPI_RX_OCTAL	BIT(15)			/* receive with 8 wires */
 
 
+static inline int ctrlc()
+{
+	return 0;
+}
 
 /**
  * @dependencies: 
@@ -132,18 +139,17 @@ static inline int wait_for_bit_##sfx(const void *reg,			\
 			break;						\
 									\
 		if (breakable && ctrlc()) {				\
-			puts("Abort\n");				\
-			return -EINTR;					\
+			debug("Abort\n");				\
+			return -1;					\
 		}							\
 									\
 		udelay(1);						\
-		WATCHDOG_RESET();					\
 	}								\
 									\
 	debug("%s: Timeout (reg=%p mask=%x wait_set=%i)\n", __func__,	\
 	      reg, mask, set);						\
 									\
-	return -ETIMEDOUT;						\
+	return -1;						\
 }
 
 BUILD_WAIT_FOR_BIT(8, u8, readb)
@@ -193,6 +199,28 @@ struct spi_slave {
 #define SPI_XFER_BEGIN		BIT(0)	/* Assert CS before transfer */
 #define SPI_XFER_END		BIT(1)	/* Deassert CS after transfer */
 #define SPI_XFER_ONCE		(SPI_XFER_BEGIN | SPI_XFER_END)
+};
+
+struct sifive_spi {
+	void		*regs;		/* base address of the registers */
+	u32		fifo_depth;
+	u32		bits_per_word;
+	u32		cs_inactive;	/* Level of the CS pins when inactive*/
+	u32		freq;
+	u32		num_cs;
+	u8		fmt_proto;
+};
+
+struct dm_spi_slave_plat {
+	unsigned int cs;
+	uint max_hz;
+	uint mode;
+};
+
+// dummy udevice
+struct udevice {
+	struct sifive_spi *spi;
+	struct dm_spi_slave_plat *slave_plat;
 };
 
 int sifive_spi_xfer(struct udevice *dev, unsigned int bitlen,
