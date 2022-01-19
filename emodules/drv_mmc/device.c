@@ -27,7 +27,7 @@ static void test()
 	dump_reg("csmode", 0x18);
 }
 
-int reg_map_setup(volatile extra_module_t *emod)
+int mmc_spi_device_setup(volatile extra_module_t *emod)
 {
 	if (!emod) {
 		debug("error\n");
@@ -40,6 +40,8 @@ int reg_map_setup(volatile extra_module_t *emod)
 
 	mmc_sd.slave_plat = &slave_plat;
 	mmc_sd.spi = &spi;
+
+	sifive_spi_probe(&spi);
 
 	test();
 	

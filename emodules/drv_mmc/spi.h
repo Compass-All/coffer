@@ -6,6 +6,8 @@
 #include "timer.h"
 #include "debug.h"
 
+#define SIFIVE_SPI_MAX_CS		32
+
 /* register offsets */
 #define SIFIVE_SPI_REG_SCKDIV            0x00 /* Serial clock divisor */
 #define SIFIVE_SPI_REG_SCKMODE           0x04 /* Serial clock mode */
@@ -219,5 +221,6 @@ struct dm_spi_slave_plat {
 };
 
 
+int sifive_spi_probe(struct sifive_spi *spi);
 int sifive_spi_xfer(struct udevice *dev, unsigned int bitlen,
 			   const void *dout, void *din, unsigned long flags);

@@ -177,13 +177,5 @@ static inline u8 crc7_byte(u8 crc, u8 data)
 static inline int dm_spi_xfer(struct udevice *dev, unsigned int bitlen,
 			   const void *dout, void *din, unsigned long flags)
 {
-	int ret = 0;
-
-	debug("############ flag1\n");
-
-	ret = sifive_spi_xfer(dev, bitlen, dout, din, flags);
-
-	debug("############ flag2\n");
-
-	return ret;
+	return sifive_spi_xfer(dev, bitlen, dout, din, flags);
 }

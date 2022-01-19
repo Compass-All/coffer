@@ -9,4 +9,4 @@ struct udevice {
 
 extern struct udevice mmc_sd;
 
-int reg_map_setup(volatile extra_module_t *emod);
+int mmc_spi_device_setup(volatile extra_module_t *emod);

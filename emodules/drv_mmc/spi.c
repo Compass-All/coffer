@@ -2,6 +2,60 @@
 #include "drv_mmc.h"
 #include "debug.h"
 #include <stddef.h>
+#include <errno.h>
+
+static void sifive_spi_init_hw(struct sifive_spi *spi)
+{
+	u32 cs_bits;
+
+	/* probe the number of CS lines */
+	spi->cs_inactive = readl(spi->regs + SIFIVE_SPI_REG_CSDEF);
+	writel(0xffffffffU, spi->regs + SIFIVE_SPI_REG_CSDEF);
+	cs_bits = readl(spi->regs + SIFIVE_SPI_REG_CSDEF);
+	writel(spi->cs_inactive, spi->regs + SIFIVE_SPI_REG_CSDEF);
+	if (!cs_bits) {
+		debug("Could not auto probe CS lines\n");
+		return;
+	}
+
+	spi->num_cs = ilog2(cs_bits) + 1;
+	if (spi->num_cs > SIFIVE_SPI_MAX_CS) {
+		debug("Invalid number of spi slaves\n");
+		return;
+	}
+
+	/* Watermark interrupts are disabled by default */
+	writel(0, spi->regs + SIFIVE_SPI_REG_IE);
+
+	/* Default watermark FIFO threshold values */
+	writel(1, spi->regs + SIFIVE_SPI_REG_TXMARK);
+	writel(0, spi->regs + SIFIVE_SPI_REG_RXMARK);
+
+	/* Set CS/SCK Delays and Inactive Time to defaults */
+	writel(SIFIVE_SPI_DELAY0_CSSCK(1) | SIFIVE_SPI_DELAY0_SCKCS(1),
+	       spi->regs + SIFIVE_SPI_REG_DELAY0);
+	writel(SIFIVE_SPI_DELAY1_INTERCS(1) | SIFIVE_SPI_DELAY1_INTERXFR(0),
+	       spi->regs + SIFIVE_SPI_REG_DELAY1);
+
+	/* Exit specialized memory-mapped SPI flash mode */
+	writel(0, spi->regs + SIFIVE_SPI_REG_FCTRL);
+}
+
+int sifive_spi_probe(struct sifive_spi *spi)
+{
+	if (!spi->regs)
+		return -ENODEV;
+
+	spi->fifo_depth = 8 ;
+	spi->bits_per_word = 8;
+
+	// spi->freq = clk_get_rate(&clkdev);
+
+	/* init the sifive spi hw */
+	sifive_spi_init_hw(spi);
+
+	return 0;
+}
 
 static void sifive_spi_prep_device(struct sifive_spi *spi,
 				   struct dm_spi_slave_plat *slave_plat)
@@ -121,9 +175,6 @@ int sifive_spi_xfer(struct udevice *dev, unsigned int bitlen,
 	struct sifive_spi *spi = dev->spi;
 	struct dm_spi_slave_plat *slave_plat = dev->slave_plat;
 	
-	debug("############# flag1 ############\n");
-
-
 	const u8 *tx_ptr = dout;
 	u8 *rx_ptr = din;
 	u32 remaining_len;
@@ -137,11 +188,7 @@ int sifive_spi_xfer(struct udevice *dev, unsigned int bitlen,
 			return ret;
 	}
 
-	debug("############# flag2 ############\n");
-
 	sifive_spi_prep_transfer(spi, slave_plat, rx_ptr);
-
-	debug("############# flag3 ############\n");
 
 	remaining_len = bitlen / 8;
 
@@ -177,12 +224,10 @@ int sifive_spi_xfer(struct udevice *dev, unsigned int bitlen,
 		remaining_len -= n_words;
 	}
 
-	debug("############# flag4 ############\n");
 
 	if (flags & SPI_XFER_END)
 		sifive_spi_clear_cs(spi);
 
-	debug("############# flag5 ############\n");
 
 	return 0;
 }
