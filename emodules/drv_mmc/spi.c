@@ -157,7 +157,7 @@ static void sifive_spi_tx(struct sifive_spi *spi, const u8 *tx_ptr)
 static int sifive_spi_wait(struct sifive_spi *spi, u32 bit)
 {
 	return wait_for_bit_le32(spi->regs + SIFIVE_SPI_REG_IP,
-				 bit, true, 1000000, false);
+				 bit, true, 10000000, false);
 }
 
 #define min(x, y) ({				\

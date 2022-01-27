@@ -6,6 +6,8 @@
 #include "timer.h"
 #include "debug.h"
 
+// #define CONFIG_MMC_SPI_CRC_ON
+
 #define SIFIVE_SPI_MAX_CS		32
 
 /* register offsets */

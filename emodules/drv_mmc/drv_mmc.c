@@ -286,25 +286,55 @@ static int mmc_spi_writedata(struct udevice *dev, const void *xbuf,
 			     u32 bcnt, u32 bsize, int multi)
 {
 	const u8 *buf = xbuf;
-	u8 r1, tok[2];
+	u8 r1 = 0, tok[2];
 	u16 crc;
 	int i, ret = 0;
 
-	tok[0] = 0xff;
-	tok[1] = multi ? SPI_TOKEN_MULTI_WRITE : SPI_TOKEN_SINGLE;
+	u8 response_buf[bsize], wait_buf[CMD_TIMEOUT];
+
+	// warm cache
+	for (i = 0; i < bsize; i++) 
+		response_buf[i] = 0;
+	for (i = 0; i < CMD_TIMEOUT; i++)
+		wait_buf[i] = 0;
+
+	tok[0] = 0xff; // one byte gap
+	tok[1] = multi ? SPI_TOKEN_MULTI_WRITE : SPI_TOKEN_SINGLE; // the real token
 
 	while (bcnt--) {
 #ifdef CONFIG_MMC_SPI_CRC_ON
+		debug("crc is on\n");
 		crc = cpu_to_be16(crc16_ccitt(0, (u8 *)buf, bsize));
 #endif
-		dm_spi_xfer(dev, 2 * 8, tok, NULL, 0);
-		dm_spi_xfer(dev, bsize * 8, buf, NULL, 0);
-		dm_spi_xfer(dev, 2 * 8, &crc, NULL, 0);
+		// send data packet
+		dm_spi_xfer(dev, 2 * 8, tok, NULL, 0); // send data token
+
+		// dm_spi_xfer(dev, bsize * 8, buf, NULL, 0); // send data block
+		for (int k = 0; k < bsize; k++) {
+			dm_spi_xfer(dev, 1 * 8, &buf[k], &r1, 0); // send data block
+			response_buf[k] = r1;
+		}
+
+		dm_spi_xfer(dev, 2 * 8, &crc, NULL, 0); // send crc (dummy)
+
 		for (i = 0; i < CMD_TIMEOUT; i++) {
-			dm_spi_xfer(dev, 1 * 8, NULL, &r1, 0);
+			dm_spi_xfer(dev, 1 * 8, NULL, &r1, 0); // data response
+			wait_buf[i] = r1; // debug
 			if ((r1 & 0x10) == 0) /* response token */
 				break;
 		}
+
+		// debug
+		debug("response\n");
+		for (int j = 0; j < bsize; j++) {
+			debug("%d: r1 = 0x%x\n", j, response_buf[j]);
+		}
+		debug("wait\n");
+		for (int j = 0; j < i + 1; j++) {
+			debug("%d: r1 = 0x%x\n", j, wait_buf[j]);
+		}
+		debug("r1 = 0x%lx\n", r1);
+
 		debug("%s: data tok%d 0x%x\n", __func__, i, r1);
 		if (SPI_MMC_RESPONSE_CODE(r1) == SPI_RESPONSE_ACCEPTED) {
 			debug("%s: data accepted\n", __func__);
@@ -424,6 +454,7 @@ static int dm_mmc_spi_request (
 
 	ret = mmc_spi_sendcmd(dev, cmd->cmdidx, cmd->cmdarg, cmd->resp_type,
 			      resp, resp_size, resp_match, resp_match_value, r1b);
+	debug("flag1: ret = %d\n", ret);
 	if (ret)
 		goto done;
 
@@ -474,12 +505,118 @@ static int dm_mmc_spi_request (
 			ret = mmc_spi_writedata(dev, data->src,
 						data->blocks, data->blocksize,
 						multi);
+		debug("flag2: ret = %d\n", ret);
 	}
 
 done:
 	dm_spi_xfer(dev, 0, NULL, NULL, SPI_XFER_END);
 
 	return ret;
+}
+
+__attribute__((unused))
+static int mmc_read_blocks(void *dst, u64 start,
+			   u64 blkcnt)
+{
+	struct mmc_cmd cmd;
+	struct mmc_data data;
+
+	if (blkcnt > 1)
+		cmd.cmdidx = MMC_CMD_READ_MULTIPLE_BLOCK;
+	else
+		cmd.cmdidx = MMC_CMD_READ_SINGLE_BLOCK;
+
+	cmd.cmdarg = start;
+
+	cmd.resp_type = MMC_RSP_R1;
+
+	data.dest = dst;
+	data.blocks = blkcnt;
+	data.blocksize = 512;
+	data.flags = MMC_DATA_READ;
+
+	if (dm_mmc_spi_request(&mmc_sd, &cmd, &data))
+		return 0;
+
+	if (blkcnt > 1) {
+		cmd.cmdidx = MMC_CMD_STOP_TRANSMISSION;
+		cmd.cmdarg = 0;
+		cmd.resp_type = MMC_RSP_R1b;
+		if (dm_mmc_spi_request(&mmc_sd, &cmd, NULL)) {
+// #if !defined(CONFIG_SPL_BUILD) || defined(CONFIG_SPL_LIBCOMMON_SUPPORT)
+// 			pr_err("mmc fail to send stop cmd\n");
+// #endif
+			return 0;
+		}
+	}
+
+	return blkcnt;
+}
+
+static int change_crc_status(int status)
+{
+	struct mmc_cmd cmd;
+	int ret = 0;
+
+	cmd.cmdidx = MMC_CMD_SPI_CRC_ON_OFF;
+	cmd.cmdarg = status & 1UL;
+
+	ret = dm_mmc_spi_request(&mmc_sd, &cmd, NULL);
+
+	debug("ret = %d\n", ret);
+
+	return ret;
+}
+
+static ulong mmc_write_blocks(const void *src, u64 start,
+		u64 blkcnt)
+{
+	struct mmc_cmd cmd;
+	struct mmc_data data;
+	int ret = 0;
+	// int timeout_ms = 1000;
+
+	change_crc_status(0);
+	udelay(1);
+
+	if (blkcnt == 0)
+		return 0;
+	else if (blkcnt == 1)
+		cmd.cmdidx = MMC_CMD_WRITE_SINGLE_BLOCK;
+	else
+		cmd.cmdidx = MMC_CMD_WRITE_MULTIPLE_BLOCK;
+
+	cmd.cmdarg = start;
+	cmd.resp_type = MMC_RSP_R1;
+
+	data.src = src;
+	data.blocks = blkcnt;
+	data.blocksize = 512;
+	data.flags = MMC_DATA_WRITE;
+
+	if ((ret = dm_mmc_spi_request(&mmc_sd, &cmd, &data))) {
+		debug("mmc write failed, ret = %d\n", ret);
+		return 0;
+	}
+
+	/* SPI multiblock writes terminate using a special
+	 * token, not a STOP_TRANSMISSION request.
+	 */
+	if (blkcnt > 1) {
+		cmd.cmdidx = MMC_CMD_STOP_TRANSMISSION;
+		cmd.cmdarg = 0;
+		cmd.resp_type = MMC_RSP_R1b;
+		if ((ret = dm_mmc_spi_request(&mmc_sd, &cmd, NULL))) {
+			debug("mmc fail to send stop cmd, ret = %d\n", ret);
+			return 0;
+		}
+	}
+
+	/* Waiting for the ready status */
+	// if (mmc_poll_for_busy(mmc, timeout_ms))
+	// 	return 0;
+
+	return blkcnt;
 }
 
 // ------------------------------
@@ -519,62 +656,47 @@ static int emod_setup(volatile extra_module_t *emod)
     return 0;
 }
 
-
 // ------------------------------
 
-static int mmc_read_blocks(void *dst, u64 start,
-			   u64 blkcnt)
-{
-	struct mmc_cmd cmd;
-	struct mmc_data data;
+#define BLOCK_SIZE	512UL
+#define NUM_BLOCKS	1UL
+#define BUF_SIZE	(BLOCK_SIZE * NUM_BLOCKS)
 
-	if (blkcnt > 1)
-		cmd.cmdidx = MMC_CMD_READ_MULTIPLE_BLOCK;
-	else
-		cmd.cmdidx = MMC_CMD_READ_SINGLE_BLOCK;
-
-	cmd.cmdarg = start;
-
-	cmd.resp_type = MMC_RSP_R1;
-
-	data.dest = dst;
-	data.blocks = blkcnt;
-	data.blocksize = 512;
-	data.flags = MMC_DATA_READ;
-
-	if (dm_mmc_spi_request(&mmc_sd, &cmd, &data))
-		return 0;
-
-	if (blkcnt > 1) {
-		cmd.cmdidx = MMC_CMD_STOP_TRANSMISSION;
-		cmd.cmdarg = 0;
-		cmd.resp_type = MMC_RSP_R1b;
-		if (dm_mmc_spi_request(&mmc_sd, &cmd, NULL)) {
-// #if !defined(CONFIG_SPL_BUILD) || defined(CONFIG_SPL_LIBCOMMON_SUPPORT)
-// 			pr_err("mmc fail to send stop cmd\n");
-// #endif
-			return 0;
-		}
-	}
-
-	return blkcnt;
-}
+#define START_BLOCK	8000000UL
 
 static void test()
 {
-	char buffer[2048];
-	for (int i = 0; i < 2048; i++) {
+	char buffer[BUF_SIZE];
+	char wbuffer[BUF_SIZE];
+
+	for (int i = 0; i < BUF_SIZE; i++) {
 		buffer[i] = 0;
 	}
+	// mmc_read_blocks(buffer, START_BLOCK, NUM_BLOCKS);
+	// udelay(10);
 
-	mmc_read_blocks(buffer, 0, 1);
+	// debug("read 1 \n");
 
-	for (int i = 0; i < 520; i += 16) {
+	for (int i = 0; i < BUF_SIZE; i++) {
+		wbuffer[i] = i;
+	}
+	mmc_write_blocks(wbuffer, START_BLOCK, NUM_BLOCKS);
+
+	debug("write 1 \n");
+
+	for (int i = 0; i < BUF_SIZE; i++) {
+		buffer[i] = 0;
+	}
+	mmc_read_blocks(buffer, START_BLOCK, NUM_BLOCKS);
+	udelay(10);
+
+	debug("read 2 \n");
+
+	for (int i = 0; i < BUF_SIZE; i += 16) {
 		u32 *ptr = (u32 *)&buffer[i];
-		debug("0x%lx, 0x%lx, 0x%lx, 0x%lx\n",
+		debug("0x%x, 0x%x, 0x%x, 0x%x\n",
 			ptr[0], ptr[1], ptr[2], ptr[3]);
 	}
-
 }
 
 __attribute__((section(".text.init")))

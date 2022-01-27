@@ -2,7 +2,6 @@
 
 #include "spi.h"
 
-#define SPI_MODE_0				(0|0)			/* (original MicroWire) */
 #define MMC_MODE_SPI		BIT(27)
 
 #define MMC_VDD_32_33		0x00100000	/* VDD voltage 3.2 ~ 3.3 */
@@ -99,7 +98,7 @@
 #define OCR_ACCESS_MODE		0x60000000
 
 /* timeout value */
-#define CMD_TIMEOUT			8
+#define CMD_TIMEOUT			512
 #define READ_TIMEOUT			3000000 /* 1 sec */
 #define WRITE_TIMEOUT			3000000 /* 1 sec */
 #define R1B_TIMEOUT			3000000 /* 1 sec */
