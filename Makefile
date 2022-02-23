@@ -7,10 +7,10 @@ all: emodules opensbi image
 image: emodules opensbi
 	$(MKIMAGE) -E -f $(ITS_PATH)/u-boot.its $(ITB_PATH)/u-boot.itb
 
-emodules: clean
+emodules: clean tools/md2/build/md2
 	make -C emodules CROSS_COMPILE=riscv64-unknown-elf- -j
 
-opensbi: clean tools/md2/build/md2
+opensbi: clean
 	make -C coffer-opensbi CROSS_COMPILE=riscv64-unknown-elf- PLATFORM=generic -j
 
 tools/md2/build/md2:
