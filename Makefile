@@ -1,4 +1,4 @@
-MKIMAGE ?= /home/prongs/src/u-boot/tools/mkimage
+MKIMAGE ?= mkimage
 ITS_PATH ?= tools/unmatched
 ITB_PATH ?= .
 
