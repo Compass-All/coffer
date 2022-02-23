@@ -4,7 +4,7 @@ ITB_PATH ?= .
 
 all: emodules opensbi image
 
-image: emodules opensbi tools/md2/build/md2
+image: tools/md2/build/md2 emodules opensbi
 	$(MKIMAGE) -E -f $(ITS_PATH)/u-boot.its $(ITB_PATH)/u-boot.itb
 
 tools/md2/build/md2:
