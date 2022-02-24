@@ -50,7 +50,7 @@ dir:
 	mkdir -p $(BUILD_DIR)
 
 docker:
-ifeq (, $(shell $(DOCKER) images $(DOCKER_IMAGE)))
+ifeq (, $(shell $(DOCKER) images $(DOCKER_IMAGE) -q))
 	$(DOCKER) build -t $(DOCKER_IMAGE) .
 endif
 
