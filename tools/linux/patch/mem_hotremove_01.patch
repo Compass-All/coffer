@@ -1,0 +1,58 @@
+From 44456c75492b457fcad7f3b0070ec0f312edc927 Mon Sep 17 00:00:00 2001
+From: MstMoonshine <11710919@mail.sustech.edu.cn>
+Date: Thu, 16 Sep 2021 21:05:41 +0800
+Subject: [PATCH] feat: isolate pages during boot up
+
+---
+ mm/Kconfig      |  2 +-
+ mm/page_alloc.c | 14 ++++++++++++--
+ 2 files changed, 13 insertions(+), 3 deletions(-)
+
+diff --git a/mm/Kconfig b/mm/Kconfig
+index a02498c0e13d..46aa2961e5f9 100644
+--- a/mm/Kconfig
++++ b/mm/Kconfig
+@@ -110,7 +110,7 @@ config NUMA_KEEP_MEMINFO
+ 	bool
+ 
+ config MEMORY_ISOLATION
+-	bool
++	def_bool y
+ 
+ #
+ # Only be set on architectures that have completely implemented memory hotplug
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index d6e94cc8066c..de8a95dd2d91 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -72,6 +72,7 @@
+ #include <linux/padata.h>
+ #include <linux/khugepaged.h>
+ #include <linux/buffer_head.h>
++#include <linux/mmzone.h>
+ #include <asm/sections.h>
+ #include <asm/tlbflush.h>
+ #include <asm/div64.h>
+@@ -6703,8 +6704,17 @@ static void __init memmap_init_zone_range(struct zone *zone,
+ 	if (start_pfn >= end_pfn)
+ 		return;
+ 
+-	memmap_init_range(end_pfn - start_pfn, nid, zone_id, start_pfn,
+-			  zone_end_pfn, MEMINIT_EARLY, NULL, MIGRATE_MOVABLE);
++	printk("[memmap_init_zone_range]-------------------------------\n");
++//	memmap_init_range(end_pfn - start_pfn, nid, zone_id, start_pfn,
++//			  zone_end_pfn, MEMINIT_EARLY, NULL, MIGRATE_MOVABLE);
++	if (zone_id == ZONE_MOVABLE)
++		memmap_init_range(end_pfn - start_pfn, nid, zone_id, start_pfn,
++				  zone_end_pfn, MEMINIT_EARLY, NULL, MIGRATE_ISOLATE);
++	else
++		memmap_init_range(end_pfn - start_pfn, nid, zone_id, start_pfn,
++				  zone_end_pfn, MEMINIT_EARLY, NULL, MIGRATE_MOVABLE);
++
++	printk("zone_id = %x, ZONE_MOVABLE = %x\n", zone_id, ZONE_MOVABLE);
+ 
+ 	if (*hole_pfn < start_pfn)
+ 		init_unavailable_range(*hole_pfn, start_pfn, zone_id, nid);
+-- 
+2.20.1
+

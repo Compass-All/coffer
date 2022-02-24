@@ -8,7 +8,10 @@ endif
 
 .PHONY: all $(subdirs) clean
 
-all: $(subdirs)
+all: dir $(subdirs)
+
+dir:
+	mkdir -p $(build_dir)
 
 $(subdirs):
 	make -C $@ CROSS_COMPILE=$(CROSS_COMPILE)

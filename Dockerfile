@@ -10,17 +10,42 @@ RUN apt -y install autoconf automake autotools-dev curl python3 libmpc-dev libmp
     gawk build-essential bison flex texinfo gperf libtool patchutils bc zlib1g-dev libexpat-dev texinfo \
     libncurses5-dev libncursesw5-dev libpython2.7 pkg-config
 
+# U-Boot
+RUN apt -y install u-boot-tools
+
+# Get Sources
+ARG QEMU_VERSION=5.0.0
+RUN wget https://download.qemu.org/qemu-${QEMU_VERSION}.tar.xz -P /root --no-verbose
+RUN git clone https://github.com/torvalds/linux.git /root/linux
+RUN git clone https://git.busybox.net/busybox /root/busybox
+
 # QEMU
 RUN apt -y install libglib2.0-dev libpixman-1-dev
+RUN tar xJf /root/qemu-${QEMU_VERSION}.tar.xz -C /root
 
-RUN wget https://download.qemu.org/qemu-5.0.0.tar.xz -P /root --no-verbose
-RUN tar xJf /root/qemu-5.0.0.tar.xz -C /root
-
-WORKDIR /root/qemu-5.0.0
+WORKDIR /root/qemu-${QEMU_VERSION}
 RUN ./configure --target-list=riscv64-linux-user,riscv64-softmmu
 RUN make -j$(nproc)
 RUN make install
 WORKDIR /
 
-# U-Boot
-RUN apt -y install u-boot-tools
+# Linux
+ADD tools/linux/patch /root/linux_patch
+ADD tools/linux/config /root/linux_config
+
+WORKDIR /root/linux
+RUN git checkout v5.14
+RUN git apply /root/linux_patch/mem_hotremove_01.patch
+RUN git apply /root/linux_patch/mem_hotremove_02.patch
+RUN cp /root/linux_config/coffer_defconfig arch/riscv/configs/coffer_defconfig
+RUN ARCH=riscv make coffer_defconfig
+WORKDIR /
+
+# Busybox
+ADD tools/busybox/config /root/busybox_config
+
+WORKDIR /root/busybox
+RUN git checkout 1_32_1
+RUN cp /root/busybox_config/.config .
+RUN CROSS_COMPILE=riscv64-unknown-linux-gnu- make -j4
+WORKDIR /
