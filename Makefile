@@ -29,14 +29,14 @@ QEMU_INIT_SCRIPT = tools/rootfs/script
 
 all: dir emodules opensbi board-image rootfs
 
-kernel-image:
+kernel-image: docker
 ifeq (, $(wildcard $(KERNEL_IMAGE))) # kernel image not found
 	mkdir -p $(KERNEL_IMAGE_PATH)
 	$(DOCKER_RUN) /bin/bash -c " make -C $(DOCKER_LINUX_PATH) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- -j4 Image \
 	&& cp $(DOCKER_LINUX_PATH)/arch/riscv/boot/Image $(DOCKER_WORKDIR)/$(KERNEL_IMAGE) "
 endif
 
-qemu-run: kernel-image
+qemu-run: kernel-image docker
 	$(DOCKER_RUN) qemu-system-riscv64 \
 		-M virt -m 8G -smp 1 -nographic \
         -bios $(DOCKER_WORKDIR)/coffer-opensbi/build/platform/generic/firmware/fw_jump.elf \
@@ -54,7 +54,7 @@ ifeq (, $(shell $(DOCKER) images $(DOCKER_IMAGE)))
 	$(DOCKER) build -t $(DOCKER_IMAGE) .
 endif
 
-rootfs: emodules
+rootfs: emodules docker
 ifeq (, $(wildcard $(ROOTFS))) # ROOTFS not found
 # Make ext2 FS
 	sudo dd if=/dev/zero of=$(ROOTFS) bs=1M count=64
@@ -94,7 +94,7 @@ board-image: emodules opensbi docker
 emodules: tools/md2/build/md2 docker
 	$(DOCKER_MAKE) -C $(DOCKER_WORKDIR)/emodules CROSS_COMPILE=riscv64-unknown-elf-
 
-opensbi:
+opensbi: docker
 	$(DOCKER_MAKE) -C $(DOCKER_WORKDIR)/coffer-opensbi CROSS_COMPILE=riscv64-unknown-elf- PLATFORM=generic -j
 
 tools/md2/build/md2:
