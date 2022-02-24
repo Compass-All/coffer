@@ -1,0 +1,18 @@
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index de8a95dd2d91..60fcf7f21ad0 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -6707,9 +6707,12 @@ static void __init memmap_init_zone_range(struct zone *zone,
+ 	printk("[memmap_init_zone_range]-------------------------------\n");
+ //	memmap_init_range(end_pfn - start_pfn, nid, zone_id, start_pfn,
+ //			  zone_end_pfn, MEMINIT_EARLY, NULL, MIGRATE_MOVABLE);
+-	if (zone_id == ZONE_MOVABLE)
++	if (zone_id == ZONE_MOVABLE) {
+ 		memmap_init_range(end_pfn - start_pfn, nid, zone_id, start_pfn,
+ 				  zone_end_pfn, MEMINIT_EARLY, NULL, MIGRATE_ISOLATE);
++		printk("Isolated range: 0x%lx -> 0x%lx\n",
++				start_pfn << 12, end_pfn << 12);
++	}
+ 	else
+ 		memmap_init_range(end_pfn - start_pfn, nid, zone_id, start_pfn,
+ 				  zone_end_pfn, MEMINIT_EARLY, NULL, MIGRATE_MOVABLE);
