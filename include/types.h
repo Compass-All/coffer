@@ -17,3 +17,7 @@ typedef unsigned long long u64;
 typedef unsigned long ulong;
 
 typedef char bool;
+
+typedef u64 usize;
+typedef u64 paddr;
+typedef u64 vaddr;

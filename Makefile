@@ -17,7 +17,7 @@ DOCKER_PROG_PATH = /root/prog
 ROOTFS = $(BUILD_DIR)/rootfs.img
 MOUNT_POINT = $(BUILD_DIR)/mnt
 
-EMODULE_DIRS = $(subst emodules/,,$(sort $(dir $(wildcard emodules/drv_*/))))
+EMODULE_DIRS = $(subst emodules/,,$(sort $(dir $(wildcard emodules/*/))))
 EMODULES = $(EMODULE_DIRS:/=)
 EMODULE_TARGETS = $(addsuffix .bin, $(EMODULES))
 EMODULE_PATH = $(addprefix $(BUILD_DIR)/emodules/, $(EMODULE_DIRS))
@@ -106,7 +106,7 @@ board-image: emodules opensbi docker
 emodules: tools/md2/build/md2 docker
 	$(DOCKER_MAKE) -C $(DOCKER_WORKDIR)/emodules CROSS_COMPILE=riscv64-unknown-elf-
 
-opensbi: docker
+opensbi: docker emodules
 	$(DOCKER_MAKE) -C $(DOCKER_WORKDIR)/coffer-opensbi CROSS_COMPILE=riscv64-unknown-elf- PLATFORM=generic -j
 
 tools/md2/build/md2:
