@@ -6,7 +6,11 @@ ITB_PATH ?= $(BUILD_DIR)/itb
 
 DOCKER = sudo docker # Linux only
 DOCKER_WORKDIR = /root/coffer
-DOCKER_RUN = $(DOCKER) run -it -v $(shell pwd):$(DOCKER_WORKDIR) --rm --device /dev/kvm coffer_dev
+DOCKER_RUN = $(DOCKER) run -it --rm \
+	-v $(shell pwd):$(DOCKER_WORKDIR) \
+	-p 1234:1234 \
+	--device /dev/kvm coffer_dev \
+	env TERM=xterm-256color
 DOCKER_MAKE = $(DOCKER_RUN) make
 DOCKER_IMAGE = coffer_dev
 
