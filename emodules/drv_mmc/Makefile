@@ -105,7 +105,9 @@ $(target_dir)/lib/%.o: $(src_dir)/%.S dirs
 dirs:
 	mkdir -p $(target_dir)
 	mkdir -p $(target_dir)/lib
-# mkdir -p $(call uniq,$(target_subdirs))
+ifneq (, $(target_subdirs))
+	mkdir -p $(call uniq,$(target_subdirs))
+endif
 
 .PHONY: clean
 
