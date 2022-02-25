@@ -17,7 +17,7 @@ DOCKER_PROG_PATH = /root/prog
 ROOTFS = $(BUILD_DIR)/rootfs.img
 MOUNT_POINT = $(BUILD_DIR)/mnt
 
-EMODULE_DIRS = $(subst emodules/,,$(sort $(dir $(wildcard emodules/drv_*/))))
+EMODULE_DIRS = $(subst emodules/,,$(sort $(dir $(wildcard emodules/*/))))
 EMODULES = $(EMODULE_DIRS:/=)
 EMODULE_TARGETS = $(addsuffix .bin, $(EMODULES))
 EMODULE_PATH = $(addprefix $(BUILD_DIR)/emodules/, $(EMODULE_DIRS))
@@ -38,7 +38,7 @@ QEMU_CMD = -M virt -m 8G -smp 1 -nographic \
 
 PROG_BUILD = $(BUILD_DIR)/prog
 
-all: dir emodules opensbi board-image
+all: dir emodules opensbi board-image rootfs
 
 kernel-image: docker
 ifeq (, $(wildcard $(KERNEL_IMAGE))) # kernel image not found
@@ -47,10 +47,10 @@ ifeq (, $(wildcard $(KERNEL_IMAGE))) # kernel image not found
 		&& cp $(DOCKER_LINUX_PATH)/arch/riscv/boot/Image $(DOCKER_WORKDIR)/$(KERNEL_IMAGE) "
 endif
 
-qemu-run: kernel-image docker rootfs
+qemu-run: kernel-image docker # rootfs
 	$(DOCKER_RUN) $(QEMU) $(QEMU_CMD)
 
-qemu-gdb: kernel-image docker rootfs
+qemu-gdb: kernel-image docker # rootfs
 	$(DOCKER_RUN) $(QEMU) $(QEMU_CMD) -s -S
 
 dir:
@@ -62,16 +62,18 @@ ifeq (, $(shell $(DOCKER) images $(DOCKER_IMAGE) -q))
 endif
 
 prog: docker
+ifeq (, $(wildcard $(BUILD_DIR)/prog/))
 	$(DOCKER_RUN) /bin/bash -c "cd $(DOCKER_PROG_PATH) \
 		&& git pull \
 		&& make \
 		&& cd / \
 		&& cp -r $(DOCKER_PROG_PATH) $(DOCKER_WORKDIR)/$(PROG_BUILD)"
+endif
 
 rootfs: emodules docker prog
 ifeq (, $(wildcard $(ROOTFS))) # ROOTFS not found
 # Make ext2 FS
-	sudo dd if=/dev/zero of=$(ROOTFS) bs=1M count=64
+	sudo dd if=/dev/zero of=$(ROOTFS) bs=1M count=256
 	sudo mkfs.ext2 -F $(ROOTFS)
 # Mount
 	mkdir -p $(MOUNT_POINT)
@@ -93,6 +95,7 @@ endif
 # Copy emodules
 	sudo cp $(EMODULE_TARGETS_ABS) $(MOUNT_POINT)/
 # Copy prog
+	sudo rm -rf $(MOUNT_POINT)/prog
 	sudo cp -r $(PROG_BUILD) $(MOUNT_POINT)/
 
 	sudo umount $(MOUNT_POINT)
@@ -106,7 +109,8 @@ board-image: emodules opensbi docker
 emodules: tools/md2/build/md2 docker
 	$(DOCKER_MAKE) -C $(DOCKER_WORKDIR)/emodules CROSS_COMPILE=riscv64-unknown-elf-
 
-opensbi: docker
+opensbi: docker emodules
+	$(DOCKER_MAKE) clean -C $(DOCKER_WORKDIR)/coffer-opensbi 
 	$(DOCKER_MAKE) -C $(DOCKER_WORKDIR)/coffer-opensbi CROSS_COMPILE=riscv64-unknown-elf- PLATFORM=generic -j
 
 tools/md2/build/md2:
