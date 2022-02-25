@@ -25,7 +25,15 @@ EMODULE_TARGETS_ABS = $(join $(EMODULE_PATH), $(EMODULE_TARGETS))
 KERNEL_IMAGE_PATH = tools/linux/build
 KERNEL_IMAGE = $(KERNEL_IMAGE_PATH)/Image
 
+QEMU = qemu-system-riscv64
 QEMU_INIT_SCRIPT = tools/rootfs/script
+QEMU_CMD = -M virt -m 8G -smp 1 -nographic \
+        -bios $(DOCKER_WORKDIR)/coffer-opensbi/build/platform/generic/firmware/fw_jump.elf \
+        -kernel $(DOCKER_WORKDIR)/$(KERNEL_IMAGE) \
+        -device loader,file=$(DOCKER_WORKDIR)/$(KERNEL_IMAGE),addr=0x80200000 \
+        -drive file=$(DOCKER_WORKDIR)/$(ROOTFS),format=raw,id=hd0 \
+        -device virtio-blk-device,drive=hd0 \
+        -append "root=/dev/vda rw console=ttyS0 movablecore=0x140000000" \
 
 all: dir emodules opensbi board-image rootfs
 
@@ -37,14 +45,10 @@ ifeq (, $(wildcard $(KERNEL_IMAGE))) # kernel image not found
 endif
 
 qemu-run: kernel-image docker
-	$(DOCKER_RUN) qemu-system-riscv64 \
-		-M virt -m 8G -smp 1 -nographic \
-        -bios $(DOCKER_WORKDIR)/coffer-opensbi/build/platform/generic/firmware/fw_jump.elf \
-        -kernel $(DOCKER_WORKDIR)/$(KERNEL_IMAGE) \
-        -device loader,file=$(DOCKER_WORKDIR)/$(KERNEL_IMAGE),addr=0x80200000 \
-        -drive file=$(DOCKER_WORKDIR)/$(ROOTFS),format=raw,id=hd0 \
-        -device virtio-blk-device,drive=hd0 \
-        -append "root=/dev/vda rw console=ttyS0 movablecore=0x140000000" \
+	$(DOCKER_RUN) $(QEMU) $(QEMU_CMD)
+
+qemu-gdb: kernel-image docker
+	$(DOCKER_RUN) $(QEMU) $(QEMU_CMD) -s -S
 
 dir:
 	mkdir -p $(BUILD_DIR)
