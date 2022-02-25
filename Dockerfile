@@ -8,7 +8,7 @@ RUN apt -y update \
 # GNU Environment
 RUN apt -y install autoconf automake autotools-dev curl python3 libmpc-dev libmpfr-dev libgmp-dev \
     gawk build-essential bison flex texinfo gperf libtool patchutils bc zlib1g-dev libexpat-dev texinfo \
-    libncurses5-dev libncursesw5-dev libpython2.7 pkg-config
+    libncurses5-dev libncursesw5-dev libpython2.7 pkg-config libglib2.0-dev libpixman-1-dev
 
 # U-Boot
 RUN apt -y install u-boot-tools
@@ -21,8 +21,7 @@ RUN git clone https://git.busybox.net/busybox /root/busybox
 RUN git clone https://github.com/MstMoonshine/COFFER_prog.git /root/prog
 
 # QEMU
-RUN apt -y install libglib2.0-dev libpixman-1-dev \
-    && tar xJf /root/qemu-${QEMU_VERSION}.tar.xz -C /root
+RUN tar xJf /root/qemu-${QEMU_VERSION}.tar.xz -C /root
 
 WORKDIR /root/qemu-${QEMU_VERSION}
 RUN ./configure --target-list=riscv64-linux-user,riscv64-softmmu \

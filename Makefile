@@ -12,6 +12,7 @@ DOCKER_IMAGE = coffer_dev
 
 DOCKER_BUSYBOX_PATH = /root/busybox
 DOCKER_LINUX_PATH = /root/linux
+DOCKER_PROG_PATH = /root/prog
 
 ROOTFS = $(BUILD_DIR)/rootfs.img
 MOUNT_POINT = $(BUILD_DIR)/mnt
@@ -35,19 +36,21 @@ QEMU_CMD = -M virt -m 8G -smp 1 -nographic \
         -device virtio-blk-device,drive=hd0 \
         -append "root=/dev/vda rw console=ttyS0 movablecore=0x140000000" \
 
-all: dir emodules opensbi board-image rootfs
+PROG_BUILD = $(BUILD_DIR)/prog
+
+all: dir emodules opensbi board-image
 
 kernel-image: docker
 ifeq (, $(wildcard $(KERNEL_IMAGE))) # kernel image not found
 	mkdir -p $(KERNEL_IMAGE_PATH)
 	$(DOCKER_RUN) /bin/bash -c " make -C $(DOCKER_LINUX_PATH) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- -j4 Image \
-	&& cp $(DOCKER_LINUX_PATH)/arch/riscv/boot/Image $(DOCKER_WORKDIR)/$(KERNEL_IMAGE) "
+		&& cp $(DOCKER_LINUX_PATH)/arch/riscv/boot/Image $(DOCKER_WORKDIR)/$(KERNEL_IMAGE) "
 endif
 
-qemu-run: kernel-image docker
+qemu-run: kernel-image docker rootfs
 	$(DOCKER_RUN) $(QEMU) $(QEMU_CMD)
 
-qemu-gdb: kernel-image docker
+qemu-gdb: kernel-image docker rootfs
 	$(DOCKER_RUN) $(QEMU) $(QEMU_CMD) -s -S
 
 dir:
@@ -58,7 +61,14 @@ ifeq (, $(shell $(DOCKER) images $(DOCKER_IMAGE) -q))
 	$(DOCKER) build -t $(DOCKER_IMAGE) .
 endif
 
-rootfs: emodules docker
+prog: docker
+	$(DOCKER_RUN) /bin/bash -c "cd $(DOCKER_PROG_PATH) \
+		&& git pull \
+		&& make \
+		&& cd / \
+		&& cp -r $(DOCKER_PROG_PATH) $(DOCKER_WORKDIR)/$(PROG_BUILD)"
+
+rootfs: emodules docker prog
 ifeq (, $(wildcard $(ROOTFS))) # ROOTFS not found
 # Make ext2 FS
 	sudo dd if=/dev/zero of=$(ROOTFS) bs=1M count=64
@@ -71,13 +81,10 @@ ifeq (, $(wildcard $(ROOTFS))) # ROOTFS not found
 	$(DOCKER_RUN) cp $(DOCKER_BUSYBOX_PATH)/busybox $(DOCKER_WORKDIR)/$(MOUNT_POINT)/bin
 	sudo ln -s ../bin/busybox $(MOUNT_POINT)/sbin/init
 	sudo ln -s ../bin/busybox $(MOUNT_POINT)/bin/sh
-# Shell init script
-	sudo mkdir -p $(MOUNT_POINT)/etc/init.d
-	sudo cp $(QEMU_INIT_SCRIPT) $(MOUNT_POINT)/etc/init.d/rcS
-	sudo chmod +x $(MOUNT_POINT)/etc/init.d/rcS
 
 	sudo umount $(MOUNT_POINT)
-else # ROOTFS exists
+endif
+# ROOTFS exists
 	sudo mount -o loop $(ROOTFS) $(MOUNT_POINT)
 # Update shell init script
 	sudo mkdir -p $(MOUNT_POINT)/etc/init.d
@@ -85,9 +92,10 @@ else # ROOTFS exists
 	sudo chmod +x $(MOUNT_POINT)/etc/init.d/rcS
 # Copy emodules
 	sudo cp $(EMODULE_TARGETS_ABS) $(MOUNT_POINT)/
+# Copy prog
+	sudo cp -r $(PROG_BUILD) $(MOUNT_POINT)/
 
 	sudo umount $(MOUNT_POINT)
-endif
 
 
 board-image: emodules opensbi docker
@@ -106,9 +114,9 @@ tools/md2/build/md2:
 
 clean: docker
 	sudo rm -rf $(BUILD_DIR)
-	make clean -C coffer-opensbi
+	sudo make clean -C coffer-opensbi
 
 clean-kernel:
 	rm $(KERNEL_IMAGE)
 
-.PHONY: all clean clean-kernel docker rootfs dir board-image kernel-image
+.PHONY: all clean clean-kernel docker rootfs dir board-image kernel-image prog
