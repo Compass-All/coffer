@@ -1,5 +1,6 @@
 emodule-objs-y = 
 emodule-objs-y += entry.o 
+emodule-objs-y += emod_manager.o
 emodule-objs-y += boot/boot.o
 emodule-objs-y += printf/printf.o
 
