@@ -2,8 +2,6 @@
 
 #include <emodules/emodule_info.h>
 
-#define EMOD_MANAGER_API_QUERY_MODULE	0
-
 typedef struct {
 	emodule_info_t info;
 
