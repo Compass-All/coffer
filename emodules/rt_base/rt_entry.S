@@ -112,7 +112,6 @@ ret_to_usr:
 
     RESTORE_CONTEXT
     csrrw   sp, sscratch, sp
-    # jal     log
     sret
 
     .align 4
@@ -120,15 +119,23 @@ ret_to_usr:
     .globl  _start
 _start:
     la      s7, 2f
-    sub     s7, s7, a0      // s7 = 2f - mem_start (mem_start = a2)
+    sub     s7, s7, a1      // s7 = 2f - base_pa_start
     li      s6, ERT_VA_START
     add     s7, s6, s7
-    csrw    stvec, s7
+    csrw    stvec, s7       // stvec points to va of `2f'
 
     /* temporary stack */
     la      sp, rt_base_stack_top
-    /* setup new page table */
+    /* setup new page table 
+     * init_mem (a0 = id, a1 = base_pa_start, a2 = base_size, 
+     *           a3 = payload_pa_start， a4 = payload_size)
+     */
     jal     init_mem
+    /* 
+     * after: a0 = satp, a1 = base_sp
+     *        a2 = usr_pc, a3 = usr_sp, a4 = usr_entry_offset
+     *        a5 = usr_sp_pa
+     */
     mv      sp, a1
     sfence.vma
     csrw    satp, a0
@@ -141,7 +148,9 @@ _start:
     csrw    stvec,  s7
 
     WAIT_ENTER
-    /* go to eapp */
+    /* go to eapp
+     * prepare_boot(a0 = argc, a1 = argv, a2 = usr_pc, a3 = usr_sp, a4 = usr_entry_offset)
+     */
     jal     prepare_boot
     csrrw   sp, sscratch, sp
 

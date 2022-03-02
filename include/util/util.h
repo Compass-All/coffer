@@ -13,13 +13,9 @@ typedef struct {
     int holder;
 } peri_addr_t;
 
-// typedef struct {
-// 	uintptr_t pmp_start;
-// 	uintptr_t pmp_size;
-// 	uintptr_t used;
-// } memseg_t;
-
 #endif // __ASSEMBLER__
+
+#define COFFER_EVAL
 
 #if __riscv_xlen == 64
 #define STORE sd

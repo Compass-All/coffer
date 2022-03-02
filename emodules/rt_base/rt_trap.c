@@ -7,9 +7,67 @@
 #include <stdint.h>
 #include <util/util.h>
 
+// FIXME: Remove below after implementing all syscalls.
+#ifdef EMODULES_DEBUG
+static const char* syscall_name[] = {
+    [SYS_getcwd] = "getcwd",
+    [SYS_dup] = "dup",
+    [SYS_fcntl] = "fcntl",
+    [SYS_faccessat] = "faccessat",
+    [SYS_chdir] = "chdir",
+    [SYS_openat] = "openat",
+    [SYS_close] = "close",
+    [SYS_getdents] = "getdents",
+    [SYS_lseek] = "lseek",
+    [SYS_read] = "read",
+    [SYS_write] = "write",
+    [SYS_writev] = "writev",
+    [SYS_pread] = "pread",
+    [SYS_pwrite] = "pwrite",
+    [SYS_fstatat] = "fstatat",
+    [SYS_fstat] = "fstat",
+    [SYS_exit] = "exit",
+    [SYS_exit_group] = "exit_group",
+    [SYS_kill] = "kill",
+    [SYS_rt_sigaction] = "rt_sigaction",
+    [SYS_times] = "times",
+    [SYS_uname] = "uname",
+    [SYS_gettimeofday] = "gettimeofday",
+    [SYS_getpid] = "getpid",
+    [SYS_getuid] = "getuid",
+    [SYS_geteuid] = "geteuid",
+    [SYS_getgid] = "getgid",
+    [SYS_getegid] = "getegid",
+    [SYS_brk] = "brk",
+    [SYS_munmap] = "munmap",
+    [SYS_mremap] = "mremap",
+    [SYS_mmap] = "mmap",
+    [SYS_open] = "open",
+    [SYS_link] = "link",
+    [SYS_unlink] = "unlink",
+    [SYS_mkdir] = "mkdir",
+    [SYS_access] = "access",
+    [SYS_stat] = "stat",
+    [SYS_lstat] = "lstat",
+    [SYS_time] = "time",
+    [SYS_getmainvars] = "getmainvars",
+};
+#endif
+
 #define ARG(x) (regs[CTX_INDEX_a##x])
 
-uintptr_t enclave_id;
+uintptr_t proxy_stvec;
+
+extern uintptr_t enclave_id;
+
+static uintptr_t proxy_syscall(uintptr_t* regs)
+{
+    uintptr_t rt_stvec = read_csr(stvec);
+    write_csr(stvec, proxy_stvec);
+    SYSCALL(ARG(7), ARG(0), ARG(1), ARG(2), ARG(3), ARG(4), ARG(5));
+    write_csr(stvec, rt_stvec);
+    return ARG(0); // a0 stores the return value
+}
 
 void handle_interrupt(uintptr_t* regs, uintptr_t scause, uintptr_t sepc,
     uintptr_t stval)
@@ -79,18 +137,47 @@ void handle_syscall(uintptr_t* regs, uintptr_t scause, uintptr_t sepc,
         retval = rt_brk(ARG(0));
         em_debug("retval = 0x%lx\n", retval);
         break;
-    case SYS_gettimeofday:
-        retval = rt_gettimeofday((struct timeval*)ARG(0), (struct timezone*)ARG(1));
-        break;
+    // case SYS_gettimeofday:
+    //     retval = rt_gettimeofday((struct timeval*)ARG(0), (struct timezone*)ARG(1));
+    //     break;
     case SYS_exit:
         em_debug("SYS_exit\n");
+#ifdef COFFER_EVAL
+        extern uintptr_t start_cycle, end_cycle;
+        end_cycle = read_csr(cycle);
+        rt_printf("Cycles: %lu %lu ", start_cycle, end_cycle);
+#endif
         ecall_exit_enclave(ARG(0));
         __builtin_unreachable();
     case SYS_faccessat:
+        em_debug("SYS_faccessat       ##########  FAKE  ###########\n");
         retval = 0;
         break;
+    case SYS_getuid:
+    case SYS_geteuid:
+    case SYS_getgid:
+    case SYS_getegid:
+        retval = 0;
+        break;
+    case SYS_read:
+        em_error("Trying to read from file #%lu to buffer %p w/ count=%lu\n", ARG(0), (void*)ARG(1), ARG(2));
+        ecall_exit_enclave(-1);
+        __builtin_unreachable();
+    case SYS_open:
+        em_error("Trying to open file at %s w/ flags=0x%lx and mode=0x%lx\n", (char*)ARG(0), ARG(1), ARG(2));
+        ecall_exit_enclave(-1);
+        __builtin_unreachable();
+    case SYS_gettimeofday:
+        em_debug("Proxying SYS_gettimeofday to host...\n");
+        retval = proxy_syscall(regs);
+        em_debug("After: retval=%lu\n", retval);
+        break;
     default:
+#ifdef EMODULES_DEBUG
+        em_error("syscall %s unimplemented!\n", syscall_name[which]);
+#else
         em_error("syscall %d unimplemented!\n", which);
+#endif
         ecall_exit_enclave(-1);
         __builtin_unreachable();
     }

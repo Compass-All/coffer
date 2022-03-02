@@ -10,6 +10,21 @@
 
 extern uintptr_t enclave_id;
 
+#define SYSCALL(__id, __arg0, __arg1, __arg2, __arg3, __arg4, __arg5)       \
+    ({                                                                      \
+        register uintptr_t a0 asm("a0") = (uintptr_t)(__arg0);              \
+        register uintptr_t a1 asm("a1") = (uintptr_t)(__arg1);              \
+        register uintptr_t a2 asm("a2") = (uintptr_t)(__arg2);              \
+        register uintptr_t a3 asm("a3") = (uintptr_t)(__arg3);              \
+        register uintptr_t a4 asm("a4") = (uintptr_t)(__arg4);              \
+        register uintptr_t a5 asm("a5") = (uintptr_t)(__arg5);              \
+        register uintptr_t a7 asm("a7") = (uintptr_t)(__id);                \
+        asm volatile("ecall"                                                \
+                     : "+r"(a0)                                             \
+                     : "r"(a1), "r"(a2), "r"(a3), "r"(a4), "r"(a5), "r"(a7) \
+                     : "memory");                                           \
+    })
+
 #define SBI_ECALL(__extid, __funid, __arg0, __arg1, __arg2)     \
     ({                                                          \
         register uintptr_t a0 asm("a0") = (uintptr_t)(__arg0);  \

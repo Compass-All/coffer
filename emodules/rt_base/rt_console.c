@@ -225,13 +225,19 @@ static void rt_print(const char* fmt, va_list vl)
             case 'p':
                 num = va_arg(vl, uintptr_t);
                 acnt += sizeof(uintptr_t);
-                print_hex(buf, &i, num, fmt_width, fmt_flags, false);
+                flush_buffer_if_overflow(buf, i, 2);
+                buf[i++] = '0';
+                buf[i++] = 'x';
+                print_hex(buf, &i, num, fmt_width - 2, fmt_flags, false);
                 break;
 
             case 'P':
                 num = va_arg(vl, uintptr_t);
                 acnt += sizeof(uintptr_t);
-                print_hex(buf, &i, num, fmt_width, fmt_flags, true);
+                flush_buffer_if_overflow(buf, i, 2);
+                buf[i++] = '0';
+                buf[i++] = 'x';
+                print_hex(buf, &i, num, fmt_width - 2, fmt_flags, true);
                 break;
 
             case 'l':

@@ -1,4 +1,4 @@
-//TODO (this file should be depressed considering the new design of device tree)
+// TODO (this file should be depressed considering the new design of device tree)
 #ifndef EBI_DRV_H
 #define EBI_DRV_H
 
@@ -12,15 +12,9 @@
 typedef uintptr_t (*cmd_handler)(uintptr_t, uintptr_t, uintptr_t, uintptr_t);
 
 typedef struct {
-	uintptr_t reg_addr;
-	uintptr_t reg_size;
+    uintptr_t reg_addr;
+    uintptr_t reg_size;
 } drv_ctrl_t;
-
-typedef struct {
-	uintptr_t drv_start;
-	uint32_t drv_size;
-	int using_by; // May be removed
-} drv_addr_t;
 
 #endif // __ASSEMBLER__
 #endif // EBI_DRV_H
