@@ -22,17 +22,28 @@ void *const tmp_stack_top = (void *)tmp_stack + TMP_STACK_SIZE;
                      : "memory");                               \
     })
 
+#define MESSAGE_LOAD_MODULE 0x12345678
+
 int send_simple_message()
 {
-	char buf[5];
-	buf[0] = 0x11;
-	buf[1] = 0x22;
-	buf[2] = 0x33;
-	buf[3] = 0x44;
-	buf[4] = 0x55;
+	u32 buf[2];
+	buf[0] = MESSAGE_LOAD_MODULE;
+	buf[1] = 1; // module ID
+
+	u8 receive_buf[10];
 
 	SBI_ECALL(0x19260817, SBI_EXT_EBI_SEND_MESSAGE, 0, (u64)&buf, 5);
 	SBI_ECALL(0x19260817, SBI_EXT_EBI_SUSPEND, 0, 0, 0);
+
+	debug("Back from host\n");
+
+	SBI_ECALL(0x19260817, SBI_EXT_EBI_LISTEN_MESSAGE, 0, (u64)&receive_buf, 10);
+	SBI_ECALL(0x19260817, SBI_EXT_EBI_SUSPEND, 0, 0, 0);
+
+	for (int i = 0; i < 10; i++) {
+		debug("0x%x\t", receive_buf[i]);
+	}
+	debug("\n");
 
 	return 0;
 }
