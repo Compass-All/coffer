@@ -217,9 +217,6 @@ void init_mem(uintptr_t id, uintptr_t base_pa_start, size_t base_size,
         usr_pc_pa = usr_get_pa(usr_pc);
         usr_entry_offset = usr_pc_pa - payload_pa_start;
     }
-    usr_heap_top = EUSR_HEAP_START;
-    em_debug("usr_heap_top = 0x%llx\n",
-        usr_heap_top);
 
     // Map/allocate pages, get stack pointer PA for argv support
     setup_pages(pt_trie_start, pt_trie_size, usr_avail_start, usr_avail_size, base_avail_start, base_avail_size);

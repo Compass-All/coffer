@@ -82,7 +82,7 @@ static int elf_map(uintptr_t elf_addr)
     return 0;
 }
 
-uintptr_t elf_load(uintptr_t elf_addr, size_t elf_size)
+uintptr_t elf_load(uintptr_t elf_addr, size_t elf_size, uintptr_t* usr_heap_top_addr)
 {
     em_debug("Loading ELF at %p with size=%d\n", (void*)elf_addr, elf_size);
     ehdr_t* ehdr = (ehdr_t*)elf_addr;
@@ -94,7 +94,7 @@ uintptr_t elf_load(uintptr_t elf_addr, size_t elf_size)
         em_error("ELF mapping failed\n");
         return -1;
     }
-
+    *usr_heap_top_addr = EUSR_HEAP_START;
     return ehdr->e_entry;
 }
 
