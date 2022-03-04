@@ -30,17 +30,19 @@ int send_simple_message()
 	buf[0] = MESSAGE_LOAD_MODULE;
 	buf[1] = 1; // module ID
 
-	u8 receive_buf[10];
+	u8 receive_buf[16];
 
-	SBI_ECALL(0x19260817, SBI_EXT_EBI_SEND_MESSAGE, 0, (u64)&buf, 5);
+	SBI_ECALL(0x19260817, SBI_EXT_EBI_SEND_MESSAGE,
+				0, (u64)&buf, 5);
 	SBI_ECALL(0x19260817, SBI_EXT_EBI_SUSPEND, 0, 0, 0);
 
 	debug("Back from host\n");
 
-	SBI_ECALL(0x19260817, SBI_EXT_EBI_LISTEN_MESSAGE, 0, (u64)&receive_buf, 10);
+	SBI_ECALL(0x19260817, SBI_EXT_EBI_LISTEN_MESSAGE,
+				0, (u64)&receive_buf, 16);
 	SBI_ECALL(0x19260817, SBI_EXT_EBI_SUSPEND, 0, 0, 0);
 
-	for (int i = 0; i < 10; i++) {
+	for (int i = 0; i < 16; i++) {
 		debug("0x%x\t", receive_buf[i]);
 	}
 	debug("\n");
