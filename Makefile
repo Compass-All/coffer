@@ -100,7 +100,8 @@ endif
 	sudo cp $(QEMU_INIT_SCRIPT) $(MOUNT_POINT)/etc/init.d/rcS
 	sudo chmod +x $(MOUNT_POINT)/etc/init.d/rcS
 # Copy emodules
-	sudo cp $(EMODULE_TARGETS_ABS) $(MOUNT_POINT)/
+	sudo mkdir -p $(MOUNT_POINT)/emodules
+	sudo cp $(EMODULE_TARGETS_ABS) $(MOUNT_POINT)/emodules/
 # Copy prog
 	sudo rm -rf $(MOUNT_POINT)/prog
 	sudo cp -r $(PROG_BUILD) $(MOUNT_POINT)/
