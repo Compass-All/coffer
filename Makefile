@@ -47,8 +47,11 @@ all: dir emodules opensbi board-image rootfs
 kernel-image: docker
 ifeq (, $(wildcard $(KERNEL_IMAGE))) # kernel image not found
 	mkdir -p $(KERNEL_IMAGE_PATH)
-	$(DOCKER_RUN) /bin/bash -c " make -C $(DOCKER_LINUX_PATH) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- -j4 Image \
-		&& cp $(DOCKER_LINUX_PATH)/arch/riscv/boot/Image $(DOCKER_WORKDIR)/$(KERNEL_IMAGE) "
+	$(DOCKER_RUN) /bin/bash \
+		-c " make -C $(DOCKER_LINUX_PATH) ARCH=riscv \
+		CROSS_COMPILE=riscv64-unknown-linux-gnu- -j$$(($$(nproc)-4)) Image \
+		&& cp $(DOCKER_LINUX_PATH)/arch/riscv/boot/Image \
+		$(DOCKER_WORKDIR)/$(KERNEL_IMAGE) "
 endif
 
 qemu-run: kernel-image docker # rootfs
