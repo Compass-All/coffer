@@ -69,12 +69,8 @@ ifeq (, $(shell $(DOCKER) images $(DOCKER_IMAGE) -q))
 endif
 
 prog: docker
-ifeq (, $(wildcard $(BUILD_DIR)/prog/))
-	$(DOCKER_RUN) /bin/bash -c "cd $(DOCKER_PROG_PATH) \
-		&& git pull \
-		&& make \
-		&& cd / \
-		&& cp -r $(DOCKER_PROG_PATH) $(DOCKER_WORKDIR)/$(PROG_BUILD)"
+ifeq (, $(wildcard $(PROG_BUILD)/))
+	$(DOCKER_MAKE) -C $(DOCKER_WORKDIR)/coffer_user_mode
 endif
 
 rootfs: emodules docker prog
