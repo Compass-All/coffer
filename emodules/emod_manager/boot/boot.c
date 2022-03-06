@@ -15,5 +15,7 @@ void emain()
 {
 	debug("[emain] hello world\n");
 
+	__ecall_ebi_suspend();
+
 	load_emodule();
 }
