@@ -3,3 +3,5 @@ dmesg -n 1
 
 mount proc /proc -t proc
 mount sys /sys -t sysfs
+
+prog/build/bin/listen_message prog/build/payloads/rv8_qsort
