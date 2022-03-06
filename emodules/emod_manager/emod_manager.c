@@ -1,7 +1,7 @@
 #include <emodules/emod_manager/emod_manager.h>
 #include <emodules/emodule_info.h>
 #include <message/message.h>
-#include <enclave/host_os.h>
+#include <enclave/host_ops.h>
 #include <enclave/enclave_ops.h>
 #include "printf/debug.h"
 
