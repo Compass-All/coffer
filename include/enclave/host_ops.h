@@ -38,7 +38,7 @@ static u64 inline __ecall_ebi_enter_enclave(
 }
 
 // TODO: change return type
-static void inline __ecall_ebi_resume(u64 enclave_id)
+static void inline __ecall_ebi_resume_enclave(u64 enclave_id)
 {
 	__ecall(
 		SBI_EXT_EBI,
