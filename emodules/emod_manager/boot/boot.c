@@ -14,11 +14,9 @@ void *const tmp_stack_top = (void *)tmp_stack + TMP_STACK_SIZE;
 
 void emain()
 {
-	debug("[emain] hello world\n");
-
 	__ecall_ebi_suspend();
 
-	load_emodule();
+	debug("[emain] hello world\n");
 
 	panic("Test panic\n");
 }
