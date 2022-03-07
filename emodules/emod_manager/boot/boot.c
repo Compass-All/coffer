@@ -1,10 +1,10 @@
 #include <types.h>
-#include "../printf/printf.h"
-#include "../printf/debug.h"
 #include <emodules/emod_manager/emod_manager.h>
 #include <emodules/ecall.h>
 #include <ebi_ecall.h>
 #include <enclave/enclave_ops.h>
+#include "../printf/printf.h"
+#include "../printf/debug.h"
 
 #define TMP_STACK_SIZE	0x1000
 
@@ -18,4 +18,6 @@ void emain()
 	__ecall_ebi_suspend();
 
 	load_emodule();
+
+	panic();
 }
