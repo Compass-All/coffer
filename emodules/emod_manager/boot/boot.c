@@ -5,6 +5,7 @@
 #include <enclave/enclave_ops.h>
 #include "../printf/printf.h"
 #include "../printf/debug.h"
+#include "../panic/panic.h"
 
 #define TMP_STACK_SIZE	0x1000
 
@@ -19,5 +20,5 @@ void emain()
 
 	load_emodule();
 
-	panic();
+	panic("Test panic\n");
 }

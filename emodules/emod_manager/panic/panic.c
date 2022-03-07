@@ -1,4 +1,4 @@
-#include <emodules/emod_manager/panic.h>
+#include "panic.h"
 #include "../printf/debug.h"
 
 __attribute__((noreturn)) void panic(const char *panic_message)
