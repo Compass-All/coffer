@@ -1,5 +1,5 @@
 #include "panic.h"
-#include "../printf/debug.h"
+#include "../debug/debug.h"
 
 __attribute__((noreturn)) void panic(const char *panic_message)
 {
