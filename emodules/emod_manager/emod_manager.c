@@ -1,21 +1,62 @@
 #include <emodules/emod_manager/emod_manager.h>
 #include <emodules/emodule_id.h>
+#include <emodules/emodule_desc.h>
 #include <message/message.h>
 #include <enclave/host_ops.h>
 #include <enclave/enclave_ops.h>
 #include "debug/debug.h"
 #include "panic/panic.h"
+#include "memory/memory.h"
+#include "emod_table/emod_table.h"
 
 #include <emodules/emod_dummy/emod_dummy.h>
 
+// ---------------
+// emodule manager descriptor
+
+static emod_desc_t emod_manager_desc = {
+	.emod_id = EMODULE_ID_MANAGER,
+	.name = "emodule manager",
+	.__signature = 0
+};
+
+static emod_manager_api_t emod_manager_api;
+static emod_manager_t emod_manager;
+
+// ---------------
+// emod_manager api
+static void api_test()
+{
+	printf("Emodule manager api testing\n");
+}
+
+// ---------------
+// emod_manager init and getter
+
+static emod_manager_t get_emodule()
+{
+	return emod_manager;
+}
+
+void emod_manager_init()
+{
+	// init emod_manager_api
+	emod_manager_api.test = api_test;
+	// ...
+	// todo!
+
+	// init emod_manager
+	emod_manager.emod_manager_desc = emod_manager_desc;
+	emod_manager.emod_manager_api = emod_manager_api;
+
+	// add self to emod_table
+	register_emodule(EMODULE_ID_MANAGER, (vaddr_t)get_emodule);
+}
+
+// ----- temporary implmentation -----
 
 #define EMOD_DUMMY_LEN	0x5000
 u8 emod_dummy_buffer[EMOD_DUMMY_LEN];
-
-void wait_for_loading_done(volatile u64 *dummy_ptr)
-{
-	while (*dummy_ptr == 0UL);
-}
 
 static void load_emod_dummy()
 {
@@ -47,19 +88,26 @@ static void load_emod_dummy()
 	}
 
 	__ecall_ebi_suspend();
-	wait_for_loading_done((volatile u64 *)&emod_dummy_buffer);
+	wait_until_non_zero((volatile u64 *)&emod_dummy_buffer);
 
 	hexdump((vaddr_t)&emod_dummy_buffer, 0x10);
+
+	vaddr_t (*dummy_init)(vaddr_t) = (void *)&emod_dummy_buffer;
+	vaddr_t dummy_module_getter_addr = dummy_init((vaddr_t)get_emodule);
+
+	register_emodule(EMODULE_ID_DUMMY, dummy_module_getter_addr);
 }
 
 void emod_manager_test()
 {
 	load_emod_dummy();
 
-	vaddr_t (*dummy_init)(void) = (void *)&emod_dummy_buffer;
-	emod_dummy_t (*get_dummy_module)(void) =
-		(void *)dummy_init();
-	emod_dummy_t emod_dummy = get_dummy_module();
+	vaddr_t dummy_getter_addr = acquire_emodule(EMODULE_ID_DUMMY);
+	emod_dummy_t (*get_emod_dummy)(void) = (void *)dummy_getter_addr;
+	emod_dummy_t emod_dummy = get_emod_dummy();
+	int one_plus_two = emod_dummy.emod_dummy_api.dummy_func1(1, 2);
+	int expected = 3;
+	assert((void *)&one_plus_two, (void *)&expected, sizeof(int));
 
 	debug("emod dummy id: %u\n", emod_dummy.emod_dummy_desc.emod_id);
 	debug("emod name: %s\n", emod_dummy.emod_dummy_desc.name);
