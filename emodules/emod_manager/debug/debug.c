@@ -1,4 +1,5 @@
 #include "debug.h"
+#include "../panic/panic.h"
 
 void hexdump(vaddr_t addr, usize len)
 {
@@ -12,4 +13,19 @@ void hexdump(vaddr_t addr, usize len)
 			printf("0x%08x\t", ptr[j]);
 		printf("0x%08x\n", ptr[group_size - 1]);
 	}
+}
+
+void assert(u8 *ptr1, u8 *ptr2, usize len)
+{
+	if (!ptr1 || !ptr2) {
+		panic("NULL Pointer during assertion\n");
+	}
+	for (int i = 0; i < len; i++) {
+		if (*ptr1 != *ptr2) {
+			error("0x%x\t(at %p)!= 0x%x\t(at %p)",
+				*ptr1, ptr1, *ptr2, ptr2);
+			panic("Assert failed\n");
+		}
+	}
+	printf("Assert passed!\n");
 }

@@ -14,3 +14,4 @@
 	printf("\033[1;31m[ERROR] " fmt "\033[0m", ##__VA_ARGS__)
 
 void hexdump(vaddr_t addr, usize len);
+void assert(u8 *ptr1, u8 *ptr2, usize len);
