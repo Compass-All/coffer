@@ -1,5 +1,6 @@
 #include <emodules/emod_dummy/emod_dummy.h>
 #include "tmp_printf.h"
+#include "dependency.h"
 
 // ---------------
 // emodule dummy descriptor
@@ -27,20 +28,34 @@ static void func2(int arg1)
 }
 
 // ---------------
-// emod_dummy init and query
+// emod_dummy init and getter
 static emod_dummy_t get_emodule()
 {
 	return emod_dummy;
 }
 
 __attribute__((section(".text.init")))
-vaddr_t dummy_init()
+vaddr_t dummy_init(vaddr_t emod_manager_getter)
 {
+	// init api
 	emod_dummy_api.dummy_func1 = func1;
 	emod_dummy_api.dummy_func2 = func2;
 
+	// init emodule
 	emod_dummy.emod_dummy_desc = emod_dummy_desc;
 	emod_dummy.emod_dummy_api = emod_dummy_api;
-	
+
+	// record emod_manager
+	if (emod_manager_getter == (vaddr_t)0UL) {
+		printf("Error: NULL emod_manager getter\n");
+		return (vaddr_t)0UL;
+	}
+
+	emod_manager_t (*get_emod_manager)(void) = 
+		(void *)emod_manager_getter;
+	emod_manager = get_emod_manager();
+
+	emod_manager.emod_manager_api.test();
+
 	return (vaddr_t)get_emodule;
 }
