@@ -20,6 +20,7 @@ void emain()
 	// enter/resume
 	debug("[emain] hello world\n");
 
+	emod_manager_init();
 	emod_manager_test();
 
 	panic("Test panic\n");
