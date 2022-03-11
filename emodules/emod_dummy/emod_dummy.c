@@ -38,12 +38,16 @@ __attribute__((section(".text.init")))
 vaddr_t dummy_init(vaddr_t emod_manager_getter)
 {
 	// init api
-	emod_dummy_api.dummy_func1 = func1;
-	emod_dummy_api.dummy_func2 = func2;
+	emod_dummy_api = (emod_dummy_api_t) {
+		.dummy_func1 = func1,
+		.dummy_func2 = func2
+	};
 
 	// init emodule
-	emod_dummy.emod_dummy_desc = emod_dummy_desc;
-	emod_dummy.emod_dummy_api = emod_dummy_api;
+	emod_dummy = (emod_dummy_t) {
+		.emod_dummy_desc = emod_dummy_desc,
+		.emod_dummy_api = emod_dummy_api
+	};
 
 	// record emod_manager
 	if (emod_manager_getter == (vaddr_t)0UL) {

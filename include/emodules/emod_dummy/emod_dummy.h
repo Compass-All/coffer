@@ -10,6 +10,6 @@ typedef struct {
 } emod_dummy_api_t;
 
 typedef struct {
-	emod_desc_t emod_dummy_desc;
-	emod_dummy_api_t emod_dummy_api;
+	emod_desc_t 		emod_dummy_desc;
+	emod_dummy_api_t 	emod_dummy_api;
 } emod_dummy_t;
