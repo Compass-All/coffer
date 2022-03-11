@@ -4,7 +4,7 @@
 
 // Emodule Debug Descriptor
 static emod_desc_t emod_debug_desc = {
-	.emod_id = EMODULE_ID_DUBUG,
+	.emod_id = EMODULE_ID_DEBUG,
 	.name = "emodule debug",
 	.__signature = 0
 };
@@ -22,10 +22,10 @@ static void hexdump(vaddr_t addr, usize len)
 	for (int i = 0; i < len; i += group_size * sizeof(u32),
 		ptr += group_size) {
 
-		printf("%p:\t", ptr);
+		printf("[hexdump] 0x%p:\t", ptr);
 		for (int j = 0; j < group_size - 1; j++)
-			printf("[hexdump] 0x%08x\t", ptr[j]);
-		printf("[hexdump] 0x%08x\n", ptr[group_size - 1]);
+			printf("0x%08x\t", ptr[j]);
+		printf("0x%08x\n", ptr[group_size - 1]);
 	}
 }
 
@@ -36,7 +36,7 @@ static void assert(u8 *ptr1, u8 *ptr2, usize len)
 	}
 	for (int i = 0; i < len; i++) {
 		if (*ptr1 != *ptr2) {
-			printf("[assert] 0x%x\t(at %p)!= 0x%x\t(at %p)",
+			printf("[assert] 0x%x\t(at 0x%p)!= 0x%x\t(at 0x%p)",
 				*ptr1, ptr1, *ptr2, ptr2);
 			printf("[assert] Assert failed\n");
 		}
