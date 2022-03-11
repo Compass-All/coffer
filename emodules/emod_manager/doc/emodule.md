@@ -4,8 +4,9 @@
 
 An emodule consists of the following:
 - an emodule descriptor
-- a set of API
+- a set of API functions
 - an initialization function
+- a getter function
 
 ## Details
 
@@ -17,7 +18,7 @@ Emodule descriptors are defined as the following:
 typedef struct {
 	u32 	emod_id;
 	char	name[32];
-	u[?]	signature;
+	u8		signature[?];
 } emod_desc_t;
 ```
 
