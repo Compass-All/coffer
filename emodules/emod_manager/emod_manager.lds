@@ -4,6 +4,8 @@ ENTRY(_start)
 
 SECTIONS
 {
+  . = 0x1000; /* can be any non-zero constant */
+
   _start = .;
 
   _text_start = .;
