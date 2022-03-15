@@ -10,3 +10,6 @@
 
 void init_page_pool(usize offset);
 paddr_t alloc_smode_page(usize number_of_pages);
+
+// test
+void page_pool_test();

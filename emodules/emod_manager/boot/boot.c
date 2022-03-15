@@ -4,8 +4,10 @@
 #include <ebi_ecall.h>
 #include <enclave/enclave_ops.h>
 #include <memory/memory.h>
+#include <memory/page_table.h>
 #include "../memory/memory.h"
 #include "../memory/page_pool.h"
+#include "../memory/page_table.h"
 #include <util/gnu_attribute.h> 
 #include "../printf/printf.h"
 #include "../debug/debug.h"
@@ -80,7 +82,7 @@ __unused static void lower_half()
  * 
  * @params:
  * 	a0 = id, a1 = base_pa_start, a2 = base_size, 
- * 	a3 = payload_pa_start， a4 = payload_size
+ * 	a3 = payload_pa_start, a4 = payload_size
  * 
  * TODO:
  * - When should CSRs get initialized?
@@ -103,14 +105,7 @@ void emain(
 	set_emod_manager_pa_start(emod_manager_pa_start);
 	init_page_pool(emod_manager_pa_end - emod_manager_pa_start);
 
-	paddr_t page1 = alloc_smode_page(1);
-	paddr_t page2 = alloc_smode_page(2);
-	paddr_t page3 = alloc_smode_page(3);
-	paddr_t page10086 = alloc_smode_page(10086);
-	show(page1);
-	show(page2);
-	show(page3);
-	show(page10086);
+	page_table_test();
 
 	panic("upper half finished\n");
 	// ---------------

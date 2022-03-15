@@ -1,6 +1,7 @@
 #pragma once
 
 #include <types.h>
+#include <memory/page_table.h>
 
 #ifndef ROUNDUP
 #define ROUNDUP(a, b) ((((a)-1) / (b) + 1) * (b))

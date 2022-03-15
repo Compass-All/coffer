@@ -56,8 +56,22 @@ paddr_t alloc_smode_page(usize number_of_pages)
 	used_smode_page_count = expected_number_of_pages;
 
 	debug("allocating %lu pages\n", number_of_pages);
-	debug("%lu pages used in total\n", expected_number_of_pages);
+	debug("%lu pages used in total, %lu pages left\n",
+		expected_number_of_pages,
+		(PAGE_POOL_SMODE_SIZE >> PAGE_SHIFT) - expected_number_of_pages);
 	show(page_pool_top);
 
 	return page_pool_top;
 }
+
+// void page_pool_test()
+// {
+// 	paddr_t page1 = alloc_smode_page(1);
+// 	paddr_t page2 = alloc_smode_page(2);
+// 	paddr_t page3 = alloc_smode_page(3);
+// 	paddr_t page10 = alloc_smode_page(10);
+// 	show(page1);
+// 	show(page2);
+// 	show(page3);
+// 	show(page10);
+// }
