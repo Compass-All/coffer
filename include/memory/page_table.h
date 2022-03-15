@@ -9,6 +9,9 @@
 typedef struct {
 	u64	ppn:	44;
 	u64	asid:	16;
+#define SATP_BARE	0
+#define SATP_SV39	8
+#define SATP_SV48	9
 	u64 mode:	4;
 } csr_satp_t;
 
@@ -108,4 +111,9 @@ static inline sv39_paddr_t pa_to_sv39(paddr_t pa)
 static inline paddr_t sv39_to_pa(sv39_paddr_t sv39_pa)
 {
 	return *(paddr_t *)&sv39_pa;
+}
+
+static inline void flush_tlb()
+{
+	asm volatile("sfence.vma");
 }

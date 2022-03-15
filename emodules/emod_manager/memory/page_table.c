@@ -1,9 +1,11 @@
 #include "page_table.h"
 #include "page_pool.h"
+#include "memory.h"
 #include "../panic/panic.h"
 #include "../debug/debug.h"
 #include <util/gnu_attribute.h>
 
+#define NOP	"addi	a0, a0, 0\n\t"
 
 /**
  * @brief Sv39 addressing is used.
@@ -35,7 +37,6 @@ static pte_t *get_leaf_pte(vaddr_t vaddr, u8 level, u8 alloc)
 		} else {
 			next_table_pa = pte->ppn << PAGE_SHIFT;
 		}
-		show(next_table_pa);
 
 		// fixme: access next table when mmu is on
 		table_root = (pte_t *)next_table_pa;
@@ -54,6 +55,48 @@ error:
 	return NULL; // should never reach here
 }
 
+__unused static paddr_t get_pa(vaddr_t va)
+{
+	pte_t pte = *get_leaf_pte(va, SV39_LEVEL_PAGE, GET_PTE_NO_ALLOC);
+	show(pte);
+	show(pte.ppn);
+	return pte.ppn << PAGE_SHIFT;
+}
+
+// should be called only once during boot
+void turn_on_mmu()
+{
+	paddr_t page_table_root_addr = (paddr_t)&page_table_root;
+	csr_satp_t satp = {
+		.mode = SATP_SV39,
+		.asid = 0,
+		.ppn = page_table_root_addr >> PAGE_SHIFT
+	};
+	u64 satp_value = *(u64 *)&satp;
+
+	show(page_table_root_addr);
+	show(satp_value);
+
+	usize va_pa_offset = get_emod_manager_va_start()
+		- get_emod_manager_pa_start();
+
+	// flush_tlb();
+	asm volatile (
+		"la		s7, temp_stvec	\n\t"	// s7 = &temp_stvec;
+		"mv		s6, %0			\n\t"	// s6 = va_pa_offset;
+		"add	s7, s6, s7		\n\t"	// s7 += s6;
+		"csrw	stvec, s7		\n\t"	// stvec = s7;
+
+		"csrw	satp, %1		\n\t"	// satp = satp_value
+	"temp_stvec:				\n\t"
+		NOP
+		:							// no output register
+		: "r"(va_pa_offset), "r"(satp_value)
+		: "s6", "s7"
+	);
+	// flush_tlb();
+}
+
 /**
  * @brief map given va to pa
  * 
@@ -68,50 +111,35 @@ void map_page(vaddr_t vaddr, paddr_t paddr, u8 flags, u8 level)
 	sv39_paddr_t pa = pa_to_sv39(paddr);
 	pte_t *pte = get_leaf_pte(vaddr, level, GET_PTE_ALLOC);
 
-	if (flags | PTE_R)
+	if (flags & PTE_R)
 		pte->r = pte->a = 1;
-	if (flags | PTE_W)
+	if (flags & PTE_W)
 		pte->w = pte->d = 1;
-	if (flags | PTE_X)
+	if (flags & PTE_X)
 		pte->x = 1;
-	if (flags | PTE_U)
+	if (flags & PTE_U)
 		pte->u = 1; // user mode page
-	if (flags | PTE_G)
+	if (flags & PTE_G)
 		pte->g = 1;
 	pte->v = 1;
 
 	pte->ppn = pa.ppn;
-}
 
-static paddr_t get_pa(vaddr_t va)
-{
-	pte_t pte = *get_leaf_pte(va, SV39_LEVEL_PAGE, GET_PTE_NO_ALLOC);
-	show(pte);
-	show(pte.ppn);
-	return pte.ppn << PAGE_SHIFT;
+	// debug("va:\t0x%lx\t->\tpa:\t0x%lx\n", vaddr, paddr);
 }
 
 // test
 void page_table_test()
 {
-	show(&page_table_root);
+	paddr_t pa_start = get_emod_manager_pa_start();
+	vaddr_t va_start = pa_start;
 
-	vaddr_t va = EMOD_MANAGER_SVA_START;
-	sv39_vaddr_t sv39_va = va_to_sv39(va);
-
-	show(va);
-	show(sv39_va.offset);
-	show(sv39_va.vpn0);
-	show(sv39_va.vpn1);
-	show(sv39_va.vpn2);
-	show(sv39_va.extension);
-
-	map_page(0x10000, 0x14c414000,
-		PTE_W | PTE_R, SV39_LEVEL_PAGE);
-
-	paddr_t pa = get_pa(0x10000);
-	show(pa);
-
-	pa = get_pa(0x11000);
-	show(pa);
+	usize len = PARTITION_SIZE / PAGE_SIZE;
+	for (int i = 0; i < len; i++) {
+		map_page(va_start, pa_start,
+			PTE_R | PTE_W | PTE_X, SV39_LEVEL_PAGE);
+	
+		va_start += PAGE_SIZE;
+		pa_start += PAGE_SIZE;
+	}
 }
