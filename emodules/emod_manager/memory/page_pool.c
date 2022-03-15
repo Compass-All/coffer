@@ -2,6 +2,7 @@
 #include "../debug/debug.h"
 #include <util/gnu_attribute.h>
 #include "memory.h"
+#include "page_table.h"
 #include <memory/memory.h>
 #include "../panic/panic.h"
 
@@ -24,6 +25,17 @@ __unused static usize used_smode_page_count = 0;
 __unused static usize used_umode_page_count = 0;
 
 static usize page_pool_offset; // write only once
+static usize page_pool_size; // write only once
+
+usize get_page_pool_offset()
+{
+	return page_pool_offset;
+}
+
+usize get_page_pool_size()
+{
+	return page_pool_size;
+}
 
 static paddr_t get_smode_page_pool_top()
 {
@@ -36,11 +48,13 @@ static paddr_t get_smode_page_pool_top()
 	return page_pool_top;
 }
 
-void init_page_pool(usize offset)
+void init_page_pool(usize offset, usize size)
 {
-	page_pool_offset = offset;
+	page_pool_offset 	= offset;
+	page_pool_size 		= size;
 	debug("page pool initialized\n");
 	show(page_pool_offset);
+	show(page_pool_size);
 }
 
 paddr_t alloc_smode_page(usize number_of_pages)
@@ -63,15 +77,3 @@ paddr_t alloc_smode_page(usize number_of_pages)
 
 	return page_pool_top;
 }
-
-// void page_pool_test()
-// {
-// 	paddr_t page1 = alloc_smode_page(1);
-// 	paddr_t page2 = alloc_smode_page(2);
-// 	paddr_t page3 = alloc_smode_page(3);
-// 	paddr_t page10 = alloc_smode_page(10);
-// 	show(page1);
-// 	show(page2);
-// 	show(page3);
-// 	show(page10);
-// }

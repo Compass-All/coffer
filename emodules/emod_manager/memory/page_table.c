@@ -4,6 +4,7 @@
 #include "../panic/panic.h"
 #include "../debug/debug.h"
 #include <util/gnu_attribute.h>
+#include <util/register.h>
 
 #define NOP	"addi	a0, a0, 0\n\t"
 
@@ -22,6 +23,9 @@ static pte_t *get_leaf_pte(vaddr_t vaddr, u8 level, u8 alloc)
 
 	pte_t *table_root = &page_table_root[0];
 
+	if (va.extension == 0)
+		show(table_root);
+
 	for (int i = level; i > 0; i--) {
 		u64 vpn = get_vpn(va, i);
 		pte_t *pte = &table_root[vpn];
@@ -38,8 +42,9 @@ static pte_t *get_leaf_pte(vaddr_t vaddr, u8 level, u8 alloc)
 			next_table_pa = pte->ppn << PAGE_SHIFT;
 		}
 
-		// fixme: access next table when mmu is on
 		table_root = (pte_t *)next_table_pa;
+		if (read_csr(satp))
+			table_root += get_va_pa_offset();
 	}
 
 	u64 vpn = get_vpn(va, 0);
@@ -47,7 +52,7 @@ static pte_t *get_leaf_pte(vaddr_t vaddr, u8 level, u8 alloc)
 
 	if (pte->v == 0 && alloc != GET_PTE_ALLOC)
 		goto error;
-
+	
 	return pte;
 
 error:
@@ -55,16 +60,13 @@ error:
 	return NULL; // should never reach here
 }
 
-__unused static paddr_t get_pa(vaddr_t va)
+__unused paddr_t get_pa(vaddr_t va)
 {
 	pte_t pte = *get_leaf_pte(va, SV39_LEVEL_PAGE, GET_PTE_NO_ALLOC);
-	show(pte);
-	show(pte.ppn);
 	return pte.ppn << PAGE_SHIFT;
 }
 
-// should be called only once during boot
-void turn_on_mmu()
+u64 init_satp()
 {
 	paddr_t page_table_root_addr = (paddr_t)&page_table_root;
 	csr_satp_t satp = {
@@ -74,27 +76,7 @@ void turn_on_mmu()
 	};
 	u64 satp_value = *(u64 *)&satp;
 
-	show(page_table_root_addr);
-	show(satp_value);
-
-	usize va_pa_offset = get_emod_manager_va_start()
-		- get_emod_manager_pa_start();
-
-	// flush_tlb();
-	asm volatile (
-		"la		s7, temp_stvec	\n\t"	// s7 = &temp_stvec;
-		"mv		s6, %0			\n\t"	// s6 = va_pa_offset;
-		"add	s7, s6, s7		\n\t"	// s7 += s6;
-		"csrw	stvec, s7		\n\t"	// stvec = s7;
-
-		"csrw	satp, %1		\n\t"	// satp = satp_value
-	"temp_stvec:				\n\t"
-		NOP
-		:							// no output register
-		: "r"(va_pa_offset), "r"(satp_value)
-		: "s6", "s7"
-	);
-	// flush_tlb();
+	return satp_value;
 }
 
 /**
@@ -125,21 +107,26 @@ void map_page(vaddr_t vaddr, paddr_t paddr, u8 flags, u8 level)
 
 	pte->ppn = pa.ppn;
 
+	// flush_tlb of the page
+
 	// debug("va:\t0x%lx\t->\tpa:\t0x%lx\n", vaddr, paddr);
+
+	// paddr_t test_pa = get_pa(vaddr);
+	// assert((u8 *)&test_pa, (u8 *)&paddr, sizeof(paddr_t));
 }
 
+
+// ---------------
 // test
 void page_table_test()
 {
-	paddr_t pa_start = get_emod_manager_pa_start();
-	vaddr_t va_start = pa_start;
-
-	usize len = PARTITION_SIZE / PAGE_SIZE;
-	for (int i = 0; i < len; i++) {
-		map_page(va_start, pa_start,
-			PTE_R | PTE_W | PTE_X, SV39_LEVEL_PAGE);
-	
-		va_start += PAGE_SIZE;
-		pa_start += PAGE_SIZE;
-	}
+	vaddr_t root_addr;
+	asm volatile(
+		"la	t1, page_table_root	\n\t"
+		"mv	%0, t1				\n\t"
+		: "=r"(root_addr)
+		:
+		: "t1"
+	);
+	show(root_addr);
 }

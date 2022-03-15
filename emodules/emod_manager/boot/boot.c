@@ -19,33 +19,6 @@ u8 tmp_stack[TMP_STACK_SIZE];
 void *const tmp_stack_top = (void *)tmp_stack + TMP_STACK_SIZE;
 
 // ---------------
-static void upper_half(paddr_t emod_manager_pa_start)
-{
-	extern u8 _end; // defined in the linker script
-	paddr_t emod_manager_pa_end = (paddr_t)&_end;
-
-	/* upper half of enclave initialization */
-
-	set_emod_manager_pa_start(emod_manager_pa_start);
-	init_page_pool(emod_manager_pa_end - emod_manager_pa_start);
-	map_sections();
-	turn_on_mmu();
-
-	panic("End of upper half\n");
-}
-
-static void lower_half()
-{
-	/* lower half of enclave initialization */
-	
-	// enter/resume
-
-	emod_manager_init();
-	emod_manager_test();
-
-	panic("Test panic\n");
-}
-
 /**
  * @brief Entry point of the enclave
  * 
@@ -69,7 +42,7 @@ static void lower_half()
  * TODO:
  * - When should CSRs get initialized?
  */
-void emain(
+void emain_upper_half(
 	u64 	eid,
 	paddr_t emod_manager_pa_start,
 	usize	emod_manager_size,
@@ -77,10 +50,56 @@ void emain(
 	usize	payload_size
 )
 {
-	debug("Hello world, I am enclave %lu\n", eid);
+	extern u8 _end; // defined in the linker script
+	paddr_t emod_manager_pa_end = (paddr_t)&_end;
 
-	upper_half(emod_manager_pa_start);
-	__ecall_ebi_suspend();
-	panic("Before lower half\n");
-	lower_half();
+	/* upper half of enclave initialization */
+
+	set_emod_manager_pa_start(emod_manager_pa_start);
+	init_page_pool(
+		emod_manager_pa_end - emod_manager_pa_start,
+		PAGE_DOWN(PARTITION_UP(emod_manager_pa_end) -
+			emod_manager_pa_end)
+	);
+
+	usize va_pa_offset = get_va_pa_offset();
+	vaddr_t smode_sp = alloc_smode_stack() + va_pa_offset;
+	u64 satp_value = init_satp();
+
+	map_page_pool();
+	map_sections();
+
+	show(va_pa_offset);
+	show(smode_sp);
+	show(satp_value);
+
+	paddr_t smode_sp_pa_test = get_pa(smode_sp);
+	show(smode_sp_pa_test);
+
+	asm volatile(
+		"mv		a0, %0	\n\t"
+		"mv		a1, %1	\n\t"
+		"mv 	s6, %2	\n\t"
+		:
+		:	"r"(satp_value),
+			"r"(smode_sp),
+			"r"(va_pa_offset)
+		// :	"a0", "a1", "s6" DO NOT UNCOMMENT THIS LINE!
+	);
+}
+
+void emain_lower_half()
+{
+	__ecall_ebi_suspend(); // this line gets executed
+
+	panic("Beginning of lower half\n");
+
+	/* lower half of enclave initialization */
+	
+	// enter/resume
+
+	emod_manager_init();
+	emod_manager_test();
+
+	panic("Test panic\n");
 }

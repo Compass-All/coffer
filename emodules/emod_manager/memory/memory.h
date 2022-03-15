@@ -11,6 +11,8 @@ typedef struct {
 
 void set_emod_manager_pa_start(paddr_t pa_start);
 paddr_t get_emod_manager_pa_start();
-vaddr_t get_emod_manager_va_start();
+usize get_va_pa_offset();
 void wait_until_non_zero(volatile u64 *ptr);
+void map_page_pool();
 void map_sections();
+paddr_t alloc_smode_stack();
