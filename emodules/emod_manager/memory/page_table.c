@@ -20,11 +20,7 @@ static pte_t page_table_root[PAGE_SIZE / sizeof(pte_t)];
 static pte_t *get_leaf_pte(vaddr_t vaddr, u8 level, u8 alloc)
 {
 	sv39_vaddr_t va = va_to_sv39(vaddr);
-
 	pte_t *table_root = &page_table_root[0];
-
-	if (va.extension == 0)
-		show(table_root);
 
 	for (int i = level; i > 0; i--) {
 		u64 vpn = get_vpn(va, i);
@@ -44,7 +40,7 @@ static pte_t *get_leaf_pte(vaddr_t vaddr, u8 level, u8 alloc)
 
 		table_root = (pte_t *)next_table_pa;
 		if (read_csr(satp))
-			table_root += get_va_pa_offset();
+			table_root += get_va_pa_offset() / sizeof(pte_t);
 	}
 
 	u64 vpn = get_vpn(va, 0);
