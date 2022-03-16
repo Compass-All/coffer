@@ -8,7 +8,7 @@ _start:
 	jal		emain_upper_half
 
     la      s7, temp_stvec
-    add     s7, s6, s7
+    add     s7, s6, s7 // s6 = va_pa_offset
     csrw    stvec, s7
 
     mv      sp, a1
