@@ -111,6 +111,10 @@ trap_handler:
 	csrrw	t1, sscratch, x0	// t1 = user sp, sscratch = 0
 	STORE	t1, EAPP_CTX_REG_OFFSET(sp)(sp) // save user sp
 
+    mv      a0, sp
+    csrr    a1, sepc
+    csrr    a2, scause
+    csrr    a3, stval
 	jal		exception_handler
 
 	LOAD	t1, EAPP_CTX_REG_OFFSET(sp)(sp) // restore user sp
