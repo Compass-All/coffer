@@ -33,7 +33,7 @@ static void __map_section(memory_section_t mem_sec)
 {
 	paddr_t paddr = mem_sec.offset + get_emod_manager_pa_start();
 	vaddr_t vaddr = mem_sec.vaddr;
-	usize number_of_pages = mem_sec.size / PAGE_SIZE;
+	usize number_of_pages = PAGE_UP(mem_sec.size) / PAGE_SIZE;
 
 	if (mem_sec.offset % PAGE_SIZE != 0)
 		panic("Section not aligned!\n");
