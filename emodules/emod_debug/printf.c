@@ -58,6 +58,7 @@
 #define PRINTF_FTOA_BUFFER_SIZE    32U
 #endif
 
+#define PRINTF_DISABLE_SUPPORT_FLOAT
 // support for the floating point type (%f)
 // default: activated
 #ifndef PRINTF_DISABLE_SUPPORT_FLOAT
