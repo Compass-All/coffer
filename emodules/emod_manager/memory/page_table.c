@@ -107,12 +107,7 @@ void map_page(vaddr_t vaddr, paddr_t paddr, u8 flags, u8 level)
 
 	pte->ppn = pa.ppn;
 
-	// flush_tlb of the page
-
-	// debug("va:\t0x%lx\t->\tpa:\t0x%lx\n", vaddr, paddr);
-
-	// paddr_t test_pa = get_pa(vaddr);
-	// assert((u8 *)&test_pa, (u8 *)&paddr, sizeof(paddr_t));
+	// TODO: flush_tlb of the page
 }
 
 
