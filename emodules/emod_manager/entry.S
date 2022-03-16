@@ -23,11 +23,7 @@ temp_stvec:
 
     jal     emain_lower_half
 
-dump_reg:
-    li      a7, 0x19260817
-    li      a6, 499 // debug, show a0 ~ a3
-    ecall
-    ret
+
 
 .macro RESTORE_CONTEXT
     LOAD ra,  EAPP_CTX_REG_OFFSET(ra)(sp)
@@ -115,6 +111,7 @@ trap_handler:
     csrr    a1, sepc
     csrr    a2, scause
     csrr    a3, stval
+    # jal     dump_reg
 	jal		exception_handler
 
 	LOAD	t1, EAPP_CTX_REG_OFFSET(sp)(sp) // restore user sp
@@ -123,3 +120,9 @@ trap_handler:
 
 	csrrw	sp, sscratch, sp
 	sret
+
+dump_reg:
+    li      a7, 0x19260817
+    li      a6, 499 // debug, show a0 ~ a3
+    ecall
+    ret
