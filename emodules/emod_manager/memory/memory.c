@@ -71,24 +71,25 @@ void map_sections()
 	paddr_t start_pa = get_emod_manager_pa_start();
 	vaddr_t start_va = start_pa + va_pa_offset;
 
-#define MAP_SECTION(name, sec_flags) {								\
-	extern u8	_##name##_start, _##name##_end;						\
-	usize offset 	= (usize)(&_##name##_start - start_pa);			\
-	usize size 		= (usize)(&_##name##_end - &_##name##_start);	\
-	vaddr_t	vaddr	= offset + start_va;							\
-	memory_section_t section = {	\
-		.offset	= offset,			\
-		.size	= size,				\
-		.vaddr	= vaddr,			\
-		.flags	= sec_flags			\
-	};								\
-	debug(#name":\n");				\
-	show(section.offset);			\
-	show(section.size);				\
-	show(section.vaddr);			\
-	show(section.flags);			\
-	__map_section(section);			\
-}
+#define MAP_SECTION(name, sec_flags) 									\
+	{																	\
+		extern u8	_##name##_start, _##name##_end;						\
+		usize offset 	= (usize)(&_##name##_start - start_pa);			\
+		usize size 		= (usize)(&_##name##_end - &_##name##_start);	\
+		vaddr_t	vaddr	= offset + start_va;							\
+		memory_section_t section = {	\
+			.offset	= offset,			\
+			.size	= size,				\
+			.vaddr	= vaddr,			\
+			.flags	= sec_flags			\
+		};								\
+		debug(#name":\n");				\
+		show(section.offset);			\
+		show(section.size);				\
+		show(section.vaddr);			\
+		show(section.flags);			\
+		__map_section(section);			\
+	}
 
 	MAP_SECTION(text, 		PTE_X);
 	MAP_SECTION(init_data, 	PTE_R | PTE_W);
