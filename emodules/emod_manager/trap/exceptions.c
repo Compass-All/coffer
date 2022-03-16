@@ -14,9 +14,9 @@ __diverge void exception_handler(
 {
 	error("Trapped! Exception!\n");
 
-	printf("sepc:\t0x%016x\t", sepc);
-	printf("scause:\t0x%016x\t", scause);
-	printf("stval:\t0x%016x\t", stval);
+	printf("sepc:\t0x%016lx\t", sepc);
+	printf("scause:\t0x%016lx\t", scause);
+	printf("stval:\t0x%016lx\t", stval);
 	printf("\n");
 
 	printf("Register Dump:\n");
