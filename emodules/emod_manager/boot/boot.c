@@ -58,23 +58,20 @@ void emain_upper_half(
 	set_emod_manager_pa_start(emod_manager_pa_start);
 	init_page_pool(
 		emod_manager_pa_end - emod_manager_pa_start,
-		PAGE_DOWN(PARTITION_UP(emod_manager_pa_end) -
-			emod_manager_pa_end)
+		PAGE_DOWN(
+			PARTITION_UP(emod_manager_pa_end)
+			- emod_manager_pa_end
+		)
 	);
-
-	usize va_pa_offset = get_va_pa_offset();
-	vaddr_t smode_sp = alloc_smode_stack() + va_pa_offset;
-	u64 satp_value = init_satp();
 
 	map_page_pool();
 	map_sections();
 
-	show(va_pa_offset);
-	show(smode_sp);
-	show(satp_value);
+	u64 satp_value = init_satp();
+	usize va_pa_offset = get_va_pa_offset();
+	vaddr_t smode_sp = alloc_smode_stack() + va_pa_offset;
 
-	paddr_t smode_sp_pa_test = get_pa(smode_sp);
-	show(smode_sp_pa_test);
+	show(satp_value); show(smode_sp); show(va_pa_offset);
 
 	asm volatile(
 		"mv		a0, %0	\n\t"
@@ -92,7 +89,7 @@ void emain_lower_half()
 {
 	__ecall_ebi_suspend(); // this line gets executed
 
-	panic("Beginning of lower half\n");
+	// panic("Beginning of lower half\n");
 
 	/* lower half of enclave initialization */
 	
