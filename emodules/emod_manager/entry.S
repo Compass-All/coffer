@@ -3,7 +3,6 @@
 .align 4
 .section ".text.init"
 .global _start
-
 _start:
 	la		sp, tmp_stack_top
 	jal		emain_upper_half
@@ -24,11 +23,7 @@ temp_stvec:
 
     jal     emain_lower_half
 
-test_asm:
-    auipc   a0, 0
-    mv      a1, sp
-    mv      a3, s7
-
+dump_reg:
     li      a7, 0x19260817
     li      a6, 499 // debug, show a0 ~ a3
     ecall
@@ -105,7 +100,6 @@ test_asm:
 .align 4
 .section ".text"
 .global trap_handler
-
 trap_handler:
 	csrrw	sp, sscratch, sp // swap sp and sscratch
 	// if sp is zero, this is a kernel trap, jump to 1f
