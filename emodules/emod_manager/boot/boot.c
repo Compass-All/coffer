@@ -54,6 +54,7 @@ void emain_upper_half(
 	paddr_t emod_manager_pa_end = (paddr_t)&_end;
 
 	/* upper half of enclave initialization */
+	debug("Beginning of emain upper half\n");
 
 	set_emod_manager_pa_start(emod_manager_pa_start);
 	init_page_pool(
@@ -87,13 +88,14 @@ void emain_upper_half(
 
 void emain_lower_half()
 {
-	__ecall_ebi_suspend(); // this line gets executed
-
-	// panic("Beginning of lower half\n");
-
+	__ecall_ebi_suspend();
 	/* lower half of enclave initialization */
-	
-	// enter/resume
+	debug("Beginning of emain lower half\n");
+
+	vaddr_t vaddr = 0x10000UL;
+	map_page(vaddr, get_emod_manager_pa_start(),
+		PTE_R, SV39_LEVEL_PAGE);
+	hexdump(vaddr, 0x10);
 
 	emod_manager_init();
 	emod_manager_test();
