@@ -64,6 +64,9 @@ vaddr_t debug_init(vaddr_t emod_manager_getter)
 		.emod_debug_api = emod_debug_api
 	};
 
+	printf("[debug_init] emod_manager_getter at 0x%lx\n",
+		emod_manager_getter);
+
 	if (emod_manager_getter == (vaddr_t)0UL) {
 		printf("Error: NULL emod_manager getter\n");
 		return (vaddr_t)0UL;

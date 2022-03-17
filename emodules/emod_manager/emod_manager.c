@@ -59,9 +59,7 @@ void emod_manager_init()
 // ----- temporary implmentation -----
 
 #define EMOD_DEBUG_LEN	0x3000
-#define EMOD_DUMMY_LEN	0x5000
 __page_aligned u8 emod_debug_buffer[EMOD_DEBUG_LEN];
-__page_aligned u8 emod_dummy_buffer[EMOD_DUMMY_LEN];
 
 static void load_emod_debug()
 {
@@ -103,8 +101,6 @@ static void load_emod_debug()
 			PTE_R | PTE_W | PTE_X, SV39_LEVEL_PAGE);
 	}
 
-	hexdump((vaddr_t)0xffffffe14c407c00, 0x200);
-
 	vaddr_t (*debug_init)(vaddr_t) = (void *)&emod_debug_buffer;
 	vaddr_t debug_module_getter_addr = debug_init((vaddr_t)get_emodule);
 
@@ -121,7 +117,6 @@ void emod_manager_test()
 
 	emod_debug.emod_debug_api.printd("Hello world from printd\n");
 	emod_debug.emod_debug_api.printd("Int test: %d\n", 4);
-	emod_debug.emod_debug_api.hexdump(debug_getter_addr, 0x10);
 
 	return;
 }

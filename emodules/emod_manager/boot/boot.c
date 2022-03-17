@@ -86,19 +86,21 @@ void emain_upper_half(
 	);
 }
 
+static inline void page_table_test_after_mmu_on()
+{
+	vaddr_t vaddr = 0x10000UL;
+	map_page(vaddr, get_emod_manager_pa_start(),
+		PTE_R, SV39_LEVEL_PAGE);
+	hexdump(vaddr, 0x10);
+}
+
 void emain_lower_half()
 {
 	__ecall_ebi_suspend();
 	/* lower half of enclave initialization */
 	debug("Beginning of emain lower half\n");
 
-	vaddr_t vaddr = 0x10000UL;
-	map_page(vaddr, get_emod_manager_pa_start(),
-		PTE_R, SV39_LEVEL_PAGE);
-	hexdump(vaddr, 0x10);
-
-	emod_manager_init();
-	emod_manager_test();
+	page_table_test_after_mmu_on();
 
 	panic("Test panic\n");
 }
