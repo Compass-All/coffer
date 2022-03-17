@@ -49,7 +49,7 @@ GENFLAGS    +=  $(emodule-genflags)
 
 GENFLAGS    +=  -I$(include_dir)
 
-CFLAGS		=	-g -Wall -Werror -ffreestanding -nostdlib -fno-strict-aliasing
+CFLAGS		=	-Wall -Werror -ffreestanding -nostdlib -fno-strict-aliasing
 CFLAGS		+=	-fno-omit-frame-pointer -fno-optimize-sibling-calls
 CFLAGS		+=	-mno-save-restore -mstrict-align
 CFLAGS      +=  -static -mcmodel=medany
