@@ -36,10 +36,13 @@ static void assert(u8 *ptr1, u8 *ptr2, usize len)
 	}
 	for (int i = 0; i < len; i++) {
 		if (*ptr1 != *ptr2) {
-			printf("[assert] 0x%x\t(at 0x%p)!= 0x%x\t(at 0x%p)",
+			printf("[assert] 0x%x\t(at 0x%p)\t!= 0x%x\t(at 0x%p)\n",
 				*ptr1, ptr1, *ptr2, ptr2);
 			printf("[assert] Assert failed\n");
+			while (1);
 		}
+		ptr1++;
+		ptr2++;
 	}
 	printf("[assert] Assert passed!\n");
 }

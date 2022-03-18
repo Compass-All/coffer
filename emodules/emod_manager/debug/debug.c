@@ -26,6 +26,8 @@ void assert(u8 *ptr1, u8 *ptr2, usize len)
 				*ptr1, ptr1, *ptr2, ptr2);
 			panic("Assert failed\n");
 		}
+		ptr1++;
+		ptr2++;
 	}
 	printf("Assert passed!\n");
 }
