@@ -1,3 +1,9 @@
+/**
+ * @file memory.h
+ * @brief This file is deprecated. Do not use anything defined here.
+ * 
+ */
+
 #ifndef EBI_MEMORY_H
 #define EBI_MEMORY_H
 

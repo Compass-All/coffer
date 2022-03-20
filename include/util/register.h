@@ -1,23 +1,12 @@
-// this file is deprecated
+#pragma once
 
-#ifndef EBI_UTIL_H
-#define EBI_UTIL_H
-
-#ifndef __ASSEMBLER__
-#include "stddef.h"
-#include "stdint.h"
-
-// TODO (still, this address seems to be optimized)
-typedef struct {
-    uintptr_t reg_pa_start;
-    uintptr_t reg_va_start;
-    uint32_t reg_size;
-    int holder;
-} peri_addr_t;
-
-#endif // __ASSEMBLER__
-
-#define COFFER_EVAL
+#define read_csr(reg)                 \
+    ({                                \
+        unsigned long __tmp;          \
+        asm volatile("csrr %0, " #reg \
+                    : "=r"(__tmp));   \
+        __tmp;                        \
+    })
 
 #if __riscv_xlen == 64
 #define STORE sd
@@ -62,5 +51,3 @@ typedef struct {
 
 #define EAPP_CTX_REG_OFFSET(reg) (__SIZEOF_POINTER__ * (CTX_INDEX_##reg))
 #define EAPP_CTX_SIZE EAPP_CTX_REG_OFFSET(MAX)
-
-#endif // EBI_UTIL_H

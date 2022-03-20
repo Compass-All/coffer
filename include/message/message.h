@@ -4,6 +4,7 @@
 #include <types.h>
 #include <ebi_ecall.h>
 
+// typedef u64 short_message_t;
 
 static u64 inline __ecall_ebi_listen_message(
 	u64 	sender_eid,
