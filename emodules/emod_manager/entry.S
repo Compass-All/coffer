@@ -11,7 +11,7 @@ _start:
     add     s7, s6, s7 // s6 = va_pa_offset
     csrw    stvec, s7
 
-    mv      sp, a1
+    mv      sp, a1     // change sp to virt addr
     sfence.vma
     csrw    satp, a0
 .align 2

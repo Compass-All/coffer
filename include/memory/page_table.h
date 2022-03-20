@@ -93,7 +93,7 @@ static inline u64 get_vpn(sv39_vaddr_t va, u8 level)
 // cast vaddr_t to sv39_vaddr_t
 static inline sv39_vaddr_t va_to_sv39(vaddr_t va)
 {
-	signed long extended_va = (signed long)(va << 25) >> 25;
+	s64 extended_va = (s64)(va << 25) >> 25;
 	return *(sv39_vaddr_t *)&extended_va;
 }
 

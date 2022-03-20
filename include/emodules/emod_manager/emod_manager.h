@@ -26,6 +26,9 @@ typedef struct {
 	// memory management
 	int (*memory_map)(vaddr_t vaddr, paddr_t paaddr, usize len);
 
+	// panic
+	// __diverge void panic(const char *panic_message);
+
 	// ... to be determined
 } emod_manager_api_t;
 

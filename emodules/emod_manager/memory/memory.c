@@ -103,6 +103,8 @@ void map_sections()
 
 paddr_t alloc_smode_stack()
 {
+	debug("allocating s mode stack: %lu pages\n",
+		SMODE_STACK_SIZE / PAGE_SIZE);
 	return alloc_smode_page(SMODE_STACK_SIZE / PAGE_SIZE)
 		+ SMODE_STACK_SIZE;
 }

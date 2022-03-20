@@ -96,11 +96,11 @@ static inline void page_table_test_after_mmu_on()
 
 void emain_lower_half()
 {
-	__ecall_ebi_suspend();
 	/* lower half of enclave initialization */
 	debug("Beginning of emain lower half\n");
 
 	page_table_test_after_mmu_on();
 
+	__ecall_ebi_suspend();
 	panic("Test panic\n");
 }

@@ -57,6 +57,8 @@ void init_page_pool(usize offset, usize size)
 	show(page_pool_size);
 }
 
+// allocate n contiguous S mode pages,
+// returning the pa of the first one
 paddr_t alloc_smode_page(usize number_of_pages)
 {
 	paddr_t page_pool_top = get_smode_page_pool_top();

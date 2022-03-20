@@ -118,5 +118,19 @@ void emod_manager_test()
 	emod_debug.emod_debug_api.printd("Hello world from printd\n");
 	emod_debug.emod_debug_api.printd("Int test: %d\n", 4);
 
+	emod_debug.emod_debug_api.hexdump(
+		(vaddr_t)emod_debug_buffer,
+		0x20
+	);
+
+	int a = 1, b = 2;
+	int c = a + b;
+	int expected = 4;
+	emod_debug.emod_debug_api.assert(
+		(u8 *)&c,
+		(u8 *)&expected,
+		sizeof(expected)
+	);
+
 	return;
 }

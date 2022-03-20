@@ -28,5 +28,5 @@ __diverge void exception_handler(
 	}
 	printf("\n");
 
-	panic("\n");
+	panic("Exception unhandled\n");
 }
