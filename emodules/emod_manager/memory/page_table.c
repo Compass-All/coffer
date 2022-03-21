@@ -49,7 +49,7 @@ static pte_t *get_leaf_pte(vaddr_t vaddr, u8 level, u8 alloc)
 
 		table_root = (pte_t *)next_table_pa;
 		if (read_csr(satp))
-			table_root += get_va_pa_offset() / sizeof(pte_t);
+			table_root += linear_map_offset / sizeof(pte_t);
 	}
 
 	u64 vpn = get_vpn(va, 2 - level);
