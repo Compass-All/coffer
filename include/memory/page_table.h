@@ -6,6 +6,8 @@
 #define SV39_LEVEL_MEGA	1
 #define SV39_LEVEL_GIGA	0
 
+#define SV39_VPN_LEN	9
+
 typedef struct {
 	u64	ppn:	44;
 	u64	asid:	16;

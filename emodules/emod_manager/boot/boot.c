@@ -67,6 +67,7 @@ void emain_upper_half(
 
 	map_page_pool();
 	map_sections();
+	setup_linear_map();
 
 	u64 satp_value = init_satp();
 	usize va_pa_offset = get_va_pa_offset();
@@ -99,6 +100,7 @@ void emain_lower_half()
 	/* lower half of enclave initialization */
 	debug("Beginning of emain lower half\n");
 
+	page_table_test();
 	page_table_test_after_mmu_on();
 
 	__ecall_ebi_suspend();
