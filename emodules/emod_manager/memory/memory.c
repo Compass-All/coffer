@@ -7,7 +7,7 @@
 // initialized during boot
 volatile 	static paddr_t emod_manager_pa_start;
 // defined in config.mk
-const 		static vaddr_t va_pa_offset = EMOD_MANAGER_VA_PA_OFFSET;
+const		static vaddr_t emod_manager_va_start = EMOD_MANAGER_VA_START;
 
 void set_emod_manager_pa_start(paddr_t pa_start)
 {
@@ -21,7 +21,7 @@ paddr_t get_emod_manager_pa_start()
 
 usize get_va_pa_offset()
 {
-	return va_pa_offset;
+	return emod_manager_va_start - emod_manager_pa_start;
 }
 
 void wait_until_non_zero(volatile u64 *ptr)
@@ -69,7 +69,7 @@ void map_page_pool()
 void map_sections()
 {
 	paddr_t start_pa = get_emod_manager_pa_start();
-	vaddr_t start_va = start_pa + va_pa_offset;
+	vaddr_t start_va = start_pa + get_va_pa_offset();
 
 #define MAP_SECTION(name, sec_flags) 									\
 	{																	\
