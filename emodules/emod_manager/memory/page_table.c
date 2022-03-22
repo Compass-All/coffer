@@ -106,7 +106,12 @@ void map_page(vaddr_t vaddr, paddr_t paddr, u8 flags, u8 level)
 
 	pte->ppn = pa.ppn;
 
-	// TODO: flush_tlb of the page
+	// flush_tlb of the page
+	asm volatile(
+		"sfence.vma	%0	\n\t"
+		:
+		: "r"(vaddr)
+	);
 }
 
 void setup_linear_map()
@@ -124,10 +129,11 @@ void setup_linear_map()
 
 // ---------------
 // test
-__unused static paddr_t get_pa(vaddr_t va, u8 level)
+__unused paddr_t get_pa(vaddr_t va, u8 level)
 {
+	sv39_vaddr_t vaddr = va_to_sv39(va);
 	pte_t pte = *get_leaf_pte(va, level, GET_PTE_NO_ALLOC);
-	return pte.ppn << PAGE_SHIFT;
+	return (pte.ppn << PAGE_SHIFT) + vaddr.offset;
 }
 
 __unused void page_table_test()
