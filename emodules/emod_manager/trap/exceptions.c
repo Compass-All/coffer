@@ -4,6 +4,7 @@
 #include "../debug/debug.h"
 #include <util/gnu_attribute.h>
 #include <util/register.h>
+#include <emodules/ecall.h>
 
 __diverge void exception_handler(
 	u64* 	regs,
@@ -14,9 +15,7 @@ __diverge void exception_handler(
 {
 	error("Trapped! Exception!\n");
 
-	printf("sepc:\t0x%016lx\t", sepc);
-	printf("scause:\t0x%016lx\t", scause);
-	printf("stval:\t0x%016lx\t", stval);
+	show(sepc); show(scause); show(stval);	
 	printf("\n");
 
 	printf("Register Dump:\n");
