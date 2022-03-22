@@ -65,6 +65,8 @@ void emain_upper_half(
 	elf_pa_start	= payload_pa_start;
 	elf_size 		= payload_size;
 
+	show(elf_pa_start); show(elf_size);
+
 	set_emod_manager_pa_start(emod_manager_pa_start);
 	init_page_pool(
 		emod_manager_pa_end - emod_manager_pa_start,
@@ -111,12 +113,12 @@ void emain_lower_half()
 	/* lower half of enclave initialization */
 	debug("Beginning of emain lower half\n");
 
-	set_csr();
-
-	vaddr_t umode_stack_top = alloc_map_umode_stack();
+	vaddr_t umode_stack_top = alloc_map_umode_stack() - PAGE_SIZE;
 	vaddr_t elf_entry = load_elf(elf_pa_start, elf_size);
-	show(umode_stack_top); show(elf_entry);
+	show(umode_stack_top);
+	show(elf_entry);
 
+	set_csr();
 	write_csr(sepc, elf_entry);
 	write_csr(sscratch, umode_stack_top);
 
