@@ -7,12 +7,13 @@
 static u8 pte_flag_from_Elf64_word(Elf64_Word word)
 {
 	u8 flag = PTE_V | PTE_U;
-	if (flag & PF_R)
+	if (word & PF_R)
 		flag |= PTE_R;
-	if (flag & PF_W)
+	if (word & PF_W)
 		flag |= PTE_W;
-	if (flag & PF_X)
+	if (word & PF_X)
 		flag |= PTE_X;
+
 	return flag;
 }
 
@@ -60,6 +61,7 @@ static int map_elf(paddr_t elf_paddr)
 
 	for (int i = 0; i < ehdr->e_phnum; i++) {
 		if (phdr[i].p_type != PT_LOAD) {
+			debug("Passing program header (i = %d)\n", i);
 			continue;
 		}
 		debug("Loading program header (i = %d)\n", i);
@@ -72,7 +74,7 @@ static int map_elf(paddr_t elf_paddr)
 
 		vaddr_t start_vaddr = PAGE_DOWN(ph_vaddr);
 		vaddr_t end_vaddr 	= PAGE_UP(ph_vaddr + file_size);
-		paddr_t start_paddr = PAGE_DOWN(elf_paddr);
+		paddr_t start_paddr = PAGE_DOWN(ph_paddr);
 		usize number_of_pages = (end_vaddr - start_vaddr) / PAGE_SIZE;
 		show(start_vaddr); show(end_vaddr); show(start_paddr);
 		show(number_of_pages);
@@ -89,7 +91,7 @@ static int map_elf(paddr_t elf_paddr)
 		if (file_size < mem_size) { // need to allocate pages
 			debug("Allocating more pages\n");
 
-			number_of_pages = PAGE_UP(mem_size - file_size) / PAGE_SIZE;
+			number_of_pages = (PAGE_UP(mem_size) - PAGE_UP(file_size)) / PAGE_SIZE;
 			paddr_t extra_page_paddr = alloc_umode_page(number_of_pages);
 
 			show(number_of_pages);
