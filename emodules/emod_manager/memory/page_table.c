@@ -8,9 +8,9 @@
 
 #define NOP	"addi	a0, a0, 0\n\t"
 
-static const paddr_t linear_map_start	= EMOD_MANAGER_LINEAR_START;
-static const paddr_t linear_map_size	= EMOD_MANAGER_LINEAR_SIZE;
-static const paddr_t linear_map_offset	= EMOD_MANAGER_LINEAR_OFFSET;
+const paddr_t linear_map_start	= EMOD_MANAGER_LINEAR_START;
+const paddr_t linear_map_size	= EMOD_MANAGER_LINEAR_SIZE;
+const paddr_t linear_map_offset	= EMOD_MANAGER_LINEAR_OFFSET;
 
 /**
  * @brief Sv39 addressing is used.

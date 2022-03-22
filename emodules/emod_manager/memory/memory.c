@@ -100,11 +100,38 @@ void map_sections()
 }
 
 #define SMODE_STACK_SIZE	0x10000
+#define UMODE_STACK_SIZE	0x10000
+
+#define UMODE_STACK_TOP_VA	0x800000000UL // to be considered
 
 paddr_t alloc_smode_stack()
 {
-	debug("allocating s mode stack: %lu pages\n",
+	debug("allocating S mode stack: %lu pages\n",
 		SMODE_STACK_SIZE / PAGE_SIZE);
 	return alloc_smode_page(SMODE_STACK_SIZE / PAGE_SIZE)
 		+ SMODE_STACK_SIZE;
+}
+
+// allocate user mode stack, return stack top va
+vaddr_t alloc_map_umode_stack()
+{
+	usize number_of_pages = UMODE_STACK_SIZE / PAGE_SIZE;
+	debug("allocating U mode stack: %lu pages\n",
+		number_of_pages);
+
+	paddr_t umode_stack_bottom_paddr =
+		alloc_umode_page(number_of_pages);
+	vaddr_t umode_stack_bottom_vaddr =
+		UMODE_STACK_TOP_VA - UMODE_STACK_SIZE;
+
+	for (int i = 0; i < number_of_pages; i++) {
+		map_page(
+			umode_stack_bottom_vaddr + i * PAGE_SIZE,
+			umode_stack_bottom_paddr + i * PAGE_SIZE,
+			PTE_U | PTE_R | PTE_W,
+			SV39_LEVEL_PAGE
+		);
+	}
+
+	return (vaddr_t)UMODE_STACK_TOP_VA;
 }

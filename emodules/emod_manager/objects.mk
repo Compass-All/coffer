@@ -5,6 +5,7 @@ emodule-objs-y += boot/boot.o
 emodule-objs-y += memory/memory.o
 emodule-objs-y += memory/page_pool.o
 emodule-objs-y += memory/page_table.o
+emodule-objs-y += elf/elf_loader.o
 emodule-objs-y += panic/panic.o
 emodule-objs-y += trap/exceptions.o
 emodule-objs-y += emod_table/emod_table.o

@@ -134,9 +134,8 @@ static paddr_t alloc_page(usize number_of_pages, u8 mode)
 
 	set_used_page_count(expected_number_of_pages, mode);
 
-	debug("allocating %lu %s pages\n",
-		number_of_pages,
-		mode == U_MODE_POOL ? "U mode" : "S mode");
+	show(mode);
+	debug("allocating %lu pages\n", number_of_pages);
 	debug("%lu pages used in total, %lu pages left\n",
 		expected_number_of_pages,
 		(pool_size >> PAGE_SHIFT) - expected_number_of_pages);

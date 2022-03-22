@@ -16,3 +16,4 @@ void wait_until_non_zero(volatile u64 *ptr);
 void map_page_pool();
 void map_sections();
 paddr_t alloc_smode_stack();
+vaddr_t alloc_map_umode_stack();
