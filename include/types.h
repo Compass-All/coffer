@@ -19,6 +19,7 @@ typedef unsigned long ulong;
 typedef int bool;
 
 typedef u64 usize;
+typedef unsigned long size_t;
 
 typedef u64 paddr_t;
 typedef u64 vaddr_t;

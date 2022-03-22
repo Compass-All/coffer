@@ -7,8 +7,13 @@
 #define ROUNDUP(a, b) ((((a)-1) / (b) + 1) * (b))
 #endif
 
+#ifndef PAGE_SHIFT
 #define PAGE_SHIFT 12
+#endif
+
+#ifndef PAGE_SIZE
 #define PAGE_SIZE (1UL << PAGE_SHIFT)
+#endif
 
 #define PAGE_UP(addr) (ROUNDUP(addr, PAGE_SIZE))
 #define PAGE_DOWN(addr) ((addr) & (~((PAGE_SIZE)-1)))

@@ -6,6 +6,10 @@
 #define SV39_LEVEL_MEGA	1
 #define SV39_LEVEL_GIGA	0
 
+#define MASK_L0 0x1ff000
+#define MASK_L1 0x3fe00000
+#define MASK_L2 0x7fc0000000
+
 typedef struct {
 	u64	ppn:	44;
 	u64	asid:	16;

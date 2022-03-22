@@ -2,7 +2,7 @@
 #ifndef EBI_DRV_H
 #define EBI_DRV_H
 
-#include "util.h"
+// #include "util.h"
 
 #define MAX_DRV 64
 #define CMD_QUERY_INFO -1
