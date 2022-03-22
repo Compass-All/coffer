@@ -17,6 +17,15 @@ static void inline __ecall_ebi_puts(paddr_t string_ptr)
 	);
 }
 
+static void inline __ecall_ebi_exit(u64 exit_val)
+{
+	__ecall(
+		SBI_EXT_EBI,
+		SBI_EXT_EBI_EXIT,
+		exit_val, 0UL, 0UL
+	);
+}
+
 static int inline __ecall_ebi_suspend()
 {
 	return __ecall(
