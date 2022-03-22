@@ -108,6 +108,11 @@ void init_page_pool(usize offset, usize size)
 	__unused usize number_of_u_pages = PAGE_POOL_UMODE_SIZE / PAGE_SIZE;
 	show(number_of_s_pages);
 	show(number_of_u_pages);
+
+	paddr_t umode_page_pool_top = get_page_pool_top(U_MODE_POOL);
+	paddr_t smode_page_pool_top = get_page_pool_top(S_MODE_POOL);
+	show(umode_page_pool_top);
+	show(smode_page_pool_top);
 }
 
 static paddr_t alloc_page(usize number_of_pages, u8 mode)
