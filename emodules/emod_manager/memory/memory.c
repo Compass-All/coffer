@@ -9,6 +9,14 @@ volatile 	static paddr_t emod_manager_pa_start;
 // defined in config.mk
 const		static vaddr_t emod_manager_va_start = EMOD_MANAGER_VA_START;
 
+// program break, to be initialized
+static vaddr_t prog_brk = 0;
+
+void wait_until_non_zero(volatile u64 *ptr)
+{
+	while (*ptr == 0UL);
+}
+
 void set_emod_manager_pa_start(paddr_t pa_start)
 {
 	emod_manager_pa_start = pa_start;
@@ -24,9 +32,26 @@ usize get_va_pa_offset()
 	return emod_manager_va_start - emod_manager_pa_start;
 }
 
-void wait_until_non_zero(volatile u64 *ptr)
+static inline vaddr_t get_prog_brk()
 {
-	while (*ptr == 0UL);
+	return prog_brk;
+}
+
+static inline void set_prog_brk(vaddr_t new_brk)
+{
+	prog_brk = new_brk;
+}
+
+// prog_brk is initialized to
+// EUSR_HEAP_START_ALIGNED - (available U mode page size)
+// invoke this only after initialize U mode page pool!
+#define EUSR_HEAP_START_ALIGNED		0x400000000UL
+void init_prog_brk()
+{
+	usize u_mode_pool_remain_size = get_umode_page_pool_avail_size();
+	set_prog_brk(EUSR_HEAP_START_ALIGNED - u_mode_pool_remain_size);
+
+	show(get_prog_brk());
 }
 
 static void __map_section(memory_section_t mem_sec)
@@ -134,4 +159,53 @@ vaddr_t alloc_map_umode_stack()
 	}
 
 	return (vaddr_t)UMODE_STACK_TOP_VA;
+}
+
+u64 sys_brk_handler(vaddr_t new_brk)
+{
+	debug("syscall brk handler\n");
+	vaddr_t old_brk = get_prog_brk();
+
+	show(old_brk);
+	show(new_brk);
+
+	if (new_brk == 0) { // new_brk == 0, querying program break
+		debug("querying program break addr\n");
+		return old_brk;
+	} else { // new_brk != 0, update prog_brk
+		debug("trying to grow program break from 0x%lx to 0x%lx\n",
+			old_brk, new_brk);
+		vaddr_t aligned_new_brk	= PAGE_UP(new_brk);
+		vaddr_t aligned_old_brk = PAGE_UP(old_brk);
+
+		if (aligned_new_brk > aligned_old_brk) {
+			usize alloc_size	 			= aligned_new_brk - aligned_old_brk;
+			usize remained_umode_pool_size	= get_umode_page_pool_avail_size();
+			show(alloc_size);
+			show(remained_umode_pool_size);
+
+			if (alloc_size <= remained_umode_pool_size) {
+				usize number_of_pages = alloc_size / PAGE_SIZE;
+				paddr_t paddr = alloc_umode_page(number_of_pages);
+				for (int i = 0; i < number_of_pages; i++) {
+					map_page(
+						aligned_old_brk		+ i * PAGE_SIZE,
+						paddr				+ i * PAGE_SIZE,
+						PTE_U | PTE_W | PTE_R,
+						SV39_LEVEL_PAGE
+					);
+				}
+			} else {
+				show(remained_umode_pool_size);
+				panic("Out of memory\n");
+
+				// TODO: allocate from SM
+			}
+		}
+
+		set_prog_brk(new_brk);
+		return new_brk;
+	}
+
+	
 }

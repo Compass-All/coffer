@@ -118,6 +118,8 @@ void emain_lower_half()
 	show(umode_stack_top);
 	show(elf_entry);
 
+	init_prog_brk();
+
 	set_csr();
 	write_csr(sepc, elf_entry);
 	write_csr(sscratch, umode_stack_top);
