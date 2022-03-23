@@ -114,7 +114,7 @@ trap_handler:
     csrr    a1, sepc
     csrr    a2, scause
     csrr    a3, stval
-    jal     dump_reg
+    # jal     dump_reg
 	jal		exception_handler
 
 	LOAD	t1, EAPP_CTX_REG_OFFSET(sp)(sp) // restore user sp
