@@ -154,7 +154,19 @@ paddr_t alloc_smode_page(usize number_of_pages)
 	return alloc_page(number_of_pages, S_MODE_POOL);
 }
 
-__unused paddr_t alloc_umode_page(usize number_of_pages)
+paddr_t alloc_umode_page(usize number_of_pages)
 {
 	return alloc_page(number_of_pages, U_MODE_POOL);
+}
+
+__unused usize get_umode_page_pool_avail_size()
+{
+	return PAGE_POOL_UMODE_SIZE
+		- (get_used_page_count(U_MODE_POOL) * PAGE_SIZE);
+}
+
+__unused usize get_smode_page_pool_avail_size()
+{
+	return PAGE_POOL_SMODE_SIZE
+		- (get_used_page_count(S_MODE_POOL) * PAGE_SIZE);
 }
