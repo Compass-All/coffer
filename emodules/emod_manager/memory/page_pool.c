@@ -109,8 +109,8 @@ void init_page_pool(usize offset, usize size)
 	show(number_of_s_pages);
 	show(number_of_u_pages);
 
-	paddr_t umode_page_pool_top = get_page_pool_top(U_MODE_POOL);
-	paddr_t smode_page_pool_top = get_page_pool_top(S_MODE_POOL);
+	__unused paddr_t umode_page_pool_top = get_page_pool_top(U_MODE_POOL);
+	__unused paddr_t smode_page_pool_top = get_page_pool_top(S_MODE_POOL);
 	show(umode_page_pool_top);
 	show(smode_page_pool_top);
 }

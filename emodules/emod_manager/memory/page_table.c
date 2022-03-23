@@ -140,14 +140,14 @@ __unused void page_table_test()
 {
 	show(&page_table_root);
 
-	paddr_t root = get_pa((vaddr_t)&page_table_root, SV39_LEVEL_PAGE);
+	__unused paddr_t root = get_pa((vaddr_t)&page_table_root, SV39_LEVEL_PAGE);
 	show(root);	
 }
 
 __unused void test_linear_map()
 {
-	vaddr_t va = get_emod_manager_pa_start() + linear_map_offset;
-	paddr_t pa = get_pa(va, SV39_LEVEL_MEGA);
+	__unused vaddr_t va = get_emod_manager_pa_start() + linear_map_offset;
+	__unused paddr_t pa = get_pa(va, SV39_LEVEL_MEGA);
 
 	show(va);
 	show(pa);
