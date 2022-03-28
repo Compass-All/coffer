@@ -34,7 +34,7 @@
 #define SYS_rt_sigaction 	134
 #define SYS_times 			153
 #define SYS_uname 			160
-#define SYS_gettimeofday 	169
+#define SYS_gettimeofday 	169 // 0xa9
 #define SYS_getpid 			172
 #define SYS_getuid 			174
 #define SYS_geteuid 		175
@@ -91,6 +91,7 @@ void syscall_handler(
 	switch (syscall_num)
 	{
 	case SYS_close:
+		// todo!();
 		break;
 
 	case SYS_write:
@@ -121,6 +122,10 @@ void syscall_handler(
 	case SYS_brk:
 		debug("syscall brk\n");
 		ret = sys_brk_handler(regs[CTX_INDEX_a0]);
+		break;
+
+	case SYS_gettimeofday:
+		// todo!();
 		break;
 	
 	default:
