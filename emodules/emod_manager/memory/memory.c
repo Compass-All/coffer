@@ -3,12 +3,14 @@
 #include "page_pool.h"
 #include "../debug/debug.h"
 #include "../panic/panic.h"
+#include "enclave/enclave_ops.h"
 
 // initialized during boot
 volatile 	static paddr_t emod_manager_pa_start;
 // defined in config.mk
 const		static vaddr_t emod_manager_va_start = EMOD_MANAGER_VA_START;
 
+#define EUSR_HEAP_START_ALIGNED		0x400000000UL
 // program break, to be initialized
 static vaddr_t prog_brk = 0;
 
@@ -45,7 +47,6 @@ static inline void set_prog_brk(vaddr_t new_brk)
 // prog_brk is initialized to
 // EUSR_HEAP_START_ALIGNED - (available U mode page size)
 // invoke this only after initialize U mode page pool!
-#define EUSR_HEAP_START_ALIGNED		0x400000000UL
 void init_prog_brk()
 {
 	usize u_mode_pool_remain_size = get_umode_page_pool_avail_size();
@@ -161,6 +162,49 @@ vaddr_t alloc_map_umode_stack()
 	return (vaddr_t)UMODE_STACK_TOP_VA;
 }
 
+// invoked before simple pool out of memory
+static void map_brk_from_pool(vaddr_t aligned_old_brk, usize size)
+{
+	usize number_of_pages = size / PAGE_SIZE;
+	paddr_t paddr = alloc_umode_page(number_of_pages);
+	for (int i = 0; i < number_of_pages; i++) {
+		map_page(
+			aligned_old_brk		+ i * PAGE_SIZE,
+			paddr				+ i * PAGE_SIZE,
+			PTE_U | PTE_W | PTE_R,
+			SV39_LEVEL_PAGE
+		);
+	}
+}
+
+static paddr_t alloc_partition_from_mmode(usize number_of_partitions)
+{
+	paddr_t allocated_paddr = __ecall_ebi_mem_alloc(number_of_partitions);
+	show(allocated_paddr);
+
+	return allocated_paddr;
+}
+
+// invoked after simple pool out of memory, allocating memory from the SM
+static void alloc_map_brk_outside_pool(
+	vaddr_t partition_aligned_old_brk,
+	usize size
+)
+{
+	usize number_of_partitions = size / PARTITION_SIZE;
+	show(number_of_partitions);
+
+	paddr_t paddr = alloc_partition_from_mmode(number_of_partitions);
+	for (int i = 0; i < number_of_partitions; i++) {
+		map_page(
+			partition_aligned_old_brk	+ i * PARTITION_SIZE,
+			paddr						+ i * PARTITION_SIZE,
+			PTE_U | PTE_W | PTE_R,
+			SV39_LEVEL_MEGA
+		);
+	}
+}
+
 u64 sys_brk_handler(vaddr_t new_brk)
 {
 	debug("syscall brk handler\n");
@@ -175,37 +219,49 @@ u64 sys_brk_handler(vaddr_t new_brk)
 	} else { // new_brk != 0, update prog_brk
 		debug("trying to grow program break from 0x%lx to 0x%lx\n",
 			old_brk, new_brk);
+
 		vaddr_t aligned_new_brk	= PAGE_UP(new_brk);
 		vaddr_t aligned_old_brk = PAGE_UP(old_brk);
+		show(aligned_old_brk);
+		show(aligned_new_brk);
 
 		if (aligned_new_brk > aligned_old_brk) {
-			usize alloc_size	 			= aligned_new_brk - aligned_old_brk;
 			usize remained_umode_pool_size	= get_umode_page_pool_avail_size();
-			show(alloc_size);
+			usize required_size				= aligned_old_brk - aligned_new_brk;
 			show(remained_umode_pool_size);
+			show(required_size);
 
-			if (alloc_size <= remained_umode_pool_size) {
-				usize number_of_pages = alloc_size / PAGE_SIZE;
-				paddr_t paddr = alloc_umode_page(number_of_pages);
-				for (int i = 0; i < number_of_pages; i++) {
-					map_page(
-						aligned_old_brk		+ i * PAGE_SIZE,
-						paddr				+ i * PAGE_SIZE,
-						PTE_U | PTE_W | PTE_R,
-						SV39_LEVEL_PAGE
-					);
+			if (remained_umode_pool_size > 0) {
+				if (required_size <= remained_umode_pool_size) {
+					map_brk_from_pool(aligned_old_brk, required_size);
+				} else {
+					// use up the rest and update old brk for further allocation
+					map_brk_from_pool(aligned_old_brk, remained_umode_pool_size);
+
+					old_brk 		= aligned_old_brk + remained_umode_pool_size;
+					aligned_old_brk = old_brk;
+
+					show(get_umode_page_pool_avail_size());
+					debug("Pool used up. Temporary old_brk set to 0x%lx\n", old_brk);
 				}
-			} else {
-				show(remained_umode_pool_size);
-				panic("Out of memory\n");
+			}
 
-				// TODO: allocate from SM
+			vaddr_t partition_aligned_new_brk = PARTITION_UP(aligned_new_brk);
+			vaddr_t partition_aligned_old_brk = PARTITION_UP(aligned_old_brk);
+			show(partition_aligned_new_brk);
+			show(partition_aligned_old_brk);
+
+			if (partition_aligned_new_brk > partition_aligned_old_brk) {
+				usize required_partition_size =
+					partition_aligned_new_brk - partition_aligned_old_brk;
+				alloc_map_brk_outside_pool(
+					partition_aligned_old_brk,
+					required_partition_size
+				);
 			}
 		}
 
 		set_prog_brk(new_brk);
 		return new_brk;
 	}
-
-	
 }
