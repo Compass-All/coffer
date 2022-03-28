@@ -22,8 +22,8 @@
  * the future). All pages left are used a u mode page pool.
  */
 
-#define U_MODE_POOL	0
-#define S_MODE_POOL	1
+#define UMODE_POOL	0
+#define SMODE_POOL	1
  
 // offset relative to pa_start of emod_manager
 static usize page_pool_offset; // write only once
@@ -50,9 +50,9 @@ usize get_page_pool_size()
 
 static usize get_used_page_count(u8 mode)
 {
-	if (mode == U_MODE_POOL)
+	if (mode == UMODE_POOL)
 		return used_umode_page_count;
-	else if (mode == S_MODE_POOL)
+	else if (mode == SMODE_POOL)
 		return used_smode_page_count;
 	else
 		panic("Invalid mode!\n");
@@ -60,9 +60,9 @@ static usize get_used_page_count(u8 mode)
 
 static void set_used_page_count(usize count, u8 mode)
 {
-	if (mode == U_MODE_POOL)
+	if (mode == UMODE_POOL)
 		used_umode_page_count = count;
-	else if (mode == S_MODE_POOL)
+	else if (mode == SMODE_POOL)
 		used_smode_page_count = count;
 	else
 		panic("Invalid mode!\n");
@@ -77,9 +77,9 @@ static paddr_t get_page_pool_top(u8 mode)
 	usize used_page_count;
 
 	offset = get_page_pool_offset();
-	if (mode == U_MODE_POOL) {
+	if (mode == UMODE_POOL) {
 		offset += PAGE_POOL_UMODE_OFFSET;
-	} else if (mode == S_MODE_POOL) {
+	} else if (mode == SMODE_POOL) {
 		offset += PAGE_POOL_SMODE_OFFSET;
 	} else {
 		panic("Invalid mode!\n");
@@ -109,8 +109,8 @@ void init_page_pool(usize offset, usize size)
 	show(number_of_s_pages);
 	show(number_of_u_pages);
 
-	__unused paddr_t umode_page_pool_top = get_page_pool_top(U_MODE_POOL);
-	__unused paddr_t smode_page_pool_top = get_page_pool_top(S_MODE_POOL);
+	__unused paddr_t umode_page_pool_top = get_page_pool_top(UMODE_POOL);
+	__unused paddr_t smode_page_pool_top = get_page_pool_top(SMODE_POOL);
 	show(umode_page_pool_top);
 	show(smode_page_pool_top);
 }
@@ -122,9 +122,9 @@ static paddr_t alloc_page(usize number_of_pages, u8 mode)
 	usize	expected_number_of_pages;
 	usize	pool_size;
 
-	if (mode == U_MODE_POOL) {
+	if (mode == UMODE_POOL) {
 		pool_size = PAGE_POOL_UMODE_SIZE;
-	} else if (mode == S_MODE_POOL) {
+	} else if (mode == SMODE_POOL) {
 		pool_size = PAGE_POOL_SMODE_SIZE;
 	}
 
@@ -151,22 +151,22 @@ static paddr_t alloc_page(usize number_of_pages, u8 mode)
 
 paddr_t alloc_smode_page(usize number_of_pages)
 {
-	return alloc_page(number_of_pages, S_MODE_POOL);
+	return alloc_page(number_of_pages, SMODE_POOL);
 }
 
 paddr_t alloc_umode_page(usize number_of_pages)
 {
-	return alloc_page(number_of_pages, U_MODE_POOL);
+	return alloc_page(number_of_pages, UMODE_POOL);
 }
 
 __unused usize get_umode_page_pool_avail_size()
 {
 	return PAGE_POOL_UMODE_SIZE
-		- (get_used_page_count(U_MODE_POOL) * PAGE_SIZE);
+		- (get_used_page_count(UMODE_POOL) * PAGE_SIZE);
 }
 
 __unused usize get_smode_page_pool_avail_size()
 {
 	return PAGE_POOL_SMODE_SIZE
-		- (get_used_page_count(S_MODE_POOL) * PAGE_SIZE);
+		- (get_used_page_count(SMODE_POOL) * PAGE_SIZE);
 }
