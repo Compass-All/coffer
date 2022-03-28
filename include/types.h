@@ -16,7 +16,9 @@ typedef long s64;
 typedef unsigned long u64;
 typedef unsigned long ulong;
 
+#ifndef __GNUG__ // GNU C++
 typedef int bool;
+#endif
 
 typedef u64 usize;
 
