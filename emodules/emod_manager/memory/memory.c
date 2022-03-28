@@ -3,11 +3,21 @@
 #include "page_pool.h"
 #include "../debug/debug.h"
 #include "../panic/panic.h"
+#include "enclave/enclave_ops.h"
 
 // initialized during boot
 volatile 	static paddr_t emod_manager_pa_start;
 // defined in config.mk
-const 		static vaddr_t va_pa_offset = EMOD_MANAGER_VA_PA_OFFSET;
+const		static vaddr_t emod_manager_va_start = EMOD_MANAGER_VA_START;
+
+#define EUSR_HEAP_START_ALIGNED		0x400000000UL
+// program break, to be initialized
+static vaddr_t prog_brk = 0;
+
+void wait_until_non_zero(volatile u64 *ptr)
+{
+	while (*ptr == 0UL);
+}
 
 void set_emod_manager_pa_start(paddr_t pa_start)
 {
@@ -21,12 +31,28 @@ paddr_t get_emod_manager_pa_start()
 
 usize get_va_pa_offset()
 {
-	return va_pa_offset;
+	return emod_manager_va_start - emod_manager_pa_start;
 }
 
-void wait_until_non_zero(volatile u64 *ptr)
+static inline vaddr_t get_prog_brk()
 {
-	while (*ptr == 0UL);
+	return prog_brk;
+}
+
+static inline void set_prog_brk(vaddr_t new_brk)
+{
+	prog_brk = new_brk;
+}
+
+// prog_brk is initialized to
+// EUSR_HEAP_START_ALIGNED - (available U mode page size)
+// invoke this only after initialize U mode page pool!
+void init_prog_brk()
+{
+	usize u_mode_pool_remain_size = get_umode_page_pool_avail_size();
+	set_prog_brk(EUSR_HEAP_START_ALIGNED - u_mode_pool_remain_size);
+
+	show(get_prog_brk());
 }
 
 static void __map_section(memory_section_t mem_sec)
@@ -69,7 +95,7 @@ void map_page_pool()
 void map_sections()
 {
 	paddr_t start_pa = get_emod_manager_pa_start();
-	vaddr_t start_va = start_pa + va_pa_offset;
+	vaddr_t start_va = start_pa + get_va_pa_offset();
 
 #define MAP_SECTION(name, sec_flags) 									\
 	{																	\
@@ -100,11 +126,142 @@ void map_sections()
 }
 
 #define SMODE_STACK_SIZE	0x10000
+#define UMODE_STACK_SIZE	0x10000
+
+#define UMODE_STACK_TOP_VA	0x800000000UL // to be considered
 
 paddr_t alloc_smode_stack()
 {
-	debug("allocating s mode stack: %lu pages\n",
+	debug("allocating S mode stack: %lu pages\n",
 		SMODE_STACK_SIZE / PAGE_SIZE);
 	return alloc_smode_page(SMODE_STACK_SIZE / PAGE_SIZE)
 		+ SMODE_STACK_SIZE;
+}
+
+// allocate user mode stack, return stack top va
+vaddr_t alloc_map_umode_stack()
+{
+	usize number_of_pages = UMODE_STACK_SIZE / PAGE_SIZE;
+	debug("allocating U mode stack: %lu pages\n",
+		number_of_pages);
+
+	paddr_t umode_stack_bottom_paddr =
+		alloc_umode_page(number_of_pages);
+	vaddr_t umode_stack_bottom_vaddr =
+		UMODE_STACK_TOP_VA - UMODE_STACK_SIZE;
+
+	for (int i = 0; i < number_of_pages; i++) {
+		map_page(
+			umode_stack_bottom_vaddr + i * PAGE_SIZE,
+			umode_stack_bottom_paddr + i * PAGE_SIZE,
+			PTE_U | PTE_R | PTE_W,
+			SV39_LEVEL_PAGE
+		);
+	}
+
+	return (vaddr_t)UMODE_STACK_TOP_VA;
+}
+
+// invoked before simple pool out of memory
+static void map_brk_from_pool(vaddr_t aligned_old_brk, usize size)
+{
+	usize number_of_pages = size / PAGE_SIZE;
+	paddr_t paddr = alloc_umode_page(number_of_pages);
+	for (int i = 0; i < number_of_pages; i++) {
+		map_page(
+			aligned_old_brk		+ i * PAGE_SIZE,
+			paddr				+ i * PAGE_SIZE,
+			PTE_U | PTE_W | PTE_R,
+			SV39_LEVEL_PAGE
+		);
+	}
+}
+
+static paddr_t alloc_partition_from_mmode(usize number_of_partitions)
+{
+	paddr_t allocated_paddr = __ecall_ebi_mem_alloc(number_of_partitions);
+	show(allocated_paddr);
+
+	return allocated_paddr;
+}
+
+// invoked after simple pool out of memory, allocating memory from the SM
+static void alloc_map_brk_outside_pool(
+	vaddr_t partition_aligned_old_brk,
+	usize size
+)
+{
+	usize number_of_partitions = size / PARTITION_SIZE;
+	show(number_of_partitions);
+
+	paddr_t paddr = alloc_partition_from_mmode(number_of_partitions);
+	for (int i = 0; i < number_of_partitions; i++) {
+		map_page(
+			partition_aligned_old_brk	+ i * PARTITION_SIZE,
+			paddr						+ i * PARTITION_SIZE,
+			PTE_U | PTE_W | PTE_R,
+			SV39_LEVEL_MEGA
+		);
+	}
+}
+
+u64 sys_brk_handler(vaddr_t new_brk)
+{
+	debug("syscall brk handler\n");
+	vaddr_t old_brk = get_prog_brk();
+
+	show(old_brk);
+	show(new_brk);
+
+	if (new_brk == 0) { // new_brk == 0, querying program break
+		debug("querying program break addr\n");
+		return old_brk;
+	} else { // new_brk != 0, update prog_brk
+		debug("trying to grow program break from 0x%lx to 0x%lx\n",
+			old_brk, new_brk);
+
+		vaddr_t aligned_new_brk	= PAGE_UP(new_brk);
+		vaddr_t aligned_old_brk = PAGE_UP(old_brk);
+		show(aligned_old_brk);
+		show(aligned_new_brk);
+
+		if (aligned_new_brk > aligned_old_brk) {
+			usize remained_umode_pool_size	= get_umode_page_pool_avail_size();
+			usize required_size				= aligned_old_brk - aligned_new_brk;
+			show(remained_umode_pool_size);
+			show(required_size);
+
+			if (remained_umode_pool_size > 0) {
+				if (required_size <= remained_umode_pool_size) {
+					map_brk_from_pool(aligned_old_brk, required_size);
+				} else {
+					// use up the rest and update old brk for further allocation
+					map_brk_from_pool(aligned_old_brk, remained_umode_pool_size);
+
+					old_brk 		= aligned_old_brk + remained_umode_pool_size;
+					aligned_old_brk = old_brk;
+
+					show(get_umode_page_pool_avail_size());
+					debug("Pool used up. Temporary old_brk set to 0x%lx\n", old_brk);
+				}
+			}
+
+			vaddr_t partition_aligned_new_brk = PARTITION_UP(aligned_new_brk);
+			vaddr_t partition_aligned_old_brk = PARTITION_UP(aligned_old_brk);
+			show(partition_aligned_new_brk);
+			show(partition_aligned_old_brk);
+
+			if (partition_aligned_new_brk > partition_aligned_old_brk) {
+				usize required_partition_size =
+					partition_aligned_new_brk - partition_aligned_old_brk;
+				alloc_map_brk_outside_pool(
+					partition_aligned_old_brk,
+					required_partition_size
+				);
+			}
+		}
+
+		set_prog_brk(new_brk);
+		return new_brk;
+	}
 }

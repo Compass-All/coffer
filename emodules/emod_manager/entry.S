@@ -23,6 +23,9 @@ temp_stvec:
 
     jal     emain_lower_half
 
+    csrrw   sp, sscratch, sp
+    sret
+
 
 
 .macro RESTORE_CONTEXT

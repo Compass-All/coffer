@@ -5,10 +5,12 @@
 #include <enclave/enclave_ops.h>
 #include <memory/memory.h>
 #include <memory/page_table.h>
+#include "../elf/elf_loader.h"
 #include "../memory/memory.h"
 #include "../memory/page_pool.h"
 #include "../memory/page_table.h"
 #include <util/gnu_attribute.h> 
+#include <util/register.h>
 #include "../printf/printf.h"
 #include "../debug/debug.h"
 #include "../panic/panic.h"
@@ -17,6 +19,10 @@
 #define TMP_STACK_SIZE	0x1000
 u8 tmp_stack[TMP_STACK_SIZE];
 void *const tmp_stack_top = (void *)tmp_stack + TMP_STACK_SIZE;
+
+// temperarily used
+static paddr_t	elf_pa_start;
+static usize	elf_size;
 
 // ---------------
 /**
@@ -56,6 +62,11 @@ void emain_upper_half(
 	/* upper half of enclave initialization */
 	debug("Beginning of emain upper half\n");
 
+	elf_pa_start	= payload_pa_start;
+	elf_size 		= payload_size;
+
+	show(elf_pa_start); show(elf_size);
+
 	set_emod_manager_pa_start(emod_manager_pa_start);
 	init_page_pool(
 		emod_manager_pa_end - emod_manager_pa_start,
@@ -67,6 +78,7 @@ void emain_upper_half(
 
 	map_page_pool();
 	map_sections();
+	setup_linear_map();
 
 	u64 satp_value = init_satp();
 	usize va_pa_offset = get_va_pa_offset();
@@ -86,12 +98,14 @@ void emain_upper_half(
 	);
 }
 
-static inline void page_table_test_after_mmu_on()
+static void set_csr()
 {
-	vaddr_t vaddr = 0x10000UL;
-	map_page(vaddr, get_emod_manager_pa_start(),
-		PTE_R, SV39_LEVEL_PAGE);
-	hexdump(vaddr, 0x10);
+	u64 sstatus = read_csr(sstatus);
+    sstatus |= SSTATUS_SUM;		// set SUM
+    sstatus &= ~SSTATUS_SPP;	// flip SPP
+    write_csr(sstatus, sstatus);
+
+	write_csr(sie, SIE_SEIE | SIE_SSIE);
 }
 
 void emain_lower_half()
@@ -99,8 +113,16 @@ void emain_lower_half()
 	/* lower half of enclave initialization */
 	debug("Beginning of emain lower half\n");
 
-	page_table_test_after_mmu_on();
+	vaddr_t umode_stack_top = alloc_map_umode_stack() - PAGE_SIZE;
+	vaddr_t elf_entry = load_elf(elf_pa_start, elf_size);
+	show(umode_stack_top);
+	show(elf_entry);
+
+	init_prog_brk();
+
+	set_csr();
+	write_csr(sepc, elf_entry);
+	write_csr(sscratch, umode_stack_top);
 
 	__ecall_ebi_suspend();
-	panic("Test panic\n");
 }
