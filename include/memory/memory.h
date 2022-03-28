@@ -8,7 +8,9 @@
 #endif
 
 #define PAGE_SHIFT 12
+#ifndef PAGE_SIZE
 #define PAGE_SIZE (1UL << PAGE_SHIFT)
+#endif
 
 #define PAGE_UP(addr) (ROUNDUP(addr, PAGE_SIZE))
 #define PAGE_DOWN(addr) ((addr) & (~((PAGE_SIZE)-1)))

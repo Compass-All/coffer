@@ -63,7 +63,7 @@ endif
 
 CPPFLAGS	+=	$(GENFLAGS)
 
-ASFLAGS		=	-g -Wall -nostdlib -D__ASSEMBLER__
+ASFLAGS		=	-Wall -nostdlib -D__ASSEMBLER__
 ASFLAGS		+=	-fno-omit-frame-pointer -fno-optimize-sibling-calls
 ASFLAGS		+=	-mno-save-restore -mstrict-align
 ASFLAGS		+=	$(GENFLAGS)

@@ -8,6 +8,10 @@
 
 #define NOP	"addi	a0, a0, 0\n\t"
 
+const paddr_t linear_map_start	= EMOD_MANAGER_LINEAR_START;
+const paddr_t linear_map_size	= EMOD_MANAGER_LINEAR_SIZE;
+const paddr_t linear_map_offset	= EMOD_MANAGER_LINEAR_OFFSET;
+
 /**
  * @brief Sv39 addressing is used.
  */
@@ -22,9 +26,14 @@ static pte_t *get_leaf_pte(vaddr_t vaddr, u8 level, u8 alloc)
 	sv39_vaddr_t va = va_to_sv39(vaddr);
 	pte_t *table_root = &page_table_root[0];
 
-	for (int i = level; i > 0; i--) {
+	for (int i = 2; i > 2 - level; i--) {
 		u64 vpn = get_vpn(va, i);
 		pte_t *pte = &table_root[vpn];
+
+		if (alloc == 0 && level == SV39_LEVEL_MEGA) {
+			show(*pte);
+			show(pte->ppn);
+		}
 
 		paddr_t next_table_pa;
 		if (pte->v == 0) {
@@ -40,10 +49,10 @@ static pte_t *get_leaf_pte(vaddr_t vaddr, u8 level, u8 alloc)
 
 		table_root = (pte_t *)next_table_pa;
 		if (read_csr(satp))
-			table_root += get_va_pa_offset() / sizeof(pte_t);
+			table_root += linear_map_offset / sizeof(pte_t);
 	}
 
-	u64 vpn = get_vpn(va, 0);
+	u64 vpn = get_vpn(va, 2 - level);
 	pte_t *pte = &table_root[vpn];
 
 	if (pte->v == 0 && alloc != GET_PTE_ALLOC)
@@ -54,12 +63,6 @@ static pte_t *get_leaf_pte(vaddr_t vaddr, u8 level, u8 alloc)
 error:
 	panic("Page not mapped!\n");
 	return NULL; // should never reach here
-}
-
-__unused paddr_t get_pa(vaddr_t va)
-{
-	pte_t pte = *get_leaf_pte(va, SV39_LEVEL_PAGE, GET_PTE_NO_ALLOC);
-	return pte.ppn << PAGE_SHIFT;
 }
 
 u64 init_satp()
@@ -103,21 +106,49 @@ void map_page(vaddr_t vaddr, paddr_t paddr, u8 flags, u8 level)
 
 	pte->ppn = pa.ppn;
 
-	// TODO: flush_tlb of the page
+	// flush_tlb of the page
+	asm volatile(
+		"sfence.vma	%0	\n\t"
+		:
+		: "r"(vaddr)
+	);
 }
 
+void setup_linear_map()
+{
+	paddr_t paddr = linear_map_start;
+	for (int i = 0; i < linear_map_size / PARTITION_SIZE; i++) {
+		vaddr_t vaddr = paddr + linear_map_offset;
+		map_page(vaddr, paddr, PTE_R | PTE_W, SV39_LEVEL_MEGA);
+
+		paddr += PARTITION_SIZE;
+	}
+
+	flush_tlb();
+}
 
 // ---------------
 // test
-void page_table_test()
+__unused paddr_t get_pa(vaddr_t va, u8 level)
 {
-	vaddr_t root_addr;
-	asm volatile(
-		"la	t1, page_table_root	\n\t"
-		"mv	%0, t1				\n\t"
-		: "=r"(root_addr)
-		:
-		: "t1"
-	);
-	show(root_addr);
+	sv39_vaddr_t vaddr = va_to_sv39(va);
+	pte_t pte = *get_leaf_pte(va, level, GET_PTE_NO_ALLOC);
+	return (pte.ppn << PAGE_SHIFT) + vaddr.offset;
+}
+
+__unused void page_table_test()
+{
+	show(&page_table_root);
+
+	__unused paddr_t root = get_pa((vaddr_t)&page_table_root, SV39_LEVEL_PAGE);
+	show(root);	
+}
+
+__unused void test_linear_map()
+{
+	__unused vaddr_t va = get_emod_manager_pa_start() + linear_map_offset;
+	__unused paddr_t pa = get_pa(va, SV39_LEVEL_MEGA);
+
+	show(va);
+	show(pa);
 }

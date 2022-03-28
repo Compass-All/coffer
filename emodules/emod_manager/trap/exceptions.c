@@ -1,22 +1,30 @@
 #include "exceptions.h"
+#include "syscalls.h"
 #include <types.h>
 #include "../panic/panic.h"
 #include "../debug/debug.h"
 #include <util/gnu_attribute.h>
 #include <util/register.h>
+#include <emodules/ecall.h>
+#include <enclave/enclave_ops.h>
 
-__diverge void exception_handler(
+#define SCAUSE_ECALL	0x8UL
+
+void exception_handler(
 	u64* 	regs,
 	u64		sepc,
 	u64		scause,
 	u64		stval
 )
 {
+	if (scause == SCAUSE_ECALL) {
+		syscall_handler(regs, sepc, scause, stval);
+		return;
+	}
+
 	error("Trapped! Exception!\n");
 
-	printf("sepc:\t0x%016lx\t", sepc);
-	printf("scause:\t0x%016lx\t", scause);
-	printf("stval:\t0x%016lx\t", stval);
+	show(sepc); show(scause); show(stval);	
 	printf("\n");
 
 	printf("Register Dump:\n");
