@@ -4,6 +4,9 @@
 #include "../panic/panic.h"
 #include "../debug/debug.h"
 
+// TODO: how to utilize the rest of the partition which
+// the elf is located?
+
 static u8 pte_flag_from_Elf64_word(Elf64_Word word)
 {
 	u8 flag = PTE_V | PTE_U;
@@ -90,6 +93,7 @@ static int map_elf(paddr_t elf_paddr)
 
 		if (file_size < mem_size) { // need to allocate pages
 			debug("Allocating more pages\n");
+			// TODO: what if number_of_pages is larger than pool size?
 
 			number_of_pages = (PAGE_UP(mem_size) - PAGE_UP(file_size)) / PAGE_SIZE;
 			paddr_t extra_page_paddr = alloc_umode_page(number_of_pages);
