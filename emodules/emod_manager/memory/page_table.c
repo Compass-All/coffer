@@ -5,6 +5,7 @@
 #include "../debug/debug.h"
 #include <util/gnu_attribute.h>
 #include <util/register.h>
+#include <enclave/enclave_ops.h>
 
 #define NOP	"addi	a0, a0, 0\n\t"
 
@@ -74,6 +75,8 @@ u64 init_satp()
 		.ppn = page_table_root_addr >> PAGE_SHIFT
 	};
 	u64 satp_value = *(u64 *)&satp;
+
+	__ecall_ebi_page_table_register(page_table_root_addr);
 
 	return satp_value;
 }

@@ -23,6 +23,15 @@ static paddr_t inline __ecall_ebi_mem_alloc(usize number_of_partitions)
 	return paddr;
 }
 
+static void inline __ecall_ebi_page_table_register(paddr_t page_table_addr)
+{
+	__ecall(
+		SBI_EXT_EBI,
+		SBI_EXT_EBI_PAGE_TABLE_RECORD,
+		page_table_addr, 0UL, 0UL
+	);
+}
+
 static void inline __ecall_ebi_puts(paddr_t string_ptr)
 {
 	__ecall(
