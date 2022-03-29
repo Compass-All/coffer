@@ -6,6 +6,8 @@
 #include "enclave/enclave_ops.h"
 #include <util/register.h>
 
+// TODO: record &emod_pa_start and &elf_pa_start to m mode
+
 // initialized during creating enclave
 volatile 	static paddr_t emod_manager_pa_start;
 // defined in config.mk
