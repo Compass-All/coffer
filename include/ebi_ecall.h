@@ -26,10 +26,6 @@
 #define SBI_EXT_EBI_SEND_MESSAGE 441
 #define SBI_EXT_EBI_STOP_LISTEN 442
 
-// deprecated
-#define SBI_EXT_EBI_MODULE_REGISTER	0xdead
-#define SBI_EXT_EBI_MODULE_LOOKUP	(0xdead + 1)
-
 #define SBI_EXT_EBI_GET_TIME 460
 
 #define SBI_EXT_EBI_DEBUG 499
