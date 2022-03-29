@@ -54,30 +54,30 @@
 #define INVERSE_MAP_ENTRY_NUM 1024
 #define PAGE_DIR_POOL 256
 
-#define flush_tlb() asm volatile("sfence.vma")
+// #define flush_tlb() asm volatile("sfence.vma")
 
-typedef struct pte {
-    uint32_t pte_v : 1;
-    uint32_t pte_r : 1;
-    uint32_t pte_w : 1;
-    uint32_t pte_x : 1;
-    uint32_t pte_u : 1;
-    uint32_t pte_g : 1;
-    uint32_t pte_a : 1;
-    uint32_t pte_d : 1;
-    uint32_t rsw : 2;
-    uintptr_t ppn : 44;
-    uintptr_t __unused_value : 10;
-} pte_t;
+// typedef struct pte {
+//     uint32_t pte_v : 1;
+//     uint32_t pte_r : 1;
+//     uint32_t pte_w : 1;
+//     uint32_t pte_x : 1;
+//     uint32_t pte_u : 1;
+//     uint32_t pte_g : 1;
+//     uint32_t pte_a : 1;
+//     uint32_t pte_d : 1;
+//     uint32_t rsw : 2;
+//     uintptr_t ppn : 44;
+//     uintptr_t __unused_value : 10;
+// } pte_t;
 
-typedef pte_t page_directory[1 << EPT_LEVEL_BITS];
+// typedef pte_t page_directory[1 << EPT_LEVEL_BITS];
 
-typedef struct inverse_map {
-    uintptr_t pa; // physical addr
-    uintptr_t va; // virtual addr
-    uint32_t count; // page counts
-    uint16_t prev, next;
-} inverse_map_t;
+// typedef struct inverse_map {
+//     uintptr_t pa; // physical addr
+//     uintptr_t va; // virtual addr
+//     uint32_t count; // page counts
+//     uint16_t prev, next;
+// } inverse_map_t;
 
 #endif // __ASSEMBLER__
 

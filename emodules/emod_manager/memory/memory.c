@@ -4,6 +4,7 @@
 #include "../debug/debug.h"
 #include "../panic/panic.h"
 #include "enclave/enclave_ops.h"
+#include <util/register.h>
 
 // initialized during creating enclave
 volatile 	static paddr_t emod_manager_pa_start;
@@ -30,7 +31,12 @@ void set_emod_manager_pa_start(paddr_t pa_start)
 
 paddr_t get_emod_manager_pa_start()
 {
-	return emod_manager_pa_start;
+	u64 satp_value = read_csr(satp);
+	csr_satp_t satp = *(csr_satp_t *)&satp_value;
+	if (satp_value)
+		return PARTITION_DOWN(satp.ppn << PAGE_SHIFT);
+	else
+		return emod_manager_pa_start;
 }
 
 void set_payload_pa_start(paddr_t pa_start)

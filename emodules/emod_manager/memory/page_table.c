@@ -76,7 +76,8 @@ u64 init_satp()
 	};
 	u64 satp_value = *(u64 *)&satp;
 
-	__ecall_ebi_page_table_register(page_table_root_addr);
+	usize page_table_offset = page_table_root_addr % PARTITION_SIZE;
+	__ecall_ebi_page_table_register(page_table_offset);
 
 	return satp_value;
 }
