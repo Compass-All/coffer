@@ -20,9 +20,9 @@
 u8 tmp_stack[TMP_STACK_SIZE];
 void *const tmp_stack_top = (void *)tmp_stack + TMP_STACK_SIZE;
 
-// temperarily used
-static paddr_t	elf_pa_start;
-static usize	elf_size;
+// temporarily used. should be parameters for entering enclave
+static paddr_t	payload_pa_start;
+static usize	payload_size;
 
 // ---------------
 /**
@@ -52,8 +52,8 @@ void emain_upper_half(
 	u64 	eid,
 	paddr_t emod_manager_pa_start,
 	usize	emod_manager_size,
-	paddr_t	payload_pa_start,
-	usize	payload_size
+	paddr_t	elf_pa_start,
+	usize	elf_size
 )
 {
 	extern u8 _end; // defined in the linker script
@@ -61,14 +61,15 @@ void emain_upper_half(
 
 	/* upper half of enclave initialization */
 	debug("Beginning of emain upper half\n");
+	show(eid);
+	show(emod_manager_pa_start); show(emod_manager_size);
 
-	elf_pa_start	= payload_pa_start;
-	elf_size 		= payload_size;
-
-	show(elf_pa_start); show(elf_size);
+	// tmp
+	payload_pa_start = elf_pa_start;
+	payload_size = elf_size;
 
 	set_emod_manager_pa_start(emod_manager_pa_start);
-	init_page_pool(
+	init_smode_page_pool(
 		emod_manager_pa_end - emod_manager_pa_start,
 		PAGE_DOWN(
 			PARTITION_UP(emod_manager_pa_end)
@@ -76,7 +77,7 @@ void emain_upper_half(
 		)
 	);
 
-	map_page_pool();
+	map_smode_page_pool();
 	map_sections();
 	setup_linear_map();
 
@@ -113,8 +114,17 @@ void emain_lower_half()
 	/* lower half of enclave initialization */
 	debug("Beginning of emain lower half\n");
 
+	set_payload_pa_start(payload_pa_start);
+	paddr_t payload_pa_end = payload_pa_start + PAGE_UP(payload_size);
+	init_umode_page_pool(
+		payload_pa_end - payload_pa_start,
+		PAGE_DOWN(
+			PARTITION_UP(payload_pa_end) - payload_pa_end
+		)
+	);
+
 	vaddr_t umode_stack_top = alloc_map_umode_stack() - PAGE_SIZE;
-	vaddr_t elf_entry = load_elf(elf_pa_start, elf_size);
+	vaddr_t elf_entry = load_elf(payload_pa_start, payload_size);
 	show(umode_stack_top);
 	show(elf_entry);
 

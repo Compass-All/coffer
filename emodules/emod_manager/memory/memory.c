@@ -5,10 +5,13 @@
 #include "../panic/panic.h"
 #include "enclave/enclave_ops.h"
 
-// initialized during boot
+// initialized during creating enclave
 volatile 	static paddr_t emod_manager_pa_start;
 // defined in config.mk
 const		static vaddr_t emod_manager_va_start = EMOD_MANAGER_VA_START;
+
+// initialized during entering enclave
+volatile	static paddr_t payload_pa_start;
 
 #define EUSR_HEAP_START_ALIGNED		0x400000000UL
 // program break, to be initialized
@@ -22,11 +25,23 @@ void wait_until_non_zero(volatile u64 *ptr)
 void set_emod_manager_pa_start(paddr_t pa_start)
 {
 	emod_manager_pa_start = pa_start;
+	show(emod_manager_pa_start);
 }
 
 paddr_t get_emod_manager_pa_start()
 {
 	return emod_manager_pa_start;
+}
+
+void set_payload_pa_start(paddr_t pa_start)
+{
+	payload_pa_start = pa_start;
+	show(payload_pa_start);
+}
+
+paddr_t get_payload_pa_start()
+{
+	return payload_pa_start;
 }
 
 usize get_va_pa_offset()
@@ -69,25 +84,6 @@ static void __map_section(memory_section_t mem_sec)
 
 		vaddr += PAGE_SIZE;
 		paddr += PAGE_SIZE;
-	}
-}
-
-void map_page_pool()
-{
-	paddr_t page_pool_start_pa = get_page_pool_offset()
-		+ get_emod_manager_pa_start();
-	usize page_pool_size = get_page_pool_size();
-
-	show(page_pool_start_pa);
-	show(page_pool_size);
-
-	for (int i = 0; i < page_pool_size / PAGE_SIZE; i++) {
-		map_page(
-			page_pool_start_pa + i * PAGE_SIZE + get_va_pa_offset(),
-			page_pool_start_pa + i * PAGE_SIZE,
-			PTE_R | PTE_W,
-			SV39_LEVEL_PAGE
-		);
 	}
 }
 
