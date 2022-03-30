@@ -242,7 +242,7 @@ u64 sys_brk_handler(vaddr_t new_brk)
 
 		if (aligned_new_brk > aligned_old_brk) {
 			usize remained_umode_pool_size	= get_umode_page_pool_avail_size();
-			usize required_size				= aligned_old_brk - aligned_new_brk;
+			usize required_size				= aligned_new_brk - aligned_old_brk;
 			show(remained_umode_pool_size);
 			show(required_size);
 
