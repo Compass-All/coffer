@@ -11,6 +11,7 @@
 #include "../memory/page_table.h"
 #include <util/gnu_attribute.h> 
 #include <util/register.h>
+#include <util/csr.h>
 #include "../printf/printf.h"
 #include "../debug/debug.h"
 #include "../panic/panic.h"

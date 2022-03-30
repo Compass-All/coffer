@@ -6,11 +6,8 @@ mount sys /sys -t sysfs
 
 /prog/host/test_eapp /prog/enclave/eapp_rand_malloc
 /prog/host/test_eapp /prog/enclave/eapp_rand_malloc
-/prog/host/test_eapp /prog/enclave/eapp_rand_malloc
-/prog/host/test_eapp /prog/enclave/eapp_rand_malloc
-/prog/host/test_eapp /prog/enclave/eapp_rand_malloc
 
-/prog/host/resume_eapp 1; /prog/host/resume_eapp 2; /prog/host/resume_eapp 3; /prog/host/resume_eapp 4; /prog/host/resume_eapp 5;
+/prog/host/resume_eapp 1; /prog/host/resume_eapp 2;
 
 # printf "\n\n\n\n\n\n\n\n\n"
 # printf "################## qsort ##################\n"
