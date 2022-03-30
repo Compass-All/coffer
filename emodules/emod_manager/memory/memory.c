@@ -3,7 +3,7 @@
 #include "page_pool.h"
 #include "../debug/debug.h"
 #include "../panic/panic.h"
-#include "enclave/enclave_ops.h"
+#include <enclave/enclave_ops.h>
 #include <util/register.h>
 
 // TODO: record &emod_pa_start and &elf_pa_start to m mode
@@ -76,6 +76,17 @@ void init_prog_brk()
 	set_prog_brk(EUSR_HEAP_START_ALIGNED - u_mode_pool_remain_size);
 
 	show(get_prog_brk());
+}
+
+void addr_record(u64 satp_value)
+{
+	paddr_t page_table_root = satp_value << PAGE_SHIFT;
+	usize page_table_offset = page_table_root - get_emod_manager_pa_start();
+	__ecall_ebi_addr_record(
+		page_table_offset,
+		(paddr_t)&emod_manager_pa_start,
+		(paddr_t)&payload_pa_start
+	);
 }
 
 static void __map_section(memory_section_t mem_sec)

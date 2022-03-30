@@ -19,6 +19,7 @@ paddr_t	get_payload_pa_start();
 usize get_va_pa_offset();
 void map_sections();
 void init_prog_brk();
+void addr_record();
 paddr_t alloc_smode_stack();
 vaddr_t alloc_map_umode_stack();
 u64 sys_brk_handler(vaddr_t addr);

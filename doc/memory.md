@@ -14,6 +14,8 @@ ELF Partition
 Other S/U partitions
 ---
 
+### Questions
+- Support ELF larger than 2M?
 
 ###
 

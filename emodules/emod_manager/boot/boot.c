@@ -87,6 +87,8 @@ void emain_upper_half(
 
 	show(satp_value); show(smode_sp); show(va_pa_offset);
 
+	addr_record(satp_value);
+
 	asm volatile(
 		"mv		a0, %0	\n\t"
 		"mv		a1, %1	\n\t"
