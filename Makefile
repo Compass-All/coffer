@@ -110,15 +110,15 @@ board-image: emodules opensbi docker
 	$(DOCKER_RUN) $(MKIMAGE) -E -f $(DOCKER_WORKDIR)/$(ITS_PATH)/u-boot.its $(DOCKER_WORKDIR)/$(ITB_PATH)/u-boot.itb
 
 # do not add "-j" to this target, which leads to UB
-emodules: tools/md2/build/md2 docker
+emodules: docker # tools/md2/build/md2
 	$(DOCKER_MAKE) -C $(DOCKER_WORKDIR)/emodules CROSS_COMPILE=riscv64-unknown-elf-
 
 opensbi: docker emodules
 	$(DOCKER_MAKE) clean -C $(DOCKER_WORKDIR)/coffer-opensbi 
 	$(DOCKER_MAKE) -C $(DOCKER_WORKDIR)/coffer-opensbi CROSS_COMPILE=riscv64-unknown-elf- PLATFORM=generic -j
 
-tools/md2/build/md2:
-	make -C tools/md2
+# tools/md2/build/md2:
+# 	make -C tools/md2
 
 clean: docker
 	sudo rm -rf $(BUILD_DIR)
