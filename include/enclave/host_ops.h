@@ -3,8 +3,7 @@
 #include <emodules/ecall.h>
 #include <types.h>
 #include <ebi_ecall.h>
-
-#define HOST_EID	0UL
+#include <enclave/eid.h>
 
 // enter
 
