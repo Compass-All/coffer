@@ -56,9 +56,9 @@ static void inline __ecall_ebi_exit(u64 exit_val)
 	);
 }
 
-static int inline __ecall_ebi_suspend()
+static void inline __ecall_ebi_suspend()
 {
-	return __ecall(
+	__ecall(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_SUSPEND,
 		0UL, 0UL, 0UL

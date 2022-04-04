@@ -21,10 +21,6 @@
 u8 tmp_stack[TMP_STACK_SIZE];
 void *const tmp_stack_top = (void *)tmp_stack + TMP_STACK_SIZE;
 
-// temporarily used. should be parameters for entering enclave
-static paddr_t	payload_pa_start;
-static usize	payload_size;
-
 // ---------------
 /**
  * @brief Entry point of the enclave
@@ -43,8 +39,7 @@ static usize	payload_size;
  * payload.
  * 
  * @params:
- * 	a0 = id, a1 = base_pa_start, a2 = base_size, 
- * 	a3 = payload_pa_start, a4 = payload_size
+ * 	a0 = id, a1 = base_pa_start, a2 = base_size
  * 
  * TODO:
  * - When should CSRs get initialized?
@@ -108,13 +103,34 @@ static void set_csr()
 
 void emain_lower_half()
 {
+	paddr_t	payload_pa_start;
+	usize	payload_size;
+	u64		argc;
+
 	__ecall_ebi_suspend();
+	asm volatile(
+		"mv		%0, a0	\n\t"
+		"mv		%1, a1	\n\t"
+		"mv		%2, a2	\n\t"
+		:	"=r"(payload_pa_start),
+			"=r"(payload_size),
+			"=r"(argc)
+	);
 
 	/* lower half of enclave initialization */
 	debug("Beginning of emain lower half\n");
 
+	show(payload_pa_start);
+	show(payload_size);
+	show(argc);
+
 	set_payload_pa_start(payload_pa_start);
 	paddr_t payload_pa_end = payload_pa_start + PAGE_UP(payload_size);
+
+	// currently only support less than one page argv
+	__unused	paddr_t	_user_arg_pa_start	= payload_pa_end;
+	__unused	paddr_t user_arg_pa_end		= payload_pa_end + PAGE_SIZE;
+
 	init_umode_page_pool(
 		payload_pa_end - payload_pa_start,
 		PAGE_DOWN(
@@ -133,5 +149,5 @@ void emain_lower_half()
 	write_csr(sepc, elf_entry);
 	write_csr(sscratch, umode_stack_top);
 
-	__ecall_ebi_suspend();
+	debug("end of emain\n");
 }
