@@ -24,6 +24,8 @@
         __tmp;                                \
     })
 
+#define current_hartid() ((unsigned int)csr_read(CSR_MHARTID))
+
 #if __riscv_xlen == 64
 #define STORE sd
 #define LOAD ld
@@ -68,6 +70,8 @@
 #define EAPP_CTX_REG_OFFSET(reg) (__SIZEOF_POINTER__ * (CTX_INDEX_##reg))
 #define EAPP_CTX_SIZE EAPP_CTX_REG_OFFSET(MAX)
 
+#ifndef __RISCV_ENCODING_H__
+#ifndef SSTATUS_UIE // TODO UGLY
 #define SSTATUS_UIE 0x00000001UL
 #define SSTATUS_UPIE 0x00000010UL
 #define SSTATUS_SPP 0x00000100UL
@@ -78,3 +82,5 @@
 
 #define SIP_SSIP 0x00000002UL
 #define SIP_STIP 0x00000020UL
+#endif
+#endif

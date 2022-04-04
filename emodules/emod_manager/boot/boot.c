@@ -80,6 +80,12 @@ void emain_upper_half(
 	map_sections();
 	setup_linear_map();
 
+	////// DEBUG //////
+	paddr_t tmp_pa = 0x140000000;
+	vaddr_t tmp_va = 0xDEAD000;
+	map_page(tmp_va, tmp_pa, -1, SV39_LEVEL_PAGE);
+    //////       //////
+
 	u64 satp_value = init_satp();
 	usize va_pa_offset = get_va_pa_offset();
 	vaddr_t smode_sp = alloc_smode_stack() + va_pa_offset;

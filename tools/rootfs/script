@@ -28,6 +28,10 @@ mount sys /sys -t sysfs
 # printf "################## dhrystone ##################\n"
 # /prog/host/test_eapp /prog/enclave/rv8_dhrystone
 
+# printf "\n\n\n\n\n\n\n\n\n"
+# printf "################## aes ##################\n"
+# /prog/host/test_eapp /prog/enclave/rv8_aes
+
 printf "\n\n\n\n\n\n\n\n\n"
-printf "################## aes ##################\n"
-/prog/host/test_eapp /prog/enclave/rv8_aes
+printf "################## tmp ##################\n"
+/prog/host/test_eapp /prog/enclave/tmp

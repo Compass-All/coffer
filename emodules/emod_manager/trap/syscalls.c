@@ -128,6 +128,16 @@ void syscall_handler(
 		// todo!();
 		break;
 	
+	case 0xDEAD:
+	    paddr_t get_pa(vaddr_t va, u8 level);
+		u8* ptr = (u8*) 0xDEAD000;
+		paddr_t pa = get_pa((vaddr_t)ptr, 2);
+		debug("pa: %lx\n", pa);
+	    for (int i = 0; i < 0x1000; i++) {
+			ptr[i] += i;
+		}
+		break;
+	
 	default:
 		panic("Unimplemented syscall\n");
 		break;
