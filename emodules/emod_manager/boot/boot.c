@@ -52,9 +52,7 @@ static usize	payload_size;
 void emain_upper_half(
 	u64 	eid,
 	paddr_t emod_manager_pa_start,
-	usize	emod_manager_size,
-	paddr_t	elf_pa_start,
-	usize	elf_size
+	usize	emod_manager_size
 )
 {
 	extern u8 _end; // defined in the linker script
@@ -64,10 +62,6 @@ void emain_upper_half(
 	debug("Beginning of emain upper half\n");
 	show(eid);
 	show(emod_manager_pa_start); show(emod_manager_size);
-
-	// tmp
-	payload_pa_start = elf_pa_start;
-	payload_size = elf_size;
 
 	set_emod_manager_pa_start(emod_manager_pa_start);
 	init_smode_page_pool(
@@ -114,6 +108,8 @@ static void set_csr()
 
 void emain_lower_half()
 {
+	__ecall_ebi_suspend();
+
 	/* lower half of enclave initialization */
 	debug("Beginning of emain lower half\n");
 
