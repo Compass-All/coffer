@@ -98,7 +98,7 @@ static void set_csr(u64 sepc, u64 sscratch)
     sstatus &= ~SSTATUS_SPP;	// flip SPP
     write_csr(sstatus, sstatus);
 
-	write_csr(sie, SIE_SEIE | SIE_SSIE);
+	// write_csr(sie, SIE_SEIE | SIE_SSIE);
 
 	write_csr(sepc, sepc);
 	write_csr(sscratch, sscratch);
