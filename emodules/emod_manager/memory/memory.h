@@ -22,4 +22,5 @@ void init_prog_brk();
 void addr_record();
 paddr_t alloc_smode_stack();
 vaddr_t alloc_map_umode_stack();
+void map_user_argv(paddr_t user_argv_pa, u64 argc);
 u64 sys_brk_handler(vaddr_t addr);

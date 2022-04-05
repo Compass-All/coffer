@@ -91,7 +91,7 @@ void emain_upper_half(
 	);
 }
 
-static void set_csr()
+static void set_csr(u64 sepc, u64 sscratch)
 {
 	u64 sstatus = read_csr(sstatus);
     sstatus |= SSTATUS_SUM;		// set SUM
@@ -99,6 +99,9 @@ static void set_csr()
     write_csr(sstatus, sstatus);
 
 	write_csr(sie, SIE_SEIE | SIE_SSIE);
+
+	write_csr(sepc, sepc);
+	write_csr(sscratch, sscratch);
 }
 
 void emain_lower_half()
@@ -128,26 +131,43 @@ void emain_lower_half()
 	paddr_t payload_pa_end = payload_pa_start + PAGE_UP(payload_size);
 
 	// currently only support less than one page argv
-	__unused	paddr_t	_user_arg_pa_start	= payload_pa_end;
-	__unused	paddr_t user_arg_pa_end		= payload_pa_end + PAGE_SIZE;
+	paddr_t	user_argv_pa_start	= payload_pa_end;
+	paddr_t user_argv_pa_end	= payload_pa_end + PAGE_SIZE;
+	show(user_argv_pa_start);
+	show(user_argv_pa_end);
+
+	map_user_argv(user_argv_pa_start, argc);
 
 	init_umode_page_pool(
-		payload_pa_end - payload_pa_start,
+		user_argv_pa_end - payload_pa_start,
 		PAGE_DOWN(
-			PARTITION_UP(payload_pa_end) - payload_pa_end
+			PARTITION_UP(user_argv_pa_end) - user_argv_pa_end
 		)
 	);
 
-	vaddr_t umode_stack_top = alloc_map_umode_stack() - PAGE_SIZE;
-	vaddr_t elf_entry = load_elf(payload_pa_start, payload_size);
+	vaddr_t user_argv_va = alloc_map_umode_stack();
+	vaddr_t umode_stack_top = user_argv_va - PAGE_SIZE;
+	show(user_argv_va);
 	show(umode_stack_top);
+	hexdump(user_argv_va, 0x50);
+
+#define PUSH(value)							\
+	{										\
+		umode_stack_top -= sizeof(u64);		\
+		*(u64 *)umode_stack_top = value;	\
+	}
+	for (int i = argc - 1; i >= 0; i--) {
+		u64 *argv_ptr = (u64 *)user_argv_va;
+		PUSH(argv_ptr[i]);
+	}
+	PUSH(argc);
+
+	vaddr_t elf_entry = load_elf(payload_pa_start, payload_size);
 	show(elf_entry);
 
 	init_prog_brk();
 
-	set_csr();
-	write_csr(sepc, elf_entry);
-	write_csr(sscratch, umode_stack_top);
+	set_csr(elf_entry, umode_stack_top);
 
 	debug("end of emain\n");
 }

@@ -153,6 +153,30 @@ paddr_t alloc_smode_stack()
 		+ SMODE_STACK_SIZE;
 }
 
+void map_user_argv(paddr_t user_argv_pa, u64 argc)
+{
+	vaddr_t user_argv_va = UMODE_STACK_TOP_VA;
+
+	u64 *user_argv_ptr = (u64 *)(user_argv_pa + linear_map_offset);
+	for (int i = 0; i < argc; i++) {
+		u64 offset = user_argv_ptr[i] % PAGE_SIZE;
+		user_argv_ptr[i] = user_argv_va + offset;
+
+		show(i);
+		show(user_argv_ptr[i]);
+		show(offset);
+	}
+
+	map_page(
+		user_argv_va,
+		user_argv_pa,
+		PTE_U | PTE_R | PTE_W,
+		SV39_LEVEL_PAGE
+	);
+	show(user_argv_va);
+	show(user_argv_pa);
+}
+
 // allocate user mode stack, return stack top va
 vaddr_t alloc_map_umode_stack()
 {

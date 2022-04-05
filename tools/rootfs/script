@@ -9,7 +9,7 @@ mount sys /sys -t sysfs
 
 # /prog/host/resume_eapp 1; /prog/host/resume_eapp 2;
 
-# /prog/host/test_eapp /prog/enclave/eapp_write
+/prog/host/test_eapp /prog/enclave/eapp_test_argv test1 test2
 # /prog/host/test_eapp /prog/enclave/eapp_printf
 
 # printf "\n\n\n\n\n\n\n\n\n"
@@ -18,7 +18,7 @@ mount sys /sys -t sysfs
 
 # printf "\n\n\n\n\n\n\n\n\n"
 # printf "################## sha512 ##################\n"
-/prog/host/test_eapp /prog/enclave/rv8_sha512
+# /prog/host/test_eapp /prog/enclave/rv8_sha512
 
 # printf "\n\n\n\n\n\n\n\n\n"
 # printf "################## primes ##################\n"

@@ -130,10 +130,39 @@ void setup_linear_map()
 
 // ---------------
 // test
-__unused paddr_t get_pa(vaddr_t va, u8 level)
+static pte_t* test_get_pte(vaddr_t va)
+{
+#define MASK_OFFSET 0xfff
+#define MASK_L0 0x1ff000
+#define MASK_L1 0x3fe00000
+#define MASK_L2 0x7fc0000000
+    u64 layer_offset[] = { (va & MASK_L2) >> 30, (va & MASK_L1) >> 21,
+        (va & MASK_L0) >> 12 };
+    pte_t* tmp_entry;
+	pte_t* root = &page_table_root[0];
+    int i;
+    for (i = 0; i < 3; ++i) {
+        tmp_entry = &root[layer_offset[i]];
+
+        if (!tmp_entry->v) {
+            return NULL;
+        }
+        if ((tmp_entry->r | tmp_entry->w | tmp_entry->x)) {
+            return tmp_entry;
+        }
+
+        root = (pte_t*)((u64)tmp_entry->ppn << PAGE_SHIFT);
+		if (read_csr(satp)) {
+			root += linear_map_offset / sizeof(pte_t);
+		}
+    }
+    return NULL;
+}
+
+__unused paddr_t get_pa(vaddr_t va)
 {
 	sv39_vaddr_t vaddr = va_to_sv39(va);
-	pte_t pte = *get_leaf_pte(va, level, GET_PTE_NO_ALLOC);
+	pte_t pte = *test_get_pte(va);
 	return (pte.ppn << PAGE_SHIFT) + vaddr.offset;
 }
 
@@ -141,14 +170,14 @@ __unused void page_table_test()
 {
 	show(&page_table_root);
 
-	__unused paddr_t root = get_pa((vaddr_t)&page_table_root, SV39_LEVEL_PAGE);
+	__unused paddr_t root = get_pa((vaddr_t)&page_table_root);
 	show(root);	
 }
 
 __unused void test_linear_map()
 {
 	__unused vaddr_t va = get_emod_manager_pa_start() + linear_map_offset;
-	__unused paddr_t pa = get_pa(va, SV39_LEVEL_MEGA);
+	__unused paddr_t pa = get_pa(va);
 
 	show(va);
 	show(pa);
