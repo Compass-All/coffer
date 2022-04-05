@@ -9,33 +9,36 @@ mount sys /sys -t sysfs
 
 # /prog/host/resume_eapp 1; /prog/host/resume_eapp 2;
 
-/prog/host/test_eapp /prog/enclave/eapp_test_argv test1 test2
 # /prog/host/test_eapp /prog/enclave/eapp_printf
 
-# printf "\n\n\n\n\n\n\n\n\n"
-# printf "################## qsort ##################\n"
-# /prog/host/test_eapp /prog/enclave/rv8_qsort
+printf "\n\n\n\n\n\n\n\n\n"
+printf "################## test_argv ##################\n"
+/prog/host/test_eapp /prog/enclave/eapp_test_argv test1 test2
 
-# printf "\n\n\n\n\n\n\n\n\n"
-# printf "################## sha512 ##################\n"
-# /prog/host/test_eapp /prog/enclave/rv8_sha512
+printf "\n\n\n\n\n\n\n\n\n"
+printf "################## qsort ##################\n"
+/prog/host/test_eapp /prog/enclave/rv8_qsort
 
-# printf "\n\n\n\n\n\n\n\n\n"
-# printf "################## primes ##################\n"
-# /prog/host/test_eapp /prog/enclave/rv8_primes
+printf "\n\n\n\n\n\n\n\n\n"
+printf "################## sha512 ##################\n"
+/prog/host/test_eapp /prog/enclave/rv8_sha512
 
-# printf "\n\n\n\n\n\n\n\n\n"
-# printf "################## norx ##################\n"
-# /prog/host/test_eapp /prog/enclave/rv8_norx
+printf "\n\n\n\n\n\n\n\n\n"
+printf "################## primes ##################\n"
+/prog/host/test_eapp /prog/enclave/rv8_primes
 
-# printf "\n\n\n\n\n\n\n\n\n"
-# printf "################## miniz ##################\n"
-# /prog/host/test_eapp /prog/enclave/rv8_miniz
+printf "\n\n\n\n\n\n\n\n\n"
+printf "################## norx ##################\n"
+/prog/host/test_eapp /prog/enclave/rv8_norx
 
-# printf "\n\n\n\n\n\n\n\n\n"
-# printf "################## dhrystone ##################\n"
-# /prog/host/test_eapp /prog/enclave/rv8_dhrystone
+printf "\n\n\n\n\n\n\n\n\n"
+printf "################## miniz ##################\n"
+/prog/host/test_eapp /prog/enclave/rv8_miniz
 
-# printf "\n\n\n\n\n\n\n\n\n"
-# printf "################## aes ##################\n"
-# /prog/host/test_eapp /prog/enclave/rv8_aes
+printf "\n\n\n\n\n\n\n\n\n"
+printf "################## dhrystone ##################\n"
+/prog/host/test_eapp /prog/enclave/rv8_dhrystone
+
+printf "\n\n\n\n\n\n\n\n\n"
+printf "################## aes ##################\n"
+/prog/host/test_eapp /prog/enclave/rv8_aes
