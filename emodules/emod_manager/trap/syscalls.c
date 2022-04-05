@@ -116,7 +116,7 @@ void syscall_handler(
 	case SYS_exit:
 	 	debug("syscall exit\n");
 		show(get_umode_page_pool_avail_size());
-		__ecall_ebi_exit(ret);
+		__ecall_ebi_exit(regs[CTX_INDEX_a0]);
 		break;
 
 	case SYS_brk:
