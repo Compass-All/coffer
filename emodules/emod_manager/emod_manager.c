@@ -95,7 +95,7 @@ static void load_emod_debug()
 
 	show(&emod_debug_buffer);
 
-	for (int i = 0; i < EMOD_DEBUG_LEN / PAGE_SIZE; i++) {
+	for (int i = 0; i < (EMOD_DEBUG_LEN >> PAGE_SHIFT); i++) {
 		vaddr_t vaddr = (vaddr_t)&emod_debug_buffer + i * PAGE_SIZE;
 		map_page(vaddr, vaddr - get_va_pa_offset(),
 			PTE_R | PTE_W | PTE_X, SV39_LEVEL_PAGE);

@@ -93,7 +93,12 @@ static void __map_section(memory_section_t mem_sec)
 {
 	paddr_t paddr = mem_sec.offset + get_emod_manager_pa_start();
 	vaddr_t vaddr = mem_sec.vaddr;
-	usize number_of_pages = PAGE_UP(mem_sec.size) / PAGE_SIZE;
+	usize number_of_pages = PAGE_UP(mem_sec.size) >> PAGE_SHIFT;
+
+	show(mem_sec.offset);
+	show(mem_sec.size);
+	show(mem_sec.vaddr);
+	show(mem_sec.flags);
 
 	if (mem_sec.offset % PAGE_SIZE != 0)
 		panic("Section not aligned!\n");
@@ -148,8 +153,8 @@ void map_sections()
 paddr_t alloc_smode_stack()
 {
 	debug("allocating S mode stack: %lu pages\n",
-		SMODE_STACK_SIZE / PAGE_SIZE);
-	return alloc_smode_page(SMODE_STACK_SIZE / PAGE_SIZE)
+		SMODE_STACK_SIZE >> PAGE_SHIFT);
+	return alloc_smode_page(SMODE_STACK_SIZE >> PAGE_SHIFT)
 		+ SMODE_STACK_SIZE;
 }
 
@@ -180,7 +185,7 @@ void map_user_argv(paddr_t user_argv_pa, u64 argc)
 // allocate user mode stack, return stack top va
 vaddr_t alloc_map_umode_stack()
 {
-	usize number_of_pages = UMODE_STACK_SIZE / PAGE_SIZE;
+	usize number_of_pages = UMODE_STACK_SIZE >> PAGE_SHIFT;
 	debug("allocating U mode stack: %lu pages\n",
 		number_of_pages);
 
@@ -204,7 +209,7 @@ vaddr_t alloc_map_umode_stack()
 // invoked before simple pool out of memory
 static void map_brk_from_pool(vaddr_t aligned_old_brk, usize size)
 {
-	usize number_of_pages = size / PAGE_SIZE;
+	usize number_of_pages = size >> PAGE_SHIFT;
 	paddr_t paddr = alloc_umode_page(number_of_pages);
 	for (int i = 0; i < number_of_pages; i++) {
 		map_page(

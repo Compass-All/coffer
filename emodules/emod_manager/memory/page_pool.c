@@ -160,7 +160,7 @@ void map_smode_page_pool()
 	paddr_t start_pa = get_emod_manager_pa_start() + smode_pool_desc.offset;
 	usize pool_size = smode_pool_desc.size;
 
-	for (int i = 0; i < pool_size / PAGE_SIZE; i++) {
+	for (int i = 0; i < (pool_size >> PAGE_SHIFT); i++) {
 		map_page(
 			start_pa + i * PAGE_SIZE + get_va_pa_offset(),
 			start_pa + i * PAGE_SIZE,

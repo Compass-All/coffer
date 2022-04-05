@@ -78,7 +78,7 @@ static int map_elf(paddr_t elf_paddr)
 		vaddr_t start_vaddr = PAGE_DOWN(ph_vaddr);
 		vaddr_t end_vaddr 	= PAGE_UP(ph_vaddr + file_size);
 		paddr_t start_paddr = PAGE_DOWN(ph_paddr);
-		usize number_of_pages = (end_vaddr - start_vaddr) / PAGE_SIZE;
+		usize number_of_pages = (end_vaddr - start_vaddr) >> PAGE_SHIFT;
 		show(start_vaddr); show(end_vaddr); show(start_paddr);
 		show(number_of_pages);
 
@@ -95,7 +95,7 @@ static int map_elf(paddr_t elf_paddr)
 			debug("Allocating more pages\n");
 			// TODO: what if number_of_pages is larger than pool size?
 
-			number_of_pages = (PAGE_UP(mem_size) - PAGE_UP(file_size)) / PAGE_SIZE;
+			number_of_pages = (PAGE_UP(mem_size) - PAGE_UP(file_size)) >> PAGE_SHIFT;
 			paddr_t extra_page_paddr = alloc_umode_page(number_of_pages);
 
 			show(number_of_pages);
