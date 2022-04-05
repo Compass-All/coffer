@@ -44,7 +44,7 @@ static pte_t *get_leaf_pte(vaddr_t vaddr, u8 level, u8 alloc)
 			pte->ppn		= next_table_pa >> PAGE_SHIFT;
 			pte->v			= 1;
 		} else {
-			next_table_pa = pte->ppn << PAGE_SHIFT;
+			next_table_pa = (u64)pte->ppn << PAGE_SHIFT;
 		}
 
 		table_root = (pte_t *)next_table_pa;
@@ -94,9 +94,9 @@ void map_page(vaddr_t vaddr, paddr_t paddr, u8 flags, u8 level)
 	pte_t *pte = get_leaf_pte(vaddr, level, GET_PTE_ALLOC);
 
 	if (flags & PTE_R)
-		pte->r = pte->a = 1;
+		pte->r = 1;
 	if (flags & PTE_W)
-		pte->w = pte->d = 1;
+		pte->w = 1;
 	if (flags & PTE_X)
 		pte->x = 1;
 	if (flags & PTE_U)
@@ -105,11 +105,15 @@ void map_page(vaddr_t vaddr, paddr_t paddr, u8 flags, u8 level)
 		pte->g = 1;
 	pte->v = 1;
 
-	pte->ppn = pa.ppn;
+	// always set to 1 if no swap space is used
+	pte->a = 1;
+	pte->d = 1;
+
+	pte->ppn = (u64)pa.ppn;
 
 	// flush_tlb of the page
 	asm volatile(
-		"sfence.vma	%0	\n\t"
+		"sfence.vma	%0, zero	\n\t" // 'zero' cannot be omitted
 		:
 		: "r"(vaddr)
 	);
