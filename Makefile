@@ -106,8 +106,15 @@ endif
 
 
 board-image: emodules opensbi docker
-	mkdir -p $(ITB_PATH)
+	sudo mkdir -p $(ITB_PATH)
 	$(DOCKER_RUN) $(MKIMAGE) -E -f $(DOCKER_WORKDIR)/$(ITS_PATH)/u-boot.its $(DOCKER_WORKDIR)/$(ITB_PATH)/u-boot.itb
+
+burn-image:	board-image
+ifneq (, $(shell ls /dev/mmcblk0p2))
+	sudo dd if=$(ITB_PATH)/u-boot.itb of=/dev/mmcblk0p2 bs=2M iflag=fullblock oflag=direct conv=fsync status=progress
+else
+	@printf "\nSD card not inserted\n\n"
+endif
 
 # do not add "-j" to this target, which leads to UB
 emodules: docker # tools/md2/build/md2
