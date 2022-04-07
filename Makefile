@@ -42,7 +42,7 @@ QEMU_CMD = -M virt -m 8G -smp 1 -nographic \
 
 PROG_BUILD = $(BUILD_DIR)/prog
 
-all: dir emodules opensbi board-image rootfs
+all: dir emodules opensbi rootfs
 
 kernel-image: docker
 ifeq (, $(wildcard $(KERNEL_IMAGE))) # kernel image not found
