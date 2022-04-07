@@ -149,7 +149,6 @@ void emain_lower_half()
 	vaddr_t umode_stack_top = user_argv_va - PAGE_SIZE;
 	show(user_argv_va);
 	show(umode_stack_top);
-	hexdump(user_argv_va, 0x50);
 
 #define PUSH(value)							\
 	{										\
