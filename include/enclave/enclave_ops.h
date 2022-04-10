@@ -49,15 +49,9 @@ static void inline __ecall_ebi_exit(u64 exit_val)
 
 static u64 inline __ecall_ebi_suspend(u64 short_message)
 {
-	u64 ret;
-	__ecall(
+	return __ecall(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_SUSPEND,
 		short_message, 0UL, 0UL
 	);
-	asm volatile (
-		"mv		%0, a0	\n\t"
-		: "=r"(ret)
-	);
-	return ret;
 }

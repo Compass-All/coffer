@@ -4,15 +4,15 @@ dmesg -n 1
 mount proc /proc -t proc
 mount sys /sys -t sysfs
 
-# /prog/host/test_eapp /prog/enclave/eapp_rand_malloc
+/prog/host/test_eapp /prog/enclave/eapp_rand_malloc
 # /prog/host/test_eapp /prog/enclave/eapp_rand_malloc
 
 # /prog/host/resume_eapp 1; /prog/host/resume_eapp 2;
 
 # Enclave
-/prog/host/test_eapp /prog/enclave/eapp_malloc 4096
+# /prog/host/test_eapp /prog/enclave/eapp_malloc 4096
 # Host
-/prog/enclave/eapp_malloc 0 4096
+# /prog/enclave/eapp_malloc 0 4096
 
 # printf "\n\n\n\n\n\n\n\n\n"
 # printf "################## test_argv ##################\n"
