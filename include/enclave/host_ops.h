@@ -37,11 +37,22 @@ static u64 inline __ecall_ebi_enter_enclave(
 }
 
 // TODO: change return type
-static void inline __ecall_ebi_resume_enclave(u64 enclave_id)
+static u64 inline __ecall_ebi_resume_enclave(
+	u64 enclave_id,
+	u64 short_message
+)
 {
+	u64 ret;
 	__ecall(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_RESUME,
-		enclave_id, 0UL, 0UL
+		enclave_id,
+		short_message,
+		0UL
 	);
+	asm volatile (
+		"mv		%0, a0	\n\t"
+		: "=r"(ret)
+	);
+	return ret;
 }

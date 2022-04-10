@@ -110,7 +110,7 @@ void emain_lower_half()
 	usize	payload_size;
 	u64		argc;
 
-	__ecall_ebi_suspend();
+	__ecall_ebi_suspend(0UL);
 	asm volatile(
 		"mv		%0, a0	\n\t"
 		"mv		%1, a1	\n\t"

@@ -90,7 +90,7 @@ static void load_emod_debug()
 		panic("listen_ret error\n");
 	}
 
-	__ecall_ebi_suspend();
+	__ecall_ebi_suspend(0UL);
 	wait_until_non_zero((volatile u64 *)&emod_debug_buffer);
 
 	show(&emod_debug_buffer);
