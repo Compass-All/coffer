@@ -1,0 +1,5 @@
+- Refactor memory allocation and migration in SM.
+- Refactor message channel.
+- Emodule loader implementation.
+- Emod_alloc implementation.
+- Port file system.

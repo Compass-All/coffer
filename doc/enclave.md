@@ -21,16 +21,31 @@ An enclave consists of the following information:
 		- IO Scheduler:
 			- Manage active/inactive status of MMIO regions according to certain scheduling algorithms
 
+## Enclave lifecycle
 
-S mode tries to read/write: 
 
-S mode page table
-	- constant offset:
-		- 2M megapage
-		- For data access (at C level)
-		- No need to consider migration
-		- Motivation: access pa
-	- contiguous va:
-		- 4k page
-		- For execution (possibly including data access at assembly level)
-		- Need to support migration
+### Create
+
+param:				()
+return to enclave:	(eid, s mode payload pa start, s mode payload size)
+
+### Enter
+
+param:				(eid, argc, argv,
+						u mode payload host va start, u mode payload size)
+return to enclave:	(umode payload pa start, u mode payload size, argc)
+
+### Suspend
+
+param:			(short message)
+return to host:	(short message)
+
+### Resume
+
+param:				(eid, short message)
+return to enclave:	(short message)
+
+### Exit
+
+param:			()
+return to host:	(return value)
