@@ -58,11 +58,30 @@ static void load_emodule(
 	wait_until_non_zero((volatile u64 *)vaddr);
 
 	vaddr_t (*init)(vaddr_t) = (void *)vaddr;
-	vaddr_t getter_addr = init((vaddr_t)get_emodule);
+	vaddr_t getter_addr = init((vaddr_t)get_emod_manager);
 
 	show(getter_addr);
 
 	register_emodule(emodule_id, getter_addr);
+}
+
+static vaddr_t acquire_emodule(u32 emodule_id)
+{
+	vaddr_t emodule_getter_addr = get_emodule(emodule_id);
+
+	if (!emodule_getter_addr) {
+		debug("loading emodule\n");
+		show(emodule_id);
+
+		usize emodule_size = get_emodule_size(emodule_id);
+		load_emodule(emodule_id, emodule_size);
+
+		emodule_getter_addr = get_emodule(emodule_id);
+	}
+
+	show(emodule_getter_addr);
+
+	return emodule_getter_addr;	
 }
 
 // ---------------
@@ -76,10 +95,12 @@ static emod_manager_t get_emod_manager()
 void emod_manager_init()
 {
 	// init emod_manager_api
-	emod_manager_api.test = api_test;
+	emod_manager_api.test 				= api_test;
+	emod_manager_api.acquire_emodule 	= acquire_emodule;
 	// ...
 	// todo!
 	show(emod_manager_api.test);
+	show(emod_manager_api.acquire_emodule);
 
 	// init emod_manager
 	emod_manager.emod_manager_desc = emod_manager_desc;
@@ -90,36 +111,9 @@ void emod_manager_init()
 }
 
 // ----- temporary implmentation -----
-
-static void load_emod_debug()
-{
-	load_emodule(EMODULE_ID_DEBUG, 0x3000);
-}
-
 void emod_manager_test()
 {
-	load_emod_debug();
-
-	vaddr_t debug_getter_addr = get_emodule(EMODULE_ID_DEBUG);
-	emod_debug_t (*get_emod_debug)(void) = (void *)debug_getter_addr;
-	emod_debug_t emod_debug = get_emod_debug();
-
-	emod_debug.emod_debug_api.printd("Hello world from printd\n");
-	emod_debug.emod_debug_api.printd("Int test: %d\n", 4);
-
-	emod_debug.emod_debug_api.hexdump(
-		debug_getter_addr,
-		0x20
-	);
-
-	int a = 1, b = 2;
-	int c = a + b;
-	int expected = 3;
-	emod_debug.emod_debug_api.assert(
-		(u8 *)&c,
-		(u8 *)&expected,
-		sizeof(expected)
-	);
+	load_emodule(EMODULE_ID_ALLOC, 0x3000);
 
 	return;
 }

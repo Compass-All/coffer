@@ -2,5 +2,9 @@
 
 #include <types.h>
 
-void register_emodule(u32 emod_id, vaddr_t emodule_getter_addr);
+#define EMODULE_DEBUG_SIZE		0x3000
+#define EMODULE_DUMMY_SIZE		0x5000
+
+void 	register_emodule(u32 emod_id, vaddr_t emodule_getter_addr);
+usize 	get_emodule_size(u32 emod_id);
 vaddr_t get_emodule(u32 emod_id);

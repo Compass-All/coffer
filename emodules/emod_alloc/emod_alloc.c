@@ -27,9 +27,20 @@ static void func2(int arg1)
 
 // ---------------
 // emod_alloc init and getter
-static emod_alloc_t get_emodule()
+static emod_alloc_t get_emod_alloc()
 {
 	return emod_alloc;
+}
+
+static void init_dependency()
+{
+	vaddr_t emod_debug_getter = emod_manager.emod_manager_api
+		.acquire_emodule(EMODULE_ID_DEBUG);
+	emod_debug_t (*get_emod_debug)(void) =
+		(void *)emod_debug_getter;
+	emod_debug = get_emod_debug();
+	
+	emod_debug.emod_debug_api.printd("Hello from init_dependency\n");
 }
 
 __attribute__((section(".text.init")))
@@ -58,5 +69,7 @@ vaddr_t alloc_init(vaddr_t emod_manager_getter)
 
 	emod_manager.emod_manager_api.test();
 
-	return (vaddr_t)get_emodule;
+	init_dependency();
+
+	return (vaddr_t)get_emod_alloc;
 }
