@@ -7,7 +7,7 @@
 
 // enter
 
-static u64 inline __ecall_ebi_create_enclave()
+static u64 inline __ecall_ebi_create()
 {
 	return __ecall(
 		SBI_EXT_EBI,
@@ -16,7 +16,7 @@ static u64 inline __ecall_ebi_create_enclave()
 	);
 }
 
-static u64 inline __ecall_ebi_enter_enclave(
+static u64 inline __ecall_ebi_enter(
 	u64 	enclave_id,
 	u64 	argc,
 	vaddr_t argv,
@@ -36,7 +36,7 @@ static u64 inline __ecall_ebi_enter_enclave(
 	);
 }
 
-static u64 inline __ecall_ebi_resume_enclave(
+static u64 inline __ecall_ebi_resume(
 	u64 enclave_id,
 	u64 short_message
 )
