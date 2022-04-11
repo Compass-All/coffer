@@ -29,37 +29,14 @@ static emod_manager_t 		emod_manager;
 
 // ---------------
 // emod_manager api
+
+static emod_manager_t get_emod_manager();
+
 static void api_test()
 {
 	printf("Emodule manager api testing\n");
 }
 
-// ---------------
-// emod_manager init and getter
-
-static emod_manager_t get_emodule()
-{
-	return emod_manager;
-}
-
-void emod_manager_init()
-{
-	// init emod_manager_api
-	emod_manager_api.test = api_test;
-	// ...
-	// todo!
-	show(emod_manager_api.test);
-
-	// init emod_manager
-	emod_manager.emod_manager_desc = emod_manager_desc;
-	emod_manager.emod_manager_api = emod_manager_api;
-
-	// add self to emod_table
-	register_emodule(EMODULE_ID_MANAGER, (vaddr_t)get_emodule);
-}
-
-// ---------------
-// load emodule
 static void load_emodule(
 	u32		emodule_id,
 	usize	emodule_size
@@ -88,6 +65,30 @@ static void load_emodule(
 	register_emodule(emodule_id, getter_addr);
 }
 
+// ---------------
+// emod_manager init and getter
+
+static emod_manager_t get_emod_manager()
+{
+	return emod_manager;
+}
+
+void emod_manager_init()
+{
+	// init emod_manager_api
+	emod_manager_api.test = api_test;
+	// ...
+	// todo!
+	show(emod_manager_api.test);
+
+	// init emod_manager
+	emod_manager.emod_manager_desc = emod_manager_desc;
+	emod_manager.emod_manager_api = emod_manager_api;
+
+	// add self to emod_table
+	register_emodule(EMODULE_ID_MANAGER, (vaddr_t)get_emod_manager);
+}
+
 // ----- temporary implmentation -----
 
 static void load_emod_debug()
@@ -99,7 +100,7 @@ void emod_manager_test()
 {
 	load_emod_debug();
 
-	vaddr_t debug_getter_addr = acquire_emodule(EMODULE_ID_DEBUG);
+	vaddr_t debug_getter_addr = get_emodule(EMODULE_ID_DEBUG);
 	emod_debug_t (*get_emod_debug)(void) = (void *)debug_getter_addr;
 	emod_debug_t emod_debug = get_emod_debug();
 

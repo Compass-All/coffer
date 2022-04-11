@@ -48,7 +48,7 @@ static void assert(u8 *ptr1, u8 *ptr2, usize len)
 }
 
 // Emodule Init and Getter
-static emod_debug_t get_emodule()
+static emod_debug_t get_emod_debug()
 {
 	return emod_debug;
 }
@@ -79,5 +79,5 @@ vaddr_t debug_init(vaddr_t emod_manager_getter)
 		= (void *)emod_manager_getter;
 	emod_manager = getter();
 
-	return (vaddr_t)get_emodule;
+	return (vaddr_t)get_emod_debug;
 }

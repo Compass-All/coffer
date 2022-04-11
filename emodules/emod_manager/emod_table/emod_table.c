@@ -34,7 +34,7 @@ void register_emodule(u32 emod_id, vaddr_t emodule_getter_addr)
 	emodule_table[emod_id] = emodule_getter_addr;
 }
 
-vaddr_t acquire_emodule(u32 emod_id)
+vaddr_t get_emodule(u32 emod_id)
 {
 	if (emod_id >= EMODULE_TABLE_SIZE) {
 		printf("Emodule %u does not exists\n", emod_id);

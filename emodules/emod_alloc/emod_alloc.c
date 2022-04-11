@@ -1,5 +1,4 @@
 #include <emodules/emod_alloc/emod_alloc.h>
-#include "tmp_printf.h"
 #include "dependency.h"
 
 // ---------------
@@ -23,7 +22,6 @@ static int func1(int arg1, int arg2)
 
 static void func2(int arg1)
 {
-	printf("func2: %d\n", arg1);
 	return;
 }
 
@@ -51,7 +49,6 @@ vaddr_t alloc_init(vaddr_t emod_manager_getter)
 
 	// record emod_manager
 	if (emod_manager_getter == (vaddr_t)0UL) {
-		printf("Error: NULL emod_manager getter\n");
 		return (vaddr_t)0UL;
 	}
 
