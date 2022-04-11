@@ -4,8 +4,9 @@ dmesg -n 1
 mount proc /proc -t proc
 mount sys /sys -t sysfs
 
-/prog/host/test_eapp /prog/enclave/eapp_rand_malloc
 # /prog/host/test_eapp /prog/enclave/eapp_rand_malloc
+
+/prog/host/test_eapp /prog/enclave/eapp_test_message
 
 # /prog/host/resume_eapp 1; /prog/host/resume_eapp 2;
 
