@@ -14,8 +14,6 @@
 #include <emodules/emodule_desc.h>
 #include <types.h>
 
-#define MESSAGE_LOAD_MODULE	0x717DB77A
-
 typedef struct {
 	// test
 	void (*test)(void);

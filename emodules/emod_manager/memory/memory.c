@@ -9,12 +9,15 @@
 // TODO: record &emod_pa_start and &elf_pa_start to m mode
 
 // initialized during creating enclave
-volatile 	static paddr_t emod_manager_pa_start;
+volatile static	paddr_t emod_manager_pa_start;
 // defined in config.mk
-const		static vaddr_t emod_manager_va_start = EMOD_MANAGER_VA_START;
+const static	vaddr_t emod_manager_va_start = EMOD_MANAGER_VA_START;
 
 // initialized during entering enclave
-volatile	static paddr_t payload_pa_start;
+volatile static paddr_t payload_pa_start;
+
+// for emodules va allocation
+static 			vaddr_t emodule_brk = EMOD_INIT_BRK;
 
 #define EUSR_HEAP_START_ALIGNED		0x400000000UL
 // program break, to be initialized
@@ -52,6 +55,39 @@ paddr_t get_payload_pa_start()
 	return payload_pa_start;
 }
 
+static void increase_emodule_brk(usize increment)
+{
+	emodule_brk += increment;
+}
+
+static vaddr_t get_emodule_brk()
+{
+	return emodule_brk;
+}
+
+vaddr_t alloc_map_emodule(usize emodule_size)
+{
+	usize	alloc_size		= PAGE_UP(emodule_size);
+	usize	number_of_pages	= alloc_size >> PAGE_SHIFT;
+	paddr_t	paddr			= alloc_smode_page(number_of_pages);
+	vaddr_t vaddr			= get_emodule_brk();
+
+	for (int i = 0; i < number_of_pages; i++) {
+		map_page(
+			vaddr + i * PAGE_SIZE,
+			paddr + i * PAGE_SIZE,
+			PTE_R | PTE_W | PTE_X,
+			SV39_LEVEL_PAGE
+		);
+	}
+
+	increase_emodule_brk(alloc_size);
+
+	return vaddr;
+}
+
+// this function should not be used after
+// the enclave gets initialized
 usize get_va_pa_offset()
 {
 	return emod_manager_va_start - emod_manager_pa_start;

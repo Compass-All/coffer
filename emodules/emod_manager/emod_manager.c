@@ -9,6 +9,7 @@
 #include "panic/panic.h"
 #include "memory/memory.h"
 #include "memory/page_table.h"
+#include "memory/page_pool.h"
 #include "emod_table/emod_table.h"
 
 #include <emodules/emod_dummy/emod_dummy.h>
@@ -23,8 +24,8 @@ static emod_desc_t emod_manager_desc = {
 	.__signature = 0
 };
 
-static emod_manager_api_t emod_manager_api;
-static emod_manager_t emod_manager;
+static emod_manager_api_t 	emod_manager_api;
+static emod_manager_t 		emod_manager;
 
 // ---------------
 // emod_manager api
@@ -57,39 +58,41 @@ void emod_manager_init()
 	register_emodule(EMODULE_ID_MANAGER, (vaddr_t)get_emodule);
 }
 
-// ----- temporary implmentation -----
-
-#define EMOD_DEBUG_LEN	0x3000
-__page_aligned u8 emod_debug_buffer[EMOD_DEBUG_LEN];
-
-static void load_emodule(u32 emodule_id)
+// ---------------
+// load emodule
+static void load_emodule(
+	u32		emodule_id,
+	usize	emodule_size
+)
 {
+	show(emodule_id);
+	show(emodule_size);
+
+	vaddr_t vaddr = alloc_map_emodule(emodule_size);
+	show(vaddr);
+
+	__ecall_ebi_listen_message(
+		0UL,
+		vaddr,
+		emodule_size	
+	);
+
 	__ecall_ebi_suspend(LOAD_MODULE | emodule_id);
+	wait_until_non_zero((volatile u64 *)vaddr);
+
+	vaddr_t (*init)(vaddr_t) = (void *)vaddr;
+	vaddr_t getter_addr = init((vaddr_t)get_emodule);
+
+	show(getter_addr);
+
+	register_emodule(emodule_id, getter_addr);
 }
+
+// ----- temporary implmentation -----
 
 static void load_emod_debug()
 {
-	__ecall_ebi_listen_message(
-		HOST_EID,
-		(vaddr_t)&emod_debug_buffer,
-		sizeof(emod_debug_buffer)
-	);
-
-	load_emodule(EMODULE_ID_DEBUG);
-	wait_until_non_zero((volatile u64 *)&emod_debug_buffer);
-
-	show(&emod_debug_buffer);
-
-	for (int i = 0; i < (EMOD_DEBUG_LEN >> PAGE_SHIFT); i++) {
-		vaddr_t vaddr = (vaddr_t)&emod_debug_buffer + i * PAGE_SIZE;
-		map_page(vaddr, vaddr - get_va_pa_offset(),
-			PTE_R | PTE_W | PTE_X, SV39_LEVEL_PAGE);
-	}
-
-	vaddr_t (*debug_init)(vaddr_t) = (void *)&emod_debug_buffer;
-	vaddr_t debug_module_getter_addr = debug_init((vaddr_t)get_emodule);
-
-	register_emodule(EMODULE_ID_DEBUG, debug_module_getter_addr);
+	load_emodule(EMODULE_ID_DEBUG, 0x3000);
 }
 
 void emod_manager_test()
@@ -104,7 +107,7 @@ void emod_manager_test()
 	emod_debug.emod_debug_api.printd("Int test: %d\n", 4);
 
 	emod_debug.emod_debug_api.hexdump(
-		(vaddr_t)emod_debug_buffer,
+		debug_getter_addr,
 		0x20
 	);
 
