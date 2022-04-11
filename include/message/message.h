@@ -4,13 +4,13 @@
 #include <types.h>
 #include <ebi_ecall.h>
 
-static u64 inline __ecall_ebi_listen_message(
+static void inline __ecall_ebi_listen_message(
 	u64 	sender_eid,
 	vaddr_t rx_addr,
 	usize 	len
 )
 {
-	return __ecall(
+	__ecall(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_LISTEN_MESSAGE,
 		sender_eid,
@@ -19,13 +19,13 @@ static u64 inline __ecall_ebi_listen_message(
 	);
 }
 
-static u64 inline __ecall_ebi_send_message(
+static void inline __ecall_ebi_send_message(
 	u64		receiver_eid,
 	vaddr_t	tx_addr,
 	usize	len
 )
 {
-	return __ecall(
+	__ecall(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_SEND_MESSAGE,
 		receiver_eid,
@@ -34,9 +34,9 @@ static u64 inline __ecall_ebi_send_message(
 	);
 }
 
-static u64 inline __ecall_ebi_stop_listen(u64 sender_eid)
+static void inline __ecall_ebi_stop_listen(u64 sender_eid)
 {
-	return __ecall(
+	__ecall(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_STOP_LISTEN,
 		sender_eid,

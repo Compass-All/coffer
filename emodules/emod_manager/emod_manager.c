@@ -2,6 +2,7 @@
 #include <emodules/emodule_id.h>
 #include <emodules/emodule_desc.h>
 #include <message/message.h>
+#include <message/short_message.h>
 #include <enclave/host_ops.h>
 #include <enclave/enclave_ops.h>
 #include "debug/debug.h"
@@ -61,36 +62,20 @@ void emod_manager_init()
 #define EMOD_DEBUG_LEN	0x3000
 __page_aligned u8 emod_debug_buffer[EMOD_DEBUG_LEN];
 
+static void load_emodule(u32 emodule_id)
+{
+	__ecall_ebi_suspend(LOAD_MODULE | emodule_id);
+}
+
 static void load_emod_debug()
 {
-	u32 message_load_debug[2] = {
-		MESSAGE_LOAD_MODULE,
-		EMODULE_ID_DEBUG
-	};
-
-	u64 send_ret = __ecall_ebi_send_message(
-		HOST_EID,
-		(vaddr_t)&message_load_debug,
-		sizeof(message_load_debug)
-	);
-	debug("send_ret = 0x%lx\n", send_ret);
-
-	if (send_ret) {
-		panic("send_ret error\n");
-	}
-
-	u64 listen_ret = __ecall_ebi_listen_message(
+	__ecall_ebi_listen_message(
 		HOST_EID,
 		(vaddr_t)&emod_debug_buffer,
 		sizeof(emod_debug_buffer)
 	);
-	debug("listen_ret = 0x%lx\n", listen_ret);
 
-	if (listen_ret) {
-		panic("listen_ret error\n");
-	}
-
-	__ecall_ebi_suspend(1UL);
+	load_emodule(EMODULE_ID_DEBUG);
 	wait_until_non_zero((volatile u64 *)&emod_debug_buffer);
 
 	show(&emod_debug_buffer);
@@ -125,7 +110,7 @@ void emod_manager_test()
 
 	int a = 1, b = 2;
 	int c = a + b;
-	int expected = 4;
+	int expected = 3;
 	emod_debug.emod_debug_api.assert(
 		(u8 *)&c,
 		(u8 *)&expected,
