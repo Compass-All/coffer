@@ -16,16 +16,16 @@
 
 typedef struct {
 	// test
-	void (*test)(void);
+	void 		(*test)(void);
 
 	// emodule management
-	vaddr_t (*acquire_emodule)(u32 emod_id);
+	vaddr_t 	(*acquire_emodule)(u32 emod_id);
 
 	// memory management
-	int (*memory_map)(vaddr_t vaddr, paddr_t paaddr, usize len);
+	void 		(*map_page)(vaddr_t vaddr, paddr_t paddr, u8 flags, u8 level);
 
 	// panic
-	// __diverge void panic(const char *panic_message);
+	void 		(*panic)(const char *panic_message);
 
 	// ... to be determined
 } emod_manager_api_t;

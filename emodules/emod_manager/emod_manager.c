@@ -14,6 +14,7 @@
 
 #include <emodules/emod_dummy/emod_dummy.h>
 #include <emodules/emod_debug/emod_debug.h>
+#include <emodules/emod_alloc/emod_alloc.h>
 
 // ---------------
 // emodule manager descriptor
@@ -37,12 +38,11 @@ static void api_test()
 	printf("Emodule manager api testing\n");
 }
 
-static void load_emodule(
-	u32		emodule_id,
-	usize	emodule_size
-)
+static void load_emodule(u32 emodule_id)
 {
 	show(emodule_id);
+
+	usize emodule_size = get_emodule_size(emodule_id);	
 	show(emodule_size);
 
 	vaddr_t vaddr = alloc_map_emodule(emodule_size);
@@ -73,8 +73,7 @@ static vaddr_t acquire_emodule(u32 emodule_id)
 		debug("loading emodule\n");
 		show(emodule_id);
 
-		usize emodule_size = get_emodule_size(emodule_id);
-		load_emodule(emodule_id, emodule_size);
+		load_emodule(emodule_id);
 
 		emodule_getter_addr = get_emodule(emodule_id);
 	}
@@ -97,6 +96,8 @@ void emod_manager_init()
 	// init emod_manager_api
 	emod_manager_api.test 				= api_test;
 	emod_manager_api.acquire_emodule 	= acquire_emodule;
+	emod_manager_api.map_page			= map_page;
+	emod_manager_api.panic				= panic;
 	// ...
 	// todo!
 	show(emod_manager_api.test);
@@ -113,7 +114,17 @@ void emod_manager_init()
 // ----- temporary implmentation -----
 void emod_manager_test()
 {
-	load_emodule(EMODULE_ID_ALLOC, 0x3000);
+	load_emodule(EMODULE_ID_ALLOC);
+
+	vaddr_t emod_alloc_getter = acquire_emodule(EMODULE_ID_ALLOC);
+	emod_alloc_t emod_alloc = ((emod_alloc_t (*)(void))emod_alloc_getter)();
+	vaddr_t allocated_addr = emod_alloc.emod_alloc_api.malloc(0x1000);
+
+	show(allocated_addr);
+
+	u64 *ptr = (u64 *)allocated_addr;
+	*ptr = 0xdeadcafe;
+	show(*ptr);
 
 	return;
 }

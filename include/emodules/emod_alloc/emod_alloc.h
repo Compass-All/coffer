@@ -5,8 +5,7 @@
 #include <emodules/emodule_id.h>
 
 typedef struct {
-	int (*alloc_func1)(int arg1, int arg2);
-	void (*alloc_func2)(int arg1);
+	vaddr_t (*malloc)(usize size);
 } emod_alloc_api_t;
 
 typedef struct {

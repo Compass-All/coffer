@@ -93,3 +93,4 @@ When an emodule wants to load another emodule, it invokes `acquire_emodule()` fu
 3. Add a directory in /include/emodules and add a header file. Define the emodule descriptor in it.
 4. Add emodule id in /include/emodules/emodule_id.h
 5. Add emodule_*.bin path to /coffer_user_mode/src/host_app/util/host_util.c
+6. Add size of the emodule to /emodules/emod_manager/emod_table(.h,.c)
