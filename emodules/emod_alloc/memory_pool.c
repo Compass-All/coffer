@@ -25,7 +25,7 @@ void init_memory_pool()
 	show(pool_brk_pa);
 }
 
-vaddr_t malloc(usize size)
+void *malloc(usize size)
 {
 	usize expected_used_size = used_size + size;
 
@@ -37,5 +37,5 @@ vaddr_t malloc(usize size)
 	pool_brk_va += size;
 	pool_brk_pa += size;
 
-	return ret;
+	return (void *)ret;
 }

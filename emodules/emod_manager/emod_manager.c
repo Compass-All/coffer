@@ -118,7 +118,7 @@ void emod_manager_test()
 
 	vaddr_t emod_alloc_getter = acquire_emodule(EMODULE_ID_ALLOC);
 	emod_alloc_t emod_alloc = ((emod_alloc_t (*)(void))emod_alloc_getter)();
-	vaddr_t allocated_addr = emod_alloc.emod_alloc_api.malloc(0x1000);
+	char *allocated_addr = emod_alloc.emod_alloc_api.malloc(0x1000);
 
 	show(allocated_addr);
 
