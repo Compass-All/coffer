@@ -6,6 +6,8 @@
 
 typedef struct {
 	void *(*malloc)(usize size);
+	void *(*calloc)(usize number, usize size);
+	void (*free)(void *ptr);
 } emod_alloc_api_t;
 
 typedef struct {

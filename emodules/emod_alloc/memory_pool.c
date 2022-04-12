@@ -39,3 +39,27 @@ void *malloc(usize size)
 
 	return (void *)ret;
 }
+
+static void *memset(void *s, int c, usize count)
+{
+	char *temp = s;
+
+	while (count > 0) {
+		count--;
+		*temp++ = c;
+	}
+
+	return s;
+}
+
+void *calloc(usize number, usize size)
+{
+	void *ret = malloc(number * size);
+	memset(ret, 0, number * size);
+	return ret;
+}
+
+void free(void *ptr)
+{
+	return;
+}

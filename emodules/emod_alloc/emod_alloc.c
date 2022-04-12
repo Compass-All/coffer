@@ -36,7 +36,9 @@ vaddr_t alloc_init(vaddr_t emod_manager_getter)
 {
 	// init api
 	emod_alloc_api = (emod_alloc_api_t) {
-		.malloc = malloc
+		.malloc = malloc,
+		.calloc = calloc,
+		.free	= free
 	};
 
 	// init emodule
