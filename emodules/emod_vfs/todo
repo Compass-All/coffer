@@ -1,0 +1,4 @@
+init functions:
+- fdtable_init: 1
+- vfscore_init: 1
+- vfscore_rootfs: 4

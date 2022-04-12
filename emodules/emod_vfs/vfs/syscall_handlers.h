@@ -22,3 +22,5 @@ int syscall_handler_write(int fd, const void *buf, size_t count);
 int syscall_handler_ioctl(int fd, unsigned long int request, void *arg);
 int syscall_handler_fstat(int fd, struct stat *st);
 int syscall_handler_fstatat(int dirfd, const char *path, struct stat *st, int flags);
+
+void vfscore_init(void);

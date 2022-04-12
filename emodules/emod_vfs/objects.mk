@@ -12,3 +12,5 @@ emodule-objs-y += vfs/lookup.o
 emodule-objs-y += vfs/task.o 
 emodule-objs-y += vfs/string.o 
 emodule-objs-y += vfs/errno.o 
+emodule-objs-y += vfs/mount.o 
+emodule-objs-y += vfs/stdio.o

@@ -9,6 +9,7 @@
 #include "errno.h"
 #include <string.h>
 #include "stat.h"
+#include "lookup.h"
 
 // readv, openat, close, lseek, read, writev, ioctl, fstat
 
@@ -528,4 +529,18 @@ int syscall_handler_fstatat(int dirfd, const char *pathname, struct stat *st, in
 	fdrop(fp);
 
 	return error;
+}
+
+
+// todo
+// add to init
+static struct task _main_task_impl;
+void vfscore_init(void)
+{
+	memset(&_main_task_impl, 0, sizeof(_main_task_impl));
+	strcpy(_main_task_impl.t_cwd, "/");
+	main_task = &_main_task_impl;
+
+	vnode_init();
+	lookup_init();
 }

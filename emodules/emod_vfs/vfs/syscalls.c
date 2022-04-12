@@ -13,8 +13,43 @@
 static int
 open_no_follow_chk(char *path)
 {
-	// todo
-	return 0;
+	int           error;
+	struct dentry *ddp;
+	char          *name;
+	struct dentry *dp;
+	struct vnode  *vp;
+
+	ddp = NULL;
+	dp  = NULL;
+	vp  = NULL;
+
+	error = lookup(path, &ddp, &name);
+	if (error) {
+		return (error);
+	}
+
+	error = namei_last_nofollow(path, ddp, &dp);
+	if (error) {
+		goto out;
+	}
+
+	vp = dp->d_vnode;
+	if (vp->v_type == VLNK) {
+		error = ELOOP;
+		goto out;
+	}
+
+	error = 0;
+out:
+	if (dp != NULL) {
+		drele(dp);
+	}
+
+	if (ddp != NULL) {
+		drele(ddp);
+	}
+
+	return (error);
 }
 
 int sys_open(char *path, int flags, mode_t mode, struct vfscore_file **fpp)

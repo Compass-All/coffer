@@ -19,3 +19,6 @@ void fhold(struct vfscore_file *fp);
 #define FOF_OFFSET  0x0800    /* Use the offset in uio argument */
 
 #define UK_VFSCORE_NOPOS ((int) (1 << 0))
+
+/* Also used from posix-sysinfo to determine sysconf(_SC_OPEN_MAX). */
+#define FDTABLE_MAX_FILES 1024

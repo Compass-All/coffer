@@ -15,3 +15,5 @@ extern emod_debug_t 	emod_debug;
 
 #define debug		emod_debug.emod_debug_api.printd
 #define show(v) 	debug(#v "\t=\t0x%lx\n", (v))
+
+#define panic	emod_manager.emod_manager_api.panic

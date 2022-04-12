@@ -15,6 +15,9 @@
 #define	VWRITE	00002
 #define	VEXEC	00001
 
+#define IO_APPEND	0x0001
+#define IO_SYNC		0x0002
+
 /*
  * Vnode types.
  */
@@ -50,6 +53,7 @@ struct vattr {
 	off_t		va_size;
 };
 
+struct vnode;
 
 typedef	int (*vnop_open_t)	(struct vfscore_file *);
 typedef	int (*vnop_close_t)	(struct vnode *, struct vfscore_file *);
@@ -156,3 +160,9 @@ struct vnode {
 
 int vn_access(struct vnode *vp, int flags);
 int vn_stat(struct vnode *vp, struct stat *st);
+void vref(struct vnode *vp);
+void vput(struct vnode *vp);
+void vrele(struct vnode *vp);
+void vn_add_name(struct vnode *vp __unused, struct dentry *dp);
+void vn_del_name(struct vnode *vp __unused, struct dentry *dp);
+void vnode_init(void);

@@ -8,3 +8,4 @@ struct task {
 };
 
 int task_conv(struct task *t, const char *cpath, int acc __unused, char *full);
+int path_conv(char *wd, const char *cpath, char *full);
