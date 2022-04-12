@@ -13,19 +13,6 @@ static emod_vfs_api_t emod_vfs_api;
 static emod_vfs_t emod_vfs;
 
 // ---------------
-// emod_vfs functions
-
-static int func1(int arg1, int arg2)
-{
-	return arg1 + arg2;
-}
-
-static void func2(int arg1)
-{
-	return;
-}
-
-// ---------------
 // emod_vfs init and getter
 static emod_vfs_t get_emod_vfs()
 {
@@ -36,10 +23,10 @@ __attribute__((section(".text.init")))
 vaddr_t vfs_init(vaddr_t emod_manager_getter)
 {
 	// init api
-	emod_vfs_api = (emod_vfs_api_t) {
-		.vfs_func1 = func1,
-		.vfs_func2 = func2
-	};
+	// emod_vfs_api = (emod_vfs_api_t) {
+	// 	.sys_open = sys_open,
+	// 	.sys_read = sys_read
+	// };
 
 	// init emodule
 	emod_vfs = (emod_vfs_t) {
