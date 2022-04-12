@@ -41,12 +41,14 @@ extern "C" {
 #define CHAR_BITS    __C_BITS
 #define CHAR_MIN      __C_MIN
 #define CHAR_MAX      __C_MAX
+#define __UC_MAX	255
 #define UCHAR_MAX    __UC_MAX
 
 #define SHRT_MIN      __S_MIN
 #define SHRT_MAX      __S_MAX
 #define USHRT_MAX    __US_MAX
 
+#define __I_MAX		2147483647
 #define INT_MIN       __I_MIN
 #define INT_MAX       __I_MAX
 #define UINT_MAX     __UI_MAX

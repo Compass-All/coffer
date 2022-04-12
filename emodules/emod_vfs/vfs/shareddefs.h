@@ -49,17 +49,17 @@
 #endif
 
 #if (defined __NEED_size_t && !defined __DEFINED_size_t)
-typedef __sz size_t;
+// typedef __sz size_t;
 #define __DEFINED_size_t
 #endif
 
 #if (defined __NEED_ssize_t && !defined __DEFINED_ssize_t)
-typedef __ssz ssize_t;
+// typedef __ssz ssize_t;
 #define __DEFINED_ssize_t
 #endif
 
 #if (defined __NEED_off_t && !defined __DEFINED_off_t)
-typedef __off off_t;
+// typedef __off off_t;
 #define __DEFINED_off_t
 #endif
 
@@ -68,7 +68,7 @@ typedef __off off_t;
 #endif
 
 #if (defined __NEED_mode_t && !defined __DEFINED_mode_t)
-typedef unsigned mode_t;
+// typedef unsigned mode_t;
 #define __DEFINED_mode_t
 #endif
 
@@ -128,7 +128,7 @@ typedef struct __locale_struct *locale_t;
 #endif
 
 #if defined(__NEED_struct_iovec) && !defined(__DEFINED_struct_iovec)
-struct iovec { void *iov_base; size_t iov_len; };
+// struct iovec { void *iov_base; size_t iov_len; };
 #define __DEFINED_struct_iovec
 #endif
 

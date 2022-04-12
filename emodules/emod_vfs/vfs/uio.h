@@ -35,7 +35,7 @@
 
 #include <sys/types.h>
 #include "sys_uio.h"
-#include <limits.h>
+#include "limits.h"
 #include "assert.h"
 
 enum	uio_rw { UIO_READ, UIO_WRITE };

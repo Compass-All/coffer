@@ -15,3 +15,5 @@ struct vfscore_file {
 
 int fdrop(struct vfscore_file *fp);
 void fhold(struct vfscore_file *fp);
+
+#define FOF_OFFSET  0x0800    /* Use the offset in uio argument */
