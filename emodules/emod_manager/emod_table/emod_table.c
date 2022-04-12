@@ -26,6 +26,7 @@ static vaddr_t emodule_table[EMODULE_TABLE_SIZE];
 static const usize emodule_size_table[EMODULE_TABLE_SIZE] = {
 	EMODULE_DEBUG_SIZE,
 	EMODULE_ALLOC_SIZE,
+	EMODULE_VFS_SIZE,
 	EMODULE_DUMMY_SIZE
 };
 
