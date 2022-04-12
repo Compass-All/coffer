@@ -1,81 +1,124 @@
 #include "syscalls.h"
-#include <sys/stat.h>
-#include <emodules/emod_vfs/iovec.h>
+#include "file.h"
+#include "../dependency.h"
+#include "fs.h"
+#include "lookup.h"
+#include "vnode.h"
+#include <errno.h>
 
-// readv, openat, close, lseek, read, writev, ioctl, fstat
-
-int	syscall_handler_open(const char *pathname, int flags, mode_t mode)
+static int
+open_no_follow_chk(char *path)
 {
+	// todo
 	return 0;
 }
 
-int syscall_handler_openat(int dirfd, const char *pathname, int flags, int mode)
+int sys_open(char *path, int flags, mode_t mode, struct vfscore_file **fpp)
 {
-	return 0;
-}
+	struct vfscore_file *fp;
+	struct dentry *dp, *ddp;
+	struct vnode *vp;
+	char *filename;
+	int error;
 
-int syscall_handler_close(int fd)
-{
-	return 0;
-}
+	debug("sys_open: path=%s flags=%x mode=%x\n",
+				path, flags, mode);
+	flags = vfscore_fflags(flags);
+	if (flags & O_CREAT) {
+		error = namei(path, &dp);
+		if (error == ENOENT) {
+			if ((error = lookup(path, &ddp, &filename)) != 0)
+				return error;
 
-int syscall_handler_lseek(int fd, off_t offset, int whence)
-{
-	return 0;
-}
+			if ((error = vn_access(ddp->d_vnode, VWRITE)) != 0) {
+				drele(ddp);
+				return error;
+			}
+			mode &= ~S_IFMT;
+			mode |= S_IFREG;
+			error = VOP_CREATE(ddp->d_vnode, filename, mode);
+			drele(ddp);
 
-int syscall_handler_preadv(int fd, const struct iovec *iov, int iovcnt, off_t offset)
-{
-	return 0;
-}
+			if (error)
+				return error;
+			if ((error = namei(path, &dp)) != 0)
+				return error;
 
-int syscall_handler_pread64(int fd, void *buf, size_t count, off_t offset)
-{
-	return 0;
-}
+			vp = dp->d_vnode;
+			flags &= ~O_TRUNC;
+		} else if (error) {
+			return error;
+		} else {
+			if (flags & O_EXCL) {
+				error = EEXIST;
+				goto out_drele;
+			}
+		}
 
-int syscall_handler_readv(int fd, const struct iovec *iov, int iovcnt)
-{
-	return 0;
-}
+		vp = dp->d_vnode;
+		flags &= ~O_CREAT;
+	} else {
+		if (flags & O_NOFOLLOW) {
+			error = open_no_follow_chk(path);
+			if (error != 0)
+				return error;
+		}
+		error = namei(path, &dp);
+		if (error)
+			return error;
 
-int syscall_handler_read(int fd, void *buf, size_t count)
-{
-	return 0;
-}
+		vp = dp->d_vnode;
 
-int syscall_handler_pwritev(int fd, const struct iovec *iov,
-	int iovcnt, off_t offset)
-{
-	return 0;
-}
+		if (flags & UK_FWRITE || flags & O_TRUNC) {
+			error = vn_access(vp, VWRITE);
+			if (error)
+				goto out_drele;
 
-int syscall_handler_pwrite64(int fd, const void *buf, size_t count, off_t offset)
-{
-	return 0;
-}
+			error = EISDIR;
+			if (vp->v_type == VDIR)
+				goto out_drele;
+		}
+		if (flags & O_DIRECTORY) {
+			if (vp->v_type != VDIR) {
+				error = ENOTDIR;
+				goto out_drele;
+			}
+		}
+	}
 
-int syscall_handler_writev(int fd, const struct iovec *iov, int vlen)
-{
-	return 0;
-}
+	fp = calloc(sizeof(struct vfscore_file), 1);
+	if (!fp) {
+		error = ENOMEM;
+		goto out_drele;
+	}
 
-int syscall_handler_write(int fd, const void *buf, size_t count)
-{
-	return 0;
-}
+	fhold(fp);
+	fp->f_flags = flags;
 
-int syscall_handler_ioctl(int fd, unsigned long int request, void *arg)
-{
-	return 0;
-}
+	fp->f_dentry = dp;
 
-int syscall_handler_fstat(int fd, struct stat *st)
-{
-	return 0;
-}
+	if (flags & O_TRUNC) {
+		error = EINVAL;
+		if (!(flags & UK_FWRITE) || vp->v_type == VDIR)
+			goto out_fp_free_unlock;
 
-int syscall_handler_fstatat(int dirfd, const char *path, struct stat *st, int flags)
-{
+		error = VOP_TRUNCATE(vp, 0);
+		if (error)
+			goto out_fp_free_unlock;
+	}
+
+	error = VOP_OPEN(vp, fp);
+	if (error)
+		goto out_fp_free_unlock;
+
+	*fpp = fp;
 	return 0;
+
+out_fp_free_unlock:
+	free(fp);
+
+out_drele:
+	if (dp)
+		drele(dp);
+	return error;
 }
