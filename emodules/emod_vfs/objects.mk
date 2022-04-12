@@ -11,3 +11,4 @@ emodule-objs-y += vfs/dentry.o
 emodule-objs-y += vfs/lookup.o
 emodule-objs-y += vfs/task.o 
 emodule-objs-y += vfs/string.o 
+emodule-objs-y += vfs/errno.o 

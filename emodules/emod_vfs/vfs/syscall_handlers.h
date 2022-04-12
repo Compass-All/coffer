@@ -3,7 +3,7 @@
 #include <emodules/emod_vfs/iovec.h>
 #include <stddef.h>
 #include <sys/types.h>
-#include <sys/stat.h>
+#include "stat.h"
 
 int	syscall_handler_open(const char *pathname, int flags, mode_t mode);
 int syscall_handler_openat(int dirfd, const char *pathname, int flags, int mode);

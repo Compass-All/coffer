@@ -5,6 +5,7 @@
 #include "uio.h"
 #include "dirent.h"
 #include "file.h"
+#include "stat.h"
 
 /*
  *  Modes.
@@ -154,3 +155,4 @@ struct vnode {
 #define VOP_SYMLINK(DVP, OP, NP)   ((DVP)->v_op->vop_symlink)(DVP, OP, NP)
 
 int vn_access(struct vnode *vp, int flags);
+int vn_stat(struct vnode *vp, struct stat *st);

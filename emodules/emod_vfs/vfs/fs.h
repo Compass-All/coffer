@@ -1,7 +1,7 @@
 #ifndef _VFSCORE_FS_H_
 #define _VFSCORE_FS_H_
 
-#include <fcntl.h>
+#include "fcntl.h"
 /*
  * Kernel encoding of open mode; separate read and write bits that are
  * independently testable: 1 greater than the above.

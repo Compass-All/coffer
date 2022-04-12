@@ -73,12 +73,12 @@
 #endif
 
 #if defined(__NEED_uid_t) && !defined(__DEFINED_uid_t)
-typedef unsigned uid_t;
+// typedef unsigned uid_t;
 #define __DEFINED_uid_t
 #endif
 
 #if defined(__NEED_gid_t) && !defined(__DEFINED_gid_t)
-typedef unsigned gid_t;
+// typedef unsigned gid_t;
 #define __DEFINED_gid_t
 #endif
 
@@ -88,7 +88,7 @@ typedef unsigned useconds_t;
 #endif
 
 #if defined(__NEED_pid_t) && !defined(__DEFINED_pid_t)
-typedef int pid_t;
+// typedef int pid_t;
 #define __DEFINED_pid_t
 #endif
 
@@ -98,22 +98,22 @@ typedef unsigned id_t;
 #endif
 
 #if defined(__NEED_dev_t) && !defined(__DEFINED_dev_t)
-typedef __u64 dev_t;
+// typedef __u64 dev_t;
 #define __DEFINED_dev_t
 #endif
 
 #if defined(__NEED_ino_t) && !defined(__DEFINED_ino_t)
-typedef __u64 ino_t;
+// typedef __u64 ino_t;
 #define __DEFINED_ino_t
 #endif
 
 #if defined(__NEED_nlink_t) && !defined(__DEFINED_nlink_t)
-typedef __u32 nlink_t;
+// typedef __u32 nlink_t;
 #define __DEFINED_nlink_t
 #endif
 
 #if defined(__NEED_blkcnt_t) && !defined(__DEFINED_blkcnt_t)
-typedef __s64 blkcnt_t;
+// typedef __s64 blkcnt_t;
 #define __DEFINED_blkcnt_t
 #endif
 

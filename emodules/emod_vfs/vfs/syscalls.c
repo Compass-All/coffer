@@ -5,7 +5,10 @@
 #include "fops.h"
 #include "lookup.h"
 #include "vnode.h"
-#include <errno.h>
+#include <string.h>
+#include "errno.h"
+#include "fcntl.h"
+#include "ioctl.h"
 
 static int
 open_no_follow_chk(char *path)
@@ -129,19 +132,7 @@ int sys_close(struct vfscore_file *fp __unused)
 	return 0;
 }
 
-static void memcpy(void *dest, const void *src, size_t count)
-{
-	char *temp1	  = dest;
-	const char *temp2 = src;
-
-	while (count > 0) {
-		*temp1++ = *temp2++;
-		count--;
-	}
-}
-
-int
-sys_read(struct vfscore_file *fp, const struct iovec *iov, size_t niov,
+int sys_read(struct vfscore_file *fp, const struct iovec *iov, size_t niov,
 		off_t offset, size_t *count)
 {
 	int error = 0;
@@ -191,8 +182,7 @@ sys_read(struct vfscore_file *fp, const struct iovec *iov, size_t niov,
 }
 
 
-int
-sys_write(struct vfscore_file *fp, const struct iovec *iov, size_t niov,
+int sys_write(struct vfscore_file *fp, const struct iovec *iov, size_t niov,
 		off_t offset, size_t *count)
 {
 	struct iovec *copy_iov;
@@ -306,5 +296,47 @@ int sys_fstat(struct vfscore_file *fp, struct stat *st)
 
 	error = vfs_stat(fp, st);
 
+	return error;
+}
+
+
+int sys_stat(char *path, struct stat *st)
+{
+	struct dentry *dp;
+	int error;
+
+	debug("sys_stat: path=%s\n", path);
+
+	error = namei(path, &dp);
+	if (error)
+		return error;
+	error = vn_stat(dp->d_vnode, st);
+	drele(dp);
+	return error;
+}
+
+int sys_lstat(char *path, struct stat *st)
+{
+	int           error;
+	struct dentry *ddp;
+	char          *name;
+	struct dentry *dp;
+
+	debug("sys_lstat: path=%s\n", path);
+
+	error = lookup(path, &ddp, &name);
+	if (error) {
+		return (error);
+	}
+
+	error = namei_last_nofollow(path, ddp, &dp);
+	if (error) {
+		drele(ddp);
+		return error;
+	}
+
+	error = vn_stat(dp->d_vnode, st);
+	drele(dp);
+	drele(ddp);
 	return error;
 }
