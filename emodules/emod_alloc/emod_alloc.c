@@ -28,7 +28,7 @@ static void init_dependency()
 		(void *)emod_debug_getter;
 	emod_debug = get_emod_debug();
 	
-	debug("Hello from init_dependency\n");
+	debug("Hello from init_dependency in emod_alloc\n");
 }
 
 __attribute__((section(".text.init")))
@@ -60,6 +60,8 @@ vaddr_t alloc_init(vaddr_t emod_manager_getter)
 
 	init_dependency();
 	init_memory_pool();
+
+	show(emod_alloc.emod_alloc_api.malloc);
 
 	return (vaddr_t)get_emod_alloc;
 }

@@ -37,3 +37,4 @@ typedef struct {
 
 void emod_manager_init();
 void emod_manager_test();
+vaddr_t acquire_emodule(u32 emodule_id);

@@ -10,6 +10,7 @@
 #include <string.h>
 #include "stat.h"
 #include "lookup.h"
+#include "../dependency.h"
 
 // readv, openat, close, lseek, read, writev, ioctl, fstat
 
@@ -19,8 +20,8 @@ int	syscall_handler_open(const char *pathname, int flags, mode_t mode)
 {
 	struct task *t = main_task;
 	char path[PATH_MAX];
-	__unused struct vfscore_file *fp;
-	__unused int fd, error;
+	struct vfscore_file *fp;
+	int fd, error;
 	int acc;
 
 	acc = 0;
@@ -51,6 +52,8 @@ int	syscall_handler_open(const char *pathname, int flags, mode_t mode)
 	if (error)
 		goto out_fput;
 	fdrop(fp);
+
+	show(fd);
 
 	return fd;
 
@@ -362,6 +365,8 @@ int syscall_handler_writev(int fd, const struct iovec *vec, int vlen)
 	ssize_t bytes = 0;
 	int error;
 
+	show(fd);
+
 	error = fget(fd, &fp);
 	if (error) {
 		error = -error;
@@ -395,17 +400,21 @@ out_error:
 
 int syscall_handler_write(int fd, const void *buf, size_t count)
 {
+	show(fd);
+	show(buf);
+	show(count);
+
 	ssize_t bytes;
 
 	struct iovec iov = {
 			.iov_base	= (void *)buf,
-			.iov_len	= count,
+			.iov_len	= count
 	};
 	bytes = syscall_handler_writev(fd, &iov, 1);
 	return bytes;
 }
 
-int syscall_handler_ioctl(int fd, unsigned long int request, void *arg)
+__unused int syscall_handler_ioctl(int fd, unsigned long int request, void *arg)
 {
 	struct vfscore_file *fp;
 	int error;

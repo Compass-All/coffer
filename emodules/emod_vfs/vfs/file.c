@@ -35,5 +35,12 @@ int fdrop(struct vfscore_file *fp)
 void fhold(struct vfscore_file *fp)
 {
 	// ukarch_inc(&fp->f_count);
+	show(fp);
+	debug("before\n");
+	show(fp->f_count);
+
 	fp->f_count++;
+	
+	debug("after\n");
+	show(fp->f_count);
 }

@@ -4,6 +4,7 @@
 #include "bitops.h"
 #include "bitmap.h"
 #include "stdio.h"
+#include "../dependency.h"
 
 void init_stdio(void);
 
@@ -13,6 +14,20 @@ struct fdtable {
 	struct vfscore_file *files[FDTABLE_MAX_FILES];
 };
 struct fdtable fdtable;
+
+static void dump_fdtable()
+{
+	show(fdtable.fd_start);
+	for (int i = 0; i < sizeof(fdtable.bitmap) / sizeof(unsigned long); i++) {
+		show(i);
+		show(fdtable.bitmap[i]);
+	}
+
+	for (int i = 0; i < FDTABLE_MAX_FILES; i++) {
+		if (fdtable.files[i])
+			show(fdtable.files[i]);
+	}
+}
 
 int vfscore_alloc_fd(void)
 {
@@ -86,13 +101,20 @@ struct vfscore_file *vfscore_get_file(int fd)
 	// unsigned long flags;
 	struct vfscore_file *ret = NULL;
 
-	// UK_ASSERT(fd < (int) FDTABLE_MAX_FILES);
+	show(fd);
+
+	dump_fdtable();
 
 	// flags = ukplat_lcpu_save_irqf();
-	if (!uk_test_bit(fd, fdtable.bitmap))
+	if (!uk_test_bit(fd, fdtable.bitmap)) {
+		debug("test_bit not hit\n");
+		show(uk_test_bit(fd, fdtable.bitmap));
 		goto exit;
+	}
 	ret = fdtable.files[fd];
 	fhold(ret);
+
+	show(ret);
 
 exit:
 	// ukplat_lcpu_restore_irqf(flags);
@@ -103,6 +125,9 @@ int fget(int fd, struct vfscore_file **out_fp)
 {
 	int ret = 0;
 	struct vfscore_file *fp = vfscore_get_file(fd);
+
+	show(fd);
+	show(fp);
 
 	if (!fp)
 		ret = EBADF;

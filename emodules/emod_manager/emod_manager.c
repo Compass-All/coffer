@@ -65,7 +65,7 @@ static void load_emodule(u32 emodule_id)
 	register_emodule(emodule_id, getter_addr);
 }
 
-static vaddr_t acquire_emodule(u32 emodule_id)
+vaddr_t acquire_emodule(u32 emodule_id)
 {
 	vaddr_t emodule_getter_addr = get_emodule(emodule_id);
 
@@ -112,7 +112,7 @@ void emod_manager_init()
 }
 
 // ----- temporary implmentation -----
-void emod_manager_test()
+__unused void emod_manager_test()
 {
 	load_emodule(EMODULE_ID_ALLOC);
 

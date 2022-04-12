@@ -169,7 +169,7 @@ void emain_lower_half()
 	set_csr(elf_entry, umode_stack_top);
 
 	emod_manager_init();
-	emod_manager_test();
+	// emod_manager_test();
 
 	debug("end of emain\n");
 }
