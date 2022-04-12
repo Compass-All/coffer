@@ -239,3 +239,72 @@ sys_write(struct vfscore_file *fp, const struct iovec *iov, size_t niov,
 	free(copy_iov);
 	return error;
 }
+
+int sys_lseek(struct vfscore_file *fp, off_t off, int type, off_t *origin)
+{
+	struct vnode *vp;
+
+	debug("sys_seek: fp=%p off=%ud type=%d\n",
+			fp, (unsigned int)off, type);
+
+	if (!fp->f_dentry) {
+	    // Linux doesn't implement lseek() on pipes, sockets, or ttys.
+	    // In OSV, we only implement lseek() on regular files, backed by vnode
+	    return ESPIPE;
+	}
+
+	vp = fp->f_dentry->d_vnode;
+	int error = EINVAL;
+	switch (type) {
+	case SEEK_CUR:
+		off = fp->f_offset + off;
+		break;
+	case SEEK_END:
+		off = vp->v_size + off;
+		break;
+	}
+	if (off >= 0) {
+		error = VOP_SEEK(vp, fp, fp->f_offset, off);
+		if (!error) {
+			*origin      = off;
+			fp->f_offset = off;
+		}
+	}
+	return error;
+}
+
+int sys_ioctl(struct vfscore_file *fp, unsigned long request, void *buf)
+{
+	int error = 0;
+
+	debug("sys_ioctl: fp=%p request=%lux\n", fp, request);
+
+	if ((fp->f_flags & (UK_FREAD | UK_FWRITE)) == 0)
+		return EBADF;
+
+	switch (request) {
+	case FIOCLEX:
+		fp->f_flags |= O_CLOEXEC;
+		break;
+	case FIONCLEX:
+		fp->f_flags &= ~O_CLOEXEC;
+		break;
+	default:
+		error = vfs_ioctl(fp, request, buf);
+		break;
+	}
+
+	debug("sys_ioctl: comp error=%d\n", error);
+	return error;
+}
+
+int sys_fstat(struct vfscore_file *fp, struct stat *st)
+{
+	int error = 0;
+
+	debug("sys_fstat: fp=%p\n", fp);
+
+	error = vfs_stat(fp, st);
+
+	return error;
+}
