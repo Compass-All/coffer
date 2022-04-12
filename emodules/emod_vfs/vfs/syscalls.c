@@ -189,3 +189,53 @@ sys_read(struct vfscore_file *fp, const struct iovec *iov, size_t niov,
 	free(copy_iov);
 	return error;
 }
+
+
+int
+sys_write(struct vfscore_file *fp, const struct iovec *iov, size_t niov,
+		off_t offset, size_t *count)
+{
+	struct iovec *copy_iov;
+	int error = 0;
+	if ((fp->f_flags & UK_FWRITE) == 0)
+		return EBADF;
+
+	size_t bytes = 0;
+	const struct iovec *iovp = iov;
+	for (unsigned i = 0; i < niov; i++) {
+		if (iovp->iov_len > IOSIZE_MAX - bytes) {
+			return EINVAL;
+		}
+		bytes += iovp->iov_len;
+		iovp++;
+	}
+
+	if (bytes == 0) {
+		*count = 0;
+		return 0;
+	}
+
+	struct uio uio;
+
+	/* TODO: same note as in sys_read. Original comment:
+	 *
+	 * "Unfortunately, the current implementation of fp->write zeros the
+	 *  iov_len fields when it writes to disk, so we have to copy iov.
+	 */
+	/* std::vector<iovec> copy_iov(iov, iov + niov); */
+	copy_iov = calloc(sizeof(struct iovec), niov);
+	if (!copy_iov)
+		return ENOMEM;
+	memcpy(copy_iov, iov, sizeof(struct iovec)*niov);
+
+	uio.uio_iov = copy_iov;
+	uio.uio_iovcnt = niov;
+	uio.uio_offset = offset;
+	uio.uio_resid = bytes;
+	uio.uio_rw = UIO_WRITE;
+	error = vfs_write(fp, &uio, (offset == -1) ? 0 : FOF_OFFSET);
+	*count = bytes - uio.uio_resid;
+
+	free(copy_iov);
+	return error;
+}
