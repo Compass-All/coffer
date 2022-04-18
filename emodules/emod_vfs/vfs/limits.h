@@ -49,6 +49,7 @@ extern "C" {
 #define USHRT_MAX    __US_MAX
 
 #define __I_MAX		2147483647
+#define __I_MIN		-2147483648
 #define INT_MIN       __I_MIN
 #define INT_MAX       __I_MAX
 #define UINT_MAX     __UI_MAX

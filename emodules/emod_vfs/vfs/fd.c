@@ -5,6 +5,8 @@
 #include "bitmap.h"
 #include "stdio.h"
 #include "../dependency.h"
+#include "fcntl.h"
+#include "syscall_handlers.h"
 
 void init_stdio(void);
 
@@ -165,6 +167,79 @@ int vfscore_put_fd(int fd)
 		fdrop(fp);
 
 	return 0;
+}
+
+int vfscore_reserve_fd(int fd)
+{
+	int ret = 0;
+
+	if (uk_test_bit(fd, fdtable.bitmap)) {
+		ret = -EBUSY;
+		goto exit;
+	}
+
+	uk_bitmap_set(fdtable.bitmap, fd, 1);
+
+exit:
+	return ret;
+}
+
+int dup3(int oldfd, int newfd, int flags)
+{
+	struct vfscore_file *fp, *fp_new;
+	int error;
+
+	/*
+	 * Don't allow any argument but O_CLOEXEC.  But we even ignore
+	 * that as we don't support exec() and thus don't care.
+	 */
+	if ((flags & ~O_CLOEXEC) != 0) {
+		error = EINVAL;
+		goto out_error;
+	}
+
+	if (oldfd == newfd) {
+		error = EINVAL;
+		goto out_error;
+	}
+
+	error = fget(oldfd, &fp);
+	if (error)
+		goto out_error;
+
+	error = fget(newfd, &fp_new);
+	if (error == 0) {
+		/* if newfd is open, then close it */
+		error = syscall_handler_close(newfd);
+		if (error)
+			goto out_error;
+	}
+
+	error = vfscore_reserve_fd(newfd);
+	if (error)
+		goto out_error;
+
+	error = vfscore_install_fd(newfd, fp);
+	if (error) {
+		fdrop(fp);
+		goto out_error;
+	}
+
+	fdrop(fp);
+	return newfd;
+
+out_error:
+	if(error > 0)
+		return -error;
+	return error;
+}
+
+int dup2(int oldfd, int newfd)
+{
+	if (oldfd == newfd)
+		return newfd;
+
+	return dup3(oldfd, newfd, 0);
 }
 
 void fdtable_init(void)
