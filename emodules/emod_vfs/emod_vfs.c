@@ -3,7 +3,7 @@
 #include "vfs/fd.h"
 #include "vfs/syscall_handlers.h"
 #include "vfs/rootfs.h"
-#include "vfs/ramfs.h"
+#include "ramfs/ramfs.h"
 #include "vfs/mount.h"
 
 // ---------------

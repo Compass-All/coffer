@@ -1,5 +1,5 @@
-#include "ramfs.h"
-#include "mount.h"
+#include "../ramfs/ramfs.h"
+#include "../vfs/mount.h"
 #include "../dependency.h"
 
 // todo
