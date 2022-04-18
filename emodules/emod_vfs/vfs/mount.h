@@ -68,6 +68,15 @@ struct vfsops {
 	struct vnops	*vfs_vnops;
 };
 
+typedef int (*vfsop_mount_t)(struct mount *, const char *, int, const void *);
+typedef int (*vfsop_umount_t)(struct mount *, int flags);
+typedef int (*vfsop_sync_t)(struct mount *);
+typedef int (*vfsop_vget_t)(struct mount *, struct vnode *);
+typedef int (*vfsop_statfs_t)(struct mount *, struct statfs *);
+
+int vfscore_nullop();
+int vfscore_einval();
+
 #define UK_FS_REGISTER(fssw) static struct vfscore_fs_type	\
 	__attribute((__section__(".uk_fs_list")))				\
 	*__ptr_##fssw __used = &fssw;							\
@@ -84,6 +93,7 @@ struct vfsops {
 void vfs_unbusy(struct mount *mp);
 void vfs_busy(struct mount *mp);
 int vfs_findroot(const char *path, struct mount **mp, char **root);
+void vfscore_release_mp_dentries(struct mount *mp);
 int mount(const char *dev, const char *dir, const char *fsname,
 	unsigned long flags, const void *data);
 void register_fs(struct vfscore_fs_type *fs);

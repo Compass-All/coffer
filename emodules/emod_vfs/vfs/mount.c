@@ -125,6 +125,16 @@ int vfs_findroot(const char *path, struct mount **mp, char **root)
 	return 0;
 }
 
+int vfscore_nullop()
+{
+	return 0;
+}
+
+int vfscore_einval()
+{
+	return EINVAL;
+}
+
 int device_open(const char *name __unused, int mode __unused,
 		struct device **devp __unused)
 {
@@ -136,6 +146,17 @@ int device_close(struct device *dev)
 {
 	panic("device_close not implemented\n");
 	return 0;
+}
+
+void vfscore_release_mp_dentries(struct mount *mp)
+{
+	/* Decrement referece count of root vnode */
+	if (mp->m_covered) {
+		drele(mp->m_covered);
+	}
+
+	/* Release root dentry */
+	drele(mp->m_root);
 }
 
 int mount(

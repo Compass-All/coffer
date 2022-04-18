@@ -37,6 +37,7 @@
 #include "sys_uio.h"
 #include "limits.h"
 #include "assert.h"
+#include <string.h>
 
 enum	uio_rw { UIO_READ, UIO_WRITE };
 
@@ -57,6 +58,12 @@ struct uio {
 	ssize_t	uio_resid;		/* remaining bytes to process */
 	enum	uio_rw uio_rw;		/* operation */
 };
+
+static inline int __memcpy_wrapper(void *dst, void *src, size_t *cnt)
+{
+	memcpy(dst, src, *cnt);
+	return 0;
+}
 
 /* This is a wrapper for functions f with a "memcpy-like" signature
  * "dst, src, cnt" to be executed over a scatter-gather list provided
@@ -103,6 +110,13 @@ int vfscore_uioforeach(int (*f)(void *, void *, size_t *), void *cp,
 	return ret;
 }
 
-int	vfscore_uiomove(void *cp, int n, struct uio *uio);
+static inline
+int vfscore_uiomove(void *cp, int n, struct uio *uio)
+{
+	int ret = vfscore_uioforeach(__memcpy_wrapper, cp, n, uio);
+
+	return ret;
+}
+
 
 #endif /* !_UIO_H_ */

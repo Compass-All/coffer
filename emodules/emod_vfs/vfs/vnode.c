@@ -277,6 +277,26 @@ int vfscore_vget(struct mount *mp, uint64_t ino, struct vnode **vpp)
 	return 0;
 }
 
+int vfscore_vop_nullop()
+{
+	return 0;
+}
+
+int vfscore_vop_einval()
+{
+	return EINVAL;
+}
+
+int vfscore_vop_eperm()
+{
+	return EPERM;
+}
+
+int vfscore_vop_erofs()
+{
+	return EROFS;
+}
+
 void vnode_init(void)
 {
 	int i;

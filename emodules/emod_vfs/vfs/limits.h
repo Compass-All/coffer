@@ -53,6 +53,7 @@ extern "C" {
 #define INT_MAX       __I_MAX
 #define UINT_MAX     __UI_MAX
 
+#define __L_MAX 	9223372036854775807L
 #define LONG_MIN      __L_MIN
 #define LONG_MAX      __L_MAX
 #define ULONG_MAX    __UL_MAX

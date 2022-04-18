@@ -43,7 +43,7 @@ void           seekdir(DIR *, long);
 long           telldir(DIR *);
 #endif
 
-#if defined(_GNU_SOURCE) || defined(_BSD_SOURCE)
+// #if defined(_GNU_SOURCE) || defined(_BSD_SOURCE)
 #define DT_UNKNOWN 0
 #define DT_FIFO 1
 #define DT_CHR 2
@@ -56,7 +56,7 @@ long           telldir(DIR *);
 #define IFTODT(x) ((x)>>12 & 017)
 #define DTTOIF(x) ((x)<<12)
 int getdents(int, struct dirent *, size_t);
-#endif
+// #endif
 
 #ifdef _GNU_SOURCE
 int versionsort(const struct dirent **, const struct dirent **);
