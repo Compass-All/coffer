@@ -130,10 +130,10 @@ void syscall_handler(
 	
 	case 0xDEAD:
 	    paddr_t get_pa(vaddr_t va, u8 level);
-		u8* ptr = (u8*) 0xDEAD000;
-		paddr_t pa = get_pa((vaddr_t)ptr, 2);
+		u8* ptr = (u8*) 0xACE00000;
+		paddr_t pa = get_pa((vaddr_t)ptr, 1);
 		debug("pa: %lx\n", pa);
-	    for (int i = 0; i < 0x1000; i++) {
+	    for (int i = 0; i < 0x200000; i++) {
 			ptr[i] += i;
 		}
 		break;

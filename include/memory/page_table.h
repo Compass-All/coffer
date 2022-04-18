@@ -17,14 +17,14 @@ typedef struct {
 	u64 mode:	4;
 } csr_satp_t;
 
-#define PTE_V	(1UL << 0)
-#define PTE_R	(1UL << 1)
-#define PTE_W	(1UL << 2)
-#define PTE_X	(1UL << 3)
-#define PTE_U	(1UL << 4)
-#define PTE_G	(1UL << 5)
-#define PTE_A	(1UL << 6)
-#define PTE_D	(1UL << 7)
+#define PTE_V	(1U << 0)
+#define PTE_R	(1U << 1)
+#define PTE_W	(1U << 2)
+#define PTE_X	(1U << 3)
+#define PTE_U	(1U << 4)
+#define PTE_G	(1U << 5)
+#define PTE_A	(1U << 6)
+#define PTE_D	(1U << 7)
 /**
  * @brief Sv39 page table entry
  * 

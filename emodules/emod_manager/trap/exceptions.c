@@ -24,7 +24,10 @@ void exception_handler(
 
 	error("Trapped! Exception!\n");
 
-	show(sepc); show(scause); show(stval);	
+	show(sepc); show(scause); show(stval); 
+	show(read_csr(sstatus));
+	show(read_csr(sip));
+	show(read_csr(sie));
 	printf("\n");
 
 	printf("Register Dump:\n");

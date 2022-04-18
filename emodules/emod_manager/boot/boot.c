@@ -81,9 +81,11 @@ void emain_upper_half(
 	setup_linear_map();
 
 	////// DEBUG //////
+	printf("\033[1;32m[emain_upper_half] Enc#%lu mapping\033[0m\n", eid);
 	paddr_t tmp_pa = 0x140000000;
-	vaddr_t tmp_va = 0xDEAD000;
-	map_page(tmp_va, tmp_pa, -1, SV39_LEVEL_PAGE);
+	vaddr_t tmp_va = 0xACE00000;
+	map_page(tmp_va, tmp_pa, (u8)(~(PTE_A | PTE_D)), SV39_LEVEL_MEGA);
+	printf("\033[1;32m[emain_upper_half] Enc#%lu DONE\033[0m\n", eid);
     //////       //////
 
 	u64 satp_value = init_satp();

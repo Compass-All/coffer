@@ -4,6 +4,17 @@ dmesg -n 1
 mount proc /proc -t proc
 mount sys /sys -t sysfs
 
+cat > /test.sh <<EOF
+#!/bin/sh
+
+/prog/host/test_eapp /prog/enclave/tmp &
+/prog/host/test_eapp /prog/enclave/tmp &
+
+wait
+EOF
+chmod +x /test.sh
+/test.sh
+
 # printf "\n\n\n\n\n\n\n\n\n"
 # printf "################## qsort ##################\n"
 # /prog/host/test_eapp /prog/enclave/rv8_qsort
@@ -32,6 +43,6 @@ mount sys /sys -t sysfs
 # printf "################## aes ##################\n"
 # /prog/host/test_eapp /prog/enclave/rv8_aes
 
-printf "\n\n\n\n\n\n\n\n\n"
-printf "################## tmp ##################\n"
-/prog/host/test_eapp /prog/enclave/tmp
+# printf "\n\n\n\n\n\n\n\n\n"
+# printf "################## tmp ##################\n"
+# /prog/host/test_eapp /prog/enclave/tmp
