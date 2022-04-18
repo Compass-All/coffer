@@ -2,6 +2,9 @@
 #include "dependency.h"
 #include "vfs/fd.h"
 #include "vfs/syscall_handlers.h"
+#include "vfs/rootfs.h"
+#include "vfs/ramfs.h"
+#include "vfs/mount.h"
 
 // ---------------
 // emodule vfs descriptor
@@ -25,7 +28,9 @@ static void init_functions()
 {
 	fdtable_init();
 	vfscore_init();
-	// vfscore_rootfs();
+	mount_init();
+	init_ramfs();
+	vfscore_rootfs();
 }
 
 static void init_dependency()

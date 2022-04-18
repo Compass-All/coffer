@@ -14,3 +14,5 @@ emodule-objs-y += vfs/string.o
 emodule-objs-y += vfs/errno.o 
 emodule-objs-y += vfs/mount.o 
 emodule-objs-y += vfs/stdio.o
+emodule-objs-y += vfs/rootfs.o
+emodule-objs-y += vfs/ramfs.o

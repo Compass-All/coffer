@@ -166,3 +166,4 @@ void vrele(struct vnode *vp);
 void vn_add_name(struct vnode *vp __unused, struct dentry *dp);
 void vn_del_name(struct vnode *vp __unused, struct dentry *dp);
 void vnode_init(void);
+int vfscore_vget(struct mount *mp, uint64_t ino, struct vnode **vpp);

@@ -6,6 +6,19 @@
 #include "vnode.h"
 
 /*
+ * Filesystem type switch table.
+ */
+struct vfscore_fs_type {
+	const char      *vs_name;	/* name of file system */
+	int		(*vs_init)(void); /* initialize routine */
+	struct vfsops	*vs_op;		/* pointer to vfs operation */
+};
+
+// #define UK_FS_REGISTER(fssw) static struct vfscore_fs_type	
+// 	__attribute((__section__(".uk_fs_list")))		
+// 	*__ptr_##fssw __used = &fssw;				
+
+/*
  * Mount flags.
  */
 #ifndef MNT_RDONLY
@@ -30,6 +43,7 @@
 #define	MNT_ASYNC	0x00000040	/* file system written asynchronously */
 #endif
 
+#define FSMAXNAMES	16		/* max length of 'file system' name */
 
 struct mount {
 	struct vfsops	*m_op;		/* pointer to vfs operation */
@@ -54,5 +68,23 @@ struct vfsops {
 	struct vnops	*vfs_vnops;
 };
 
+#define UK_FS_REGISTER(fssw) static struct vfscore_fs_type	\
+	__attribute((__section__(".uk_fs_list")))				\
+	*__ptr_##fssw __used = &fssw;							\
+
+/*
+ * VFS interface
+ */
+#define VFS_MOUNT(MP, DEV, FL, DAT) ((MP)->m_op->vfs_mount)(MP, DEV, FL, DAT)
+#define VFS_UNMOUNT(MP, FL)         ((MP)->m_op->vfs_unmount)(MP, FL)
+#define VFS_SYNC(MP)                ((MP)->m_op->vfs_sync)(MP)
+#define VFS_VGET(MP, VP)            ((MP)->m_op->vfs_vget)(MP, VP)
+#define VFS_STATFS(MP, SFP)         ((MP)->m_op->vfs_statfs)(MP, SFP)
+
 void vfs_unbusy(struct mount *mp);
+void vfs_busy(struct mount *mp);
 int vfs_findroot(const char *path, struct mount **mp, char **root);
+int mount(const char *dev, const char *dir, const char *fsname,
+	unsigned long flags, const void *data);
+void register_fs(struct vfscore_fs_type *fs);
+void mount_init();

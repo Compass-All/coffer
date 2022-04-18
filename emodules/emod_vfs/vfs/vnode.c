@@ -188,8 +188,95 @@ void vn_del_name(struct vnode *vp __unused, struct dentry *dp)
 	uk_list_del(&dp->d_names_link);
 }
 
-// todo
-// add to init
+/*
+ * Get the hash value from the mount point and path name.
+ * XXX(hch): replace with a better hash for 64-bit pointers.
+ */
+static unsigned int vn_hash(struct mount *mp, uint64_t ino)
+{
+	return (ino ^ (unsigned long)mp) & (VNODE_BUCKETS - 1);
+}
+
+/*
+ * Returns locked vnode for specified mount point and path.
+ * vn_lock() will increment the reference count of vnode.
+ *
+ * Locking: VNODE_LOCK must be held.
+ */
+struct vnode *vn_lookup(struct mount *mp, uint64_t ino)
+{
+	struct vnode *vp;
+
+	show(mp);
+	show(ino);
+
+	uk_list_for_each_entry(vp, &vnode_table[vn_hash(mp, ino)], v_link) {
+		if (vp->v_mount == mp && vp->v_ino == ino) {
+			vp->v_refcnt++;
+			show(vp);
+			return vp;
+		}
+	}
+	debug("not found\n");
+	return NULL;		/* not found */
+}
+
+/*
+ * Allocate new vnode for specified path.
+ * Increment its reference count and lock it.
+ * Returns 1 if vnode was found in cache; otherwise returns 0.
+ */
+int vfscore_vget(struct mount *mp, uint64_t ino, struct vnode **vpp)
+{
+	struct vnode *vp;
+	int error;
+
+	*vpp = NULL;
+
+	show(ino);
+
+	vp = vn_lookup(mp, ino);
+	if (vp) {
+		*vpp = vp;
+		show(vp);
+		return 1;
+	}
+
+	vp = calloc(1, sizeof(*vp));
+	if (!vp) {
+		panic("calloc failed\n");
+		return 0;
+	}
+
+	UK_INIT_LIST_HEAD(&vp->v_names);
+	vp->v_ino = ino;
+	vp->v_mount = mp;
+	vp->v_refcnt = 1;
+	vp->v_op = mp->m_op->vfs_vnops;
+
+	show(vp);
+	show(vp->v_names);
+	show(vp->v_ino);
+	show(vp->v_mount);
+	show(vp->v_refcnt);
+	show(vp->v_op);
+
+	/*
+	 * Request to allocate fs specific data for vnode.
+	 */
+	if ((error = VFS_VGET(mp, vp)) != 0) {
+		free(vp);
+		return 0;
+	}
+	vfs_busy(vp->v_mount);
+
+	uk_list_add(&vp->v_link, &vnode_table[vn_hash(mp, ino)]);
+
+	*vpp = vp;
+
+	return 0;
+}
+
 void vnode_init(void)
 {
 	int i;

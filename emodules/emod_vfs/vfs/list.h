@@ -7,6 +7,9 @@
 #define UK_LIST_HEAD(name) \
 	struct uk_list_head name = UK_LIST_HEAD_INIT(name)
 
+#define UK_LIST_DECLARE(name) \
+	struct uk_list_head name;
+
 struct uk_list_head {
 	struct uk_list_head *next;
 	struct uk_list_head *prev;
