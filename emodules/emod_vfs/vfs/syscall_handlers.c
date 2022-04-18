@@ -540,10 +540,8 @@ int syscall_handler_fstatat(int dirfd, const char *pathname, struct stat *st, in
 	return error;
 }
 
-
-// todo
-// add to init
 static struct task _main_task_impl;
+
 void vfscore_init(void)
 {
 	memset(&_main_task_impl, 0, sizeof(_main_task_impl));

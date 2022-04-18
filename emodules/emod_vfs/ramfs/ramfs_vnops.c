@@ -659,7 +659,6 @@ static int ramfs_setattr(
 #define ramfs_link      ((vnop_link_t)vfscore_vop_eperm)
 #define ramfs_fallocate ((vnop_fallocate_t)vfscore_vop_nullop)
 
-// todo
 struct vnops ramfs_vnops;
 
 void ramfs_vnops_init()

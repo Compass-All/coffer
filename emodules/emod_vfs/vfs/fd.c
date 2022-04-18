@@ -167,9 +167,6 @@ int vfscore_put_fd(int fd)
 	return 0;
 }
 
-// todo
-// take this as part of the init function
-// (also check init functions in other files)
 void fdtable_init(void)
 {
 	memset(&fdtable, 0, sizeof(fdtable));
