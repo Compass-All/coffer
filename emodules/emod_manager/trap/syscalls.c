@@ -59,6 +59,19 @@
 
 static emod_vfs_t emod_vfs;
 
+__unused static void *memcpy(void *dest, const void *src, size_t count)
+{
+	char *temp1	  = dest;
+	const char *temp2 = src;
+
+	while (count > 0) {
+		*temp1++ = *temp2++;
+		count--;
+	}
+
+	return dest;
+}
+
 void load_emod_vfs()
 {
 	static u8 loaded = 0;
@@ -75,6 +88,10 @@ void load_emod_vfs()
 static int syscall_handler_open(const char *pathname, int flags, mode_t mode)
 {
 	load_emod_vfs();
+
+	debug("pathname: %s\n", pathname);
+	debug("flags = 0o%o\n", flags);
+	show(mode);
 
 	return emod_vfs.emod_vfs_api.syscall_handler_open(pathname, flags, mode);
 }
@@ -215,6 +232,21 @@ static int syscall_handler_fstatat(
 		.syscall_handler_fstatat(dirfd, path, st, flags);
 }
 
+static void *syscall_handler_mmap(
+	void	*addr,
+	size_t	len,
+	int		prot,
+	int		flags,
+	int		fildes,
+	off_t	off
+)
+{
+	load_emod_vfs();
+	
+	return emod_vfs.emod_vfs_api
+		.syscall_handler_mmap(addr, len, prot, flags, fildes, off);
+}
+
 
 // temporary implementation
 // static int sys_fstat_handler(u64 fd, vaddr_t sstat)
@@ -254,11 +286,15 @@ void syscall_handler(
 	{
 	case SYS_open:
 		debug("syscall open\n");
+		show(regs[CTX_INDEX_a0]);
+		show(regs[CTX_INDEX_a1]);
+		show(regs[CTX_INDEX_a2]);
 		ret = (u64)syscall_handler_open(
 			(const char *)	regs[CTX_INDEX_a0],
 			(int)			regs[CTX_INDEX_a1],
 			(mode_t)		regs[CTX_INDEX_a2]
 		);
+		debug("end of syscall open\n");
 		break;
 
 	case SYS_openat:
@@ -269,6 +305,7 @@ void syscall_handler(
 			(int)			regs[CTX_INDEX_a2],
 			(int)			regs[CTX_INDEX_a3]
 		);
+		debug("end of syscall openat\n");
 		break;
 
 	case SYS_close:
@@ -285,6 +322,7 @@ void syscall_handler(
 			(off_t)		regs[CTX_INDEX_a1],
 			(int)		regs[CTX_INDEX_a2]
 		);
+		debug("end of syscall lseek\n");
 		break;
 
 	case SYS_pread:
@@ -295,6 +333,7 @@ void syscall_handler(
 			(size_t)	regs[CTX_INDEX_a2],
 			(off_t)		regs[CTX_INDEX_a3]
 		);
+		debug("end of syscall pread\n");
 		break;
 
 	case SYS_read:
@@ -304,6 +343,7 @@ void syscall_handler(
 			(void *)	regs[CTX_INDEX_a1],
 			(size_t)	regs[CTX_INDEX_a2]
 		);
+		debug("end of syscall read\n");
 		break;
 	
 	case SYS_pwrite:
@@ -314,6 +354,7 @@ void syscall_handler(
 			(size_t)	regs[CTX_INDEX_a2],
 			(off_t)		regs[CTX_INDEX_a3]
 		);
+		debug("end of syscall pwrite\n");
 		break;
 
 	case SYS_writev:
@@ -323,6 +364,7 @@ void syscall_handler(
 			(const struct iovec *)	regs[CTX_INDEX_a1],
 			(int)					regs[CTX_INDEX_a2]
 		);
+		debug("end of syscall writev\n");
 		break;
 
 	case SYS_write:
@@ -332,6 +374,7 @@ void syscall_handler(
 			(const void *)	regs[CTX_INDEX_a1],
 			(size_t)		regs[CTX_INDEX_a2]
 		);
+		debug("end of syscall write\n");
 		break;
 
 	case SYS_fstat:
@@ -340,6 +383,7 @@ void syscall_handler(
 			(int)			regs[CTX_INDEX_a0],
 			(struct stat *)	regs[CTX_INDEX_a1]
 		);
+		debug("end of syscall fstat\n");
 		break;
 
 	case SYS_fstatat:
@@ -350,6 +394,7 @@ void syscall_handler(
 			(struct stat *)	regs[CTX_INDEX_a2],
 			(int)			regs[CTX_INDEX_a3]
 		);
+		debug("end of syscall fstatat\n");
 		break;
 
 	// case SYS_write:
@@ -373,6 +418,20 @@ void syscall_handler(
 	case SYS_brk:
 		debug("syscall brk\n");
 		ret = sys_brk_handler(regs[CTX_INDEX_a0]);
+		debug("end of syscall brk\n");
+		break;
+	
+	case SYS_mmap:
+		debug("syscall mmap\n");
+		ret = (u64)syscall_handler_mmap(
+			(void *)		regs[CTX_INDEX_a0],
+			(size_t)		regs[CTX_INDEX_a1],
+			(int)			regs[CTX_INDEX_a2],
+			(int)			regs[CTX_INDEX_a3],
+			(int)			regs[CTX_INDEX_a4],
+			(off_t)			regs[CTX_INDEX_a5]
+		);
+		debug("end of syscall mmap\n");
 		break;
 
 	case SYS_gettimeofday:
@@ -383,6 +442,9 @@ void syscall_handler(
 		panic("Unimplemented syscall\n");
 		break;
 	}
+	show(ret);
+	debug("(int)ret = %d\n", ret);
+	debug("end of syscall handler\n");
 
 	write_csr(sepc, sepc + 4);
 	regs[CTX_INDEX_a0] = ret;

@@ -5,6 +5,7 @@
 #include "vfs/rootfs.h"
 #include "ramfs/ramfs.h"
 #include "vfs/mount.h"
+#include "mmap/mman.h"
 
 // ---------------
 // emodule vfs descriptor
@@ -26,10 +27,11 @@ static emod_vfs_t get_emod_vfs()
 
 static void init_functions()
 {
-	fdtable_init();
-	vfscore_init();
+	debug("initializing vfs\n");
 	mount_init();
 	init_ramfs();
+	fdtable_init();
+	vfscore_init();
 	vfscore_rootfs();
 }
 
@@ -68,6 +70,7 @@ vaddr_t vfs_init(vaddr_t emod_manager_getter)
 	emod_vfs_api.syscall_handler_write 		= &syscall_handler_write;
 	emod_vfs_api.syscall_handler_fstat 		= &syscall_handler_fstat;
 	emod_vfs_api.syscall_handler_fstatat 	= &syscall_handler_fstatat;
+	emod_vfs_api.syscall_handler_mmap	 	= &mmap;
 
 	// init emodule
 	emod_vfs = (emod_vfs_t) {

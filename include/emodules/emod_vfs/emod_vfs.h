@@ -35,6 +35,9 @@ typedef struct {
 	int (*syscall_handler_fstatat)(int dirfd, const char *path, struct stat *st,
 		int flags);
 
+	void *(*syscall_handler_mmap)(void *addr, size_t len, int prot, int flags,
+		int fildes, off_t off);
+
 } emod_vfs_api_t;
 
 typedef struct {
