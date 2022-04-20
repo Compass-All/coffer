@@ -17,7 +17,7 @@ struct fdtable {
 };
 struct fdtable fdtable;
 
-static void dump_fdtable()
+__unused static void dump_fdtable()
 {
 	show(fdtable.fd_start);
 	for (int i = 0; i < sizeof(fdtable.bitmap) / sizeof(unsigned long); i++) {
@@ -105,7 +105,7 @@ struct vfscore_file *vfscore_get_file(int fd)
 
 	show(fd);
 
-	dump_fdtable();
+	// dump_fdtable();
 
 	// flags = ukplat_lcpu_save_irqf();
 	if (!uk_test_bit(fd, fdtable.bitmap)) {
