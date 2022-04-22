@@ -6,7 +6,9 @@ mount sys /sys -t sysfs
 
 # /prog/host/test_eapp /prog/enclave/eapp_rand_malloc
 
-/prog/host/test_eapp /prog/enclave/eapp_write
+# /prog/host/test_eapp /prog/enclave/eapp_write
+
+/prog/host/test_eapp /prog/enclave/eapp_fs_test
 
 # /prog/host/test_eapp /prog/enclave/eapp_test_message
 

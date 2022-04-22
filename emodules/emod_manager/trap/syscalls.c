@@ -11,6 +11,7 @@
 #include <emodules/emod_vfs/emod_vfs.h>
 #include <emodules/emod_manager/emod_manager.h>
 #include <emodules/emodule_id.h>
+#include "../memory/page_table.h"
 
 #include <sys/stat.h>
 
@@ -410,6 +411,7 @@ void syscall_handler(
 		// break;
 
 	case SYS_exit:
+	case SYS_exit_group:
 	 	debug("syscall exit\n");
 		show(get_umode_page_pool_avail_size());
 		__ecall_ebi_exit(regs[CTX_INDEX_a0]);
@@ -436,6 +438,12 @@ void syscall_handler(
 
 	case SYS_gettimeofday:
 		// todo!();
+		break;
+
+	case 29:
+		break;
+
+	case 96:
 		break;
 	
 	default:

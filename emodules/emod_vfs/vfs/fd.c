@@ -103,14 +103,14 @@ struct vfscore_file *vfscore_get_file(int fd)
 	// unsigned long flags;
 	struct vfscore_file *ret = NULL;
 
-	show(fd);
+	// show(fd);
 
 	// dump_fdtable();
 
 	// flags = ukplat_lcpu_save_irqf();
 	if (!uk_test_bit(fd, fdtable.bitmap)) {
-		debug("test_bit not hit\n");
-		show(uk_test_bit(fd, fdtable.bitmap));
+		// debug("test_bit not hit\n");
+		// show(uk_test_bit(fd, fdtable.bitmap));
 		goto exit;
 	}
 	ret = fdtable.files[fd];
@@ -128,8 +128,8 @@ int fget(int fd, struct vfscore_file **out_fp)
 	int ret = 0;
 	struct vfscore_file *fp = vfscore_get_file(fd);
 
-	show(fd);
-	show(fp);
+	// show(fd);
+	// show(fp);
 
 	if (!fp)
 		ret = EBADF;
