@@ -55,6 +55,18 @@ static int elf_check(Elf64_Ehdr *ehdr, usize elf_size)
 	return 0;
 }
 
+static void *memset(void *s, int c, usize count)
+{
+	char *temp = s;
+
+	while (count > 0) {
+		count--;
+		*temp++ = c;
+	}
+
+	return s;
+}
+
 static int map_elf(paddr_t elf_paddr)
 {
 	vaddr_t elf_vaddr_linear = elf_paddr + linear_map_offset;
@@ -95,7 +107,8 @@ static int map_elf(paddr_t elf_paddr)
 			debug("Allocating more pages\n");
 			// TODO: what if number_of_pages is larger than pool size?
 
-			number_of_pages = (PAGE_UP(mem_size) - PAGE_UP(file_size)) >> PAGE_SHIFT;
+			number_of_pages = 
+				(PAGE_UP(mem_size) - PAGE_UP(file_size)) >> PAGE_SHIFT;
 			paddr_t extra_page_paddr = alloc_umode_page(number_of_pages);
 
 			show(number_of_pages);
@@ -109,6 +122,11 @@ static int map_elf(paddr_t elf_paddr)
 					SV39_LEVEL_PAGE
 				);
 			}
+
+			debug("zero mem-only portion\n");
+			show(ph_vaddr + file_size);
+			show(mem_size - file_size);
+			memset((void *)(ph_vaddr + file_size), 0, mem_size - file_size);
 		}
 	}
 
