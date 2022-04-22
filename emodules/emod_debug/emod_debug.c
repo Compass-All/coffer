@@ -1,6 +1,7 @@
 #include <emodules/emod_debug/emod_debug.h>
 #include "dependency.h"
 #include "printf.h"
+#include <util/gnu_attribute.h>
 
 // Emodule Debug Descriptor
 static emod_desc_t emod_debug_desc = {
@@ -14,6 +15,16 @@ static emod_debug_t emod_debug;
 // Emodule Debug Functions
 
 // printf from "printf.h"
+#ifdef EMODULES_DEBUG
+#define printf(fmt, ...) printf_(fmt, ##__VA_ARGS__)
+#else
+#define printf(fmt, ...)
+#endif
+
+__unused static int dummy_printd(const char* format, ...)
+{
+	return 0;
+}
 
 static void hexdump(vaddr_t addr, usize len)
 {
@@ -57,7 +68,11 @@ __attribute__((section(".text.init")))
 vaddr_t debug_init(vaddr_t emod_manager_getter)
 {
 	emod_debug_api = (emod_debug_api_t) {
-		.printd = printf,
+#ifdef EMODULES_DEBUG
+		.printd = printf_,
+#else
+		.printd = dummy_printd,
+#endif
 		.hexdump = hexdump,
 		.assert = assert
 	};
