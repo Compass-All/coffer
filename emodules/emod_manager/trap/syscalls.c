@@ -86,189 +86,89 @@ void load_emod_vfs()
 	}
 }
 
-static int syscall_handler_open(const char *pathname, int flags, mode_t mode)
-{
-	load_emod_vfs();
-
-	debug("pathname: %s\n", pathname);
-	debug("flags = 0o%o\n", flags);
-	show(mode);
-
-	return emod_vfs.emod_vfs_api.syscall_handler_open(pathname, flags, mode);
+#define DEFINE_FS_SYSCALL_HANDLER_1(type, syscall_name, type1, var1)		\
+static type syscall_handler_##syscall_name(type1 var1)						\
+{																			\
+	load_emod_vfs();														\
+	return emod_vfs.emod_vfs_api.syscall_handler_##syscall_name(var1);		\
 }
-
-static int syscall_handler_openat(
-	int 		dirfd,
-	const char 	*pathname,
-	int 		flags,
-	int 		mode)
-{
-	load_emod_vfs();
-
-	return emod_vfs.emod_vfs_api
-		.syscall_handler_openat(dirfd, pathname, flags, mode);
+#define DEFINE_FS_SYSCALL_HANDLER_2(type, syscall_name, type1, var1, type2, var2)	\
+static type syscall_handler_##syscall_name(type1 var1, type2 var2)					\
+{																					\
+	load_emod_vfs();																\
+	return emod_vfs.emod_vfs_api.syscall_handler_##syscall_name(var1, var2);		\
 }
-
-static int syscall_handler_close(int fd)
-{
-	load_emod_vfs();
-
-	return emod_vfs.emod_vfs_api
-		.syscall_handler_close(fd);
+#define DEFINE_FS_SYSCALL_HANDLER_3(type, syscall_name, type1, var1, type2, var2, type3, var3)	\
+static type syscall_handler_##syscall_name(type1 var1, type2 var2, type3 var3)					\
+{																								\
+	load_emod_vfs();																			\
+	return emod_vfs.emod_vfs_api.syscall_handler_##syscall_name(var1, var2, var3);				\
 }
-
-static int syscall_handler_lseek(int fd, off_t offset, int whence)
-{
-	load_emod_vfs();
-
-	return emod_vfs.emod_vfs_api
-		.syscall_handler_lseek(fd, offset, whence);
+#define DEFINE_FS_SYSCALL_HANDLER_4(type, syscall_name, type1, var1, type2, var2, type3, var3, type4, var4)	\
+static type syscall_handler_##syscall_name(type1 var1, type2 var2, type3 var3, type4 var4)					\
+{																											\
+	load_emod_vfs();																						\
+	return emod_vfs.emod_vfs_api.syscall_handler_##syscall_name(var1, var2, var3, var4);					\
 }
-
-__unused static int syscall_handler_preadv(
-	int 	fd,
-	const struct iovec *iov,
-	int 	iovcnt,
-	off_t 	offset
-)
-{
-	load_emod_vfs();
-
-	return emod_vfs.emod_vfs_api
-		.syscall_handler_preadv(fd, iov, iovcnt, offset);
+#define DEFINE_FS_SYSCALL_HANDLER_5(type, syscall_name, type1, var1, type2, var2, type3, var3, type4, var4, type5, var5)	\
+static type syscall_handler_##syscall_name(type1 var1, type2 var2, type3 var3, type4 var4, type5 var5)						\
+{																															\
+	load_emod_vfs();																										\
+	return emod_vfs.emod_vfs_api.syscall_handler_##syscall_name(var1, var2, var3, var4, var5);								\
 }
-
-static int syscall_handler_pread64(int fd, void *buf, size_t count, off_t offset)
-{
-	load_emod_vfs();
-
-	return emod_vfs.emod_vfs_api
-		.syscall_handler_pread64(fd, buf, count, offset);
-}
-
-__unused static int syscall_handler_readv(int fd, const struct iovec *iov, int iovcnt)
-{
-	load_emod_vfs();
-
-	return emod_vfs.emod_vfs_api
-		.syscall_handler_readv(fd, iov, iovcnt);
-}
-
-static int syscall_handler_read(int fd, void *buf, size_t count)
-{
-	load_emod_vfs();
-
-	return emod_vfs.emod_vfs_api
-		.syscall_handler_read(fd, buf, count);
-}
-
-__unused static int syscall_handler_pwritev(
-	int 	fd,
-	const struct iovec *iov,
-	int 	iovcnt,
-	off_t 	offset
-)
-{
-	load_emod_vfs();
-
-	return emod_vfs.emod_vfs_api
-		.syscall_handler_pwritev(fd, iov, iovcnt, offset);
-}
-
-static int syscall_handler_pwrite64(
-	int 	fd,
-	const void *buf,
-	size_t 	count,
-	off_t 	offset
-)
-{
-	load_emod_vfs();
-
-	return emod_vfs.emod_vfs_api
-		.syscall_handler_pwrite64(fd, buf, count, offset);
-}
-
-static int syscall_handler_writev(int fd, const struct iovec *iov, int vlen)
-{
-	load_emod_vfs();
-
-	return emod_vfs.emod_vfs_api
-		.syscall_handler_writev(fd, iov, vlen);
-}
-
-static int syscall_handler_write(int fd, const void *buf, size_t count)
-{
-	load_emod_vfs();
-
-	return emod_vfs.emod_vfs_api
-		.syscall_handler_write(fd, buf, count);
-}
-
-// static int syscall_handler_ioctl(int fd, unsigned long int request, void *arg)
-// {
-// 	load_emod_vfs();
-
-// 	return emod_vfs.emod_vfs_api
-// 		.syscall_handler_ioctl(fd, request, arg);
-// }
-
-static int syscall_handler_fstat(int fd, struct stat *st)
-{
-	load_emod_vfs();
-
-	return emod_vfs.emod_vfs_api
-		.syscall_handler_fstat(fd, st);
-}
-
-static int syscall_handler_fstatat(
-	int			dirfd,
-	const char 	*path,
-	struct stat *st,
-	int 		flags
-)
-{
-	load_emod_vfs();
-
-	return emod_vfs.emod_vfs_api
-		.syscall_handler_fstatat(dirfd, path, st, flags);
-}
-
-static void *syscall_handler_mmap(
-	void	*addr,
-	size_t	len,
-	int		prot,
-	int		flags,
-	int		fildes,
-	off_t	off
-)
-{
-	load_emod_vfs();
-	
-	return emod_vfs.emod_vfs_api
-		.syscall_handler_mmap(addr, len, prot, flags, fildes, off);
+#define DEFINE_FS_SYSCALL_HANDLER_6(type, syscall_name, type1, var1, type2, var2, type3, var3, type4, var4, type5, var5, type6, var6)	\
+static type syscall_handler_##syscall_name(type1 var1, type2 var2, type3 var3, type4 var4, type5 var5, type6 var6)						\
+{																																		\
+	load_emod_vfs();																													\
+	return emod_vfs.emod_vfs_api.syscall_handler_##syscall_name(var1, var2, var3, var4, var5, var6);									\
 }
 
 
-// temporary implementation
-// static int sys_fstat_handler(u64 fd, vaddr_t sstat)
-// {
-//     struct stat* stat = (struct stat*)sstat;
-//     /* now only support stdio */
-//     if (fd > 4 || fd < 0) {
-//         return -1;
-//     }
-//     stat->st_dev = 26;
-//     stat->st_ino = 6;
-//     stat->st_nlink = 1;
-//     stat->st_mode = S_IWUSR | S_IRUSR | S_IRGRP;
-//     stat->st_uid = 1000;
-//     stat->st_gid = 5;
-//     stat->st_rdev = 34819;
-//     stat->st_size = 0;
-//     stat->st_blksize = 1024;
-//     stat->st_blocks = 0;
-//     return 0;
-// }
+
+
+
+DEFINE_FS_SYSCALL_HANDLER_3(int, open, const char *, pathname,
+	int, flags, mode_t, mode)
+
+DEFINE_FS_SYSCALL_HANDLER_4(int, openat, int, dirfd, const char *, pathname,
+	int, flags, int, mode)
+
+DEFINE_FS_SYSCALL_HANDLER_1(int, close, int, fd)
+
+DEFINE_FS_SYSCALL_HANDLER_3(int, lseek, int, fd, off_t, offset, int, whence)
+
+__unused
+DEFINE_FS_SYSCALL_HANDLER_4(int, preadv, int, fd,
+	const struct iovec *, iov, int, iovcnt, off_t, offset)
+
+DEFINE_FS_SYSCALL_HANDLER_4(int, pread64, int, fd, void *, buf,
+	size_t, count, off_t, offset)
+
+__unused
+DEFINE_FS_SYSCALL_HANDLER_3(int, readv, int, fd,
+	const struct iovec *, iov, int, iovcnt)
+
+DEFINE_FS_SYSCALL_HANDLER_3(int, read, int, fd, void *, buf, size_t, count)
+
+__unused
+DEFINE_FS_SYSCALL_HANDLER_4(int, pwritev, int, fd,
+	const struct iovec *, iov, int, iovcnt, off_t, offset)
+
+DEFINE_FS_SYSCALL_HANDLER_4(int, pwrite64, int, fd, const void *, buf,
+	size_t, count, off_t, offset)
+
+DEFINE_FS_SYSCALL_HANDLER_3(int, writev, int, fd, const struct iovec *, iov,
+	int, vlen)
+
+DEFINE_FS_SYSCALL_HANDLER_3(int, write, int, fd, const void *, buf, size_t, count)
+
+DEFINE_FS_SYSCALL_HANDLER_2(int, fstat, int, fd, struct stat *, st)
+
+DEFINE_FS_SYSCALL_HANDLER_4(int, fstatat, int, dirfd, const char *, path,
+	struct stat *, st, int, flags)
+
+DEFINE_FS_SYSCALL_HANDLER_6(void *, mmap, void *, addr, size_t, len, int, prot,
+	int, flags, int, fildes, off_t, off)
 
 void syscall_handler(
 	u64 	*regs,
