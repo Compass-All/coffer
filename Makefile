@@ -43,7 +43,7 @@ QEMU_CMD = -M virt -m 8G -smp $(QEMU_CORES) -nographic \
 
 PROG_BUILD = $(BUILD_DIR)/prog
 
-all: dir emodules opensbi board-image rootfs
+all: dir emodules opensbi rootfs
 
 kernel-image: docker
 ifeq (, $(wildcard $(KERNEL_IMAGE))) # kernel image not found
@@ -107,19 +107,26 @@ endif
 
 
 board-image: emodules opensbi docker
-	mkdir -p $(ITB_PATH)
+	sudo mkdir -p $(ITB_PATH)
 	$(DOCKER_RUN) $(MKIMAGE) -E -f $(DOCKER_WORKDIR)/$(ITS_PATH)/u-boot.its $(DOCKER_WORKDIR)/$(ITB_PATH)/u-boot.itb
 
+burn-image:	board-image
+ifneq (, $(shell ls /dev/mmcblk0p2))
+	sudo dd if=$(ITB_PATH)/u-boot.itb of=/dev/mmcblk0p2 bs=2M iflag=fullblock oflag=direct conv=fsync status=progress
+else
+	@printf "\nSD card not inserted\n\n"
+endif
+
 # do not add "-j" to this target, which leads to UB
-emodules: tools/md2/build/md2 docker
+emodules: docker # tools/md2/build/md2
 	$(DOCKER_MAKE) -C $(DOCKER_WORKDIR)/emodules CROSS_COMPILE=riscv64-unknown-elf-
 
 opensbi: docker emodules
 	$(DOCKER_MAKE) clean -C $(DOCKER_WORKDIR)/coffer-opensbi 
 	$(DOCKER_MAKE) -C $(DOCKER_WORKDIR)/coffer-opensbi CROSS_COMPILE=riscv64-unknown-elf- PLATFORM=generic -j
 
-tools/md2/build/md2:
-	make -C tools/md2
+# tools/md2/build/md2:
+# 	make -C tools/md2
 
 clean: docker
 	sudo rm -rf $(BUILD_DIR)

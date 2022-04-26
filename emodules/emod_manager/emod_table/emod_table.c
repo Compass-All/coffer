@@ -23,18 +23,34 @@
 #define EMODULE_TABLE_SIZE	0x100
 
 static vaddr_t emodule_table[EMODULE_TABLE_SIZE];
+static const usize emodule_size_table[EMODULE_TABLE_SIZE] = {
+	EMODULE_MANAGER_SIZE,
+	EMODULE_DEBUG_SIZE,
+	EMODULE_ALLOC_SIZE,
+	EMODULE_VFS_SIZE,
+	EMODULE_DUMMY_SIZE
+};
 
 void register_emodule(u32 emod_id, vaddr_t emodule_getter_addr)
 {
 	if (emod_id >= EMODULE_TABLE_SIZE)
 		panic("Attempt to register emodule that doesn't exist!\n");
 
-	debug("emod %u getter at 0x%lx\n",
-		emod_id, emodule_getter_addr);
+	show(emodule_getter_addr);
 	emodule_table[emod_id] = emodule_getter_addr;
 }
 
-vaddr_t acquire_emodule(u32 emod_id)
+usize get_emodule_size(u32 emod_id)
+{
+	if (emod_id >= EMODULE_TABLE_SIZE) {
+		printf("Emodule %u does not exists\n", emod_id);
+		return (vaddr_t)0UL;
+	}
+
+	return emodule_size_table[emod_id];
+}
+
+vaddr_t get_emodule(u32 emod_id)
 {
 	if (emod_id >= EMODULE_TABLE_SIZE) {
 		printf("Emodule %u does not exists\n", emod_id);

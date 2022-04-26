@@ -14,6 +14,24 @@ wait
 EOF
 chmod +x /test.sh
 /test.sh
+# /prog/host/test_eapp /prog/enclave/eapp_rand_malloc
+
+# /prog/host/test_eapp /prog/enclave/eapp_write
+
+/prog/host/test_eapp /prog/enclave/eapp_fs_test
+
+# /prog/host/test_eapp /prog/enclave/eapp_test_message
+
+# /prog/host/resume_eapp 1; /prog/host/resume_eapp 2;
+
+# Enclave
+# /prog/host/test_eapp /prog/enclave/eapp_malloc 4096
+# Host
+# /prog/enclave/eapp_malloc 0 4096
+
+# printf "\n\n\n\n\n\n\n\n\n"
+# printf "################## test_argv ##################\n"
+# /prog/host/test_eapp /prog/enclave/eapp_test_argv test1 test2
 
 # printf "\n\n\n\n\n\n\n\n\n"
 # printf "################## qsort ##################\n"
@@ -42,7 +60,3 @@ chmod +x /test.sh
 # printf "\n\n\n\n\n\n\n\n\n"
 # printf "################## aes ##################\n"
 # /prog/host/test_eapp /prog/enclave/rv8_aes
-
-# printf "\n\n\n\n\n\n\n\n\n"
-# printf "################## tmp ##################\n"
-# /prog/host/test_eapp /prog/enclave/tmp

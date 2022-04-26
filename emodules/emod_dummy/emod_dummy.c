@@ -29,7 +29,7 @@ static void func2(int arg1)
 
 // ---------------
 // emod_dummy init and getter
-static emod_dummy_t get_emodule()
+static emod_dummy_t get_emod_dummy()
 {
 	return emod_dummy;
 }
@@ -61,5 +61,5 @@ vaddr_t dummy_init(vaddr_t emod_manager_getter)
 
 	emod_manager.emod_manager_api.test();
 
-	return (vaddr_t)get_emodule;
+	return (vaddr_t)get_emod_dummy;
 }

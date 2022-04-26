@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MEMORY_MEMORY_H
+#define MEMORY_MEMORY_H
 
 #include <types.h>
 #include <memory/page_table.h>
@@ -7,11 +8,8 @@
 #define ROUNDUP(a, b) ((((a)-1) / (b) + 1) * (b))
 #endif
 
-#ifndef PAGE_SHIFT
+#ifndef __RISCV_ASM_H__
 #define PAGE_SHIFT 12
-#endif
-
-#ifndef PAGE_SIZE
 #define PAGE_SIZE (1UL << PAGE_SHIFT)
 #endif
 
@@ -23,3 +21,7 @@
 
 #define PARTITION_UP(addr) (ROUNDUP(addr, PARTITION_SIZE))
 #define PARTITION_DOWN(addr) ((addr) & (~((PARTITION_SIZE)-1)))
+
+#define NUM_REGIONS 3
+
+#endif

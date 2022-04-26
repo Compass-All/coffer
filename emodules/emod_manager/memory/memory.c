@@ -3,12 +3,21 @@
 #include "page_pool.h"
 #include "../debug/debug.h"
 #include "../panic/panic.h"
-#include "enclave/enclave_ops.h"
+#include <enclave/enclave_ops.h>
+#include <util/register.h>
 
-// initialized during boot
-volatile 	static paddr_t emod_manager_pa_start;
+// TODO: record &emod_pa_start and &elf_pa_start to m mode
+
+// initialized during creating enclave
+volatile static	paddr_t emod_manager_pa_start;
 // defined in config.mk
-const		static vaddr_t emod_manager_va_start = EMOD_MANAGER_VA_START;
+const static	vaddr_t emod_manager_va_start = EMOD_MANAGER_VA_START;
+
+// initialized during entering enclave
+volatile static paddr_t payload_pa_start;
+
+// for emodules va allocation
+static 			vaddr_t emodule_brk = EMOD_INIT_BRK;
 
 #define EUSR_HEAP_START_ALIGNED		0x400000000UL
 // program break, to be initialized
@@ -22,13 +31,63 @@ void wait_until_non_zero(volatile u64 *ptr)
 void set_emod_manager_pa_start(paddr_t pa_start)
 {
 	emod_manager_pa_start = pa_start;
+	show(emod_manager_pa_start);
 }
 
 paddr_t get_emod_manager_pa_start()
 {
-	return emod_manager_pa_start;
+	u64 satp_value = read_csr(satp);
+	csr_satp_t satp = *(csr_satp_t *)&satp_value;
+	if (satp_value)
+		return PARTITION_DOWN(satp.ppn << PAGE_SHIFT);
+	else
+		return emod_manager_pa_start;
 }
 
+void set_payload_pa_start(paddr_t pa_start)
+{
+	payload_pa_start = pa_start;
+	show(payload_pa_start);
+}
+
+paddr_t get_payload_pa_start()
+{
+	return payload_pa_start;
+}
+
+static void increase_emodule_brk(usize increment)
+{
+	emodule_brk += increment;
+}
+
+static vaddr_t get_emodule_brk()
+{
+	return emodule_brk;
+}
+
+vaddr_t alloc_map_emodule(usize emodule_size)
+{
+	usize	alloc_size		= PAGE_UP(emodule_size);
+	usize	number_of_pages	= alloc_size >> PAGE_SHIFT;
+	paddr_t	paddr			= alloc_smode_page(number_of_pages);
+	vaddr_t vaddr			= get_emodule_brk();
+
+	for (int i = 0; i < number_of_pages; i++) {
+		map_page(
+			vaddr + i * PAGE_SIZE,
+			paddr + i * PAGE_SIZE,
+			PTE_R | PTE_W | PTE_X,
+			SV39_LEVEL_PAGE
+		);
+	}
+
+	increase_emodule_brk(alloc_size);
+
+	return vaddr;
+}
+
+// this function should not be used after
+// the enclave gets initialized
 usize get_va_pa_offset()
 {
 	return emod_manager_va_start - emod_manager_pa_start;
@@ -55,11 +114,27 @@ void init_prog_brk()
 	show(get_prog_brk());
 }
 
+void addr_record(u64 satp_value)
+{
+	paddr_t page_table_root = satp_value << PAGE_SHIFT;
+	usize page_table_offset = page_table_root - get_emod_manager_pa_start();
+	__ecall_ebi_addr_record(
+		page_table_offset,
+		(paddr_t)&emod_manager_pa_start,
+		(paddr_t)&payload_pa_start
+	);
+}
+
 static void __map_section(memory_section_t mem_sec)
 {
 	paddr_t paddr = mem_sec.offset + get_emod_manager_pa_start();
 	vaddr_t vaddr = mem_sec.vaddr;
-	usize number_of_pages = PAGE_UP(mem_sec.size) / PAGE_SIZE;
+	usize number_of_pages = PAGE_UP(mem_sec.size) >> PAGE_SHIFT;
+
+	show(mem_sec.offset);
+	show(mem_sec.size);
+	show(mem_sec.vaddr);
+	show(mem_sec.flags);
 
 	if (mem_sec.offset % PAGE_SIZE != 0)
 		panic("Section not aligned!\n");
@@ -69,25 +144,6 @@ static void __map_section(memory_section_t mem_sec)
 
 		vaddr += PAGE_SIZE;
 		paddr += PAGE_SIZE;
-	}
-}
-
-void map_page_pool()
-{
-	paddr_t page_pool_start_pa = get_page_pool_offset()
-		+ get_emod_manager_pa_start();
-	usize page_pool_size = get_page_pool_size();
-
-	show(page_pool_start_pa);
-	show(page_pool_size);
-
-	for (int i = 0; i < page_pool_size / PAGE_SIZE; i++) {
-		map_page(
-			page_pool_start_pa + i * PAGE_SIZE + get_va_pa_offset(),
-			page_pool_start_pa + i * PAGE_SIZE,
-			PTE_R | PTE_W,
-			SV39_LEVEL_PAGE
-		);
 	}
 }
 
@@ -133,15 +189,39 @@ void map_sections()
 paddr_t alloc_smode_stack()
 {
 	debug("allocating S mode stack: %lu pages\n",
-		SMODE_STACK_SIZE / PAGE_SIZE);
-	return alloc_smode_page(SMODE_STACK_SIZE / PAGE_SIZE)
+		SMODE_STACK_SIZE >> PAGE_SHIFT);
+	return alloc_smode_page(SMODE_STACK_SIZE >> PAGE_SHIFT)
 		+ SMODE_STACK_SIZE;
+}
+
+void map_user_argv(paddr_t user_argv_pa, u64 argc)
+{
+	vaddr_t user_argv_va = UMODE_STACK_TOP_VA;
+
+	u64 *user_argv_ptr = (u64 *)(user_argv_pa + linear_map_offset);
+	for (int i = 0; i < argc; i++) {
+		u64 offset = user_argv_ptr[i] % PAGE_SIZE;
+		user_argv_ptr[i] = user_argv_va + offset;
+
+		show(i);
+		show(user_argv_ptr[i]);
+		show(offset);
+	}
+
+	map_page(
+		user_argv_va,
+		user_argv_pa,
+		PTE_U | PTE_R | PTE_W,
+		SV39_LEVEL_PAGE
+	);
+	show(user_argv_va);
+	show(user_argv_pa);
 }
 
 // allocate user mode stack, return stack top va
 vaddr_t alloc_map_umode_stack()
 {
-	usize number_of_pages = UMODE_STACK_SIZE / PAGE_SIZE;
+	usize number_of_pages = UMODE_STACK_SIZE >> PAGE_SHIFT;
 	debug("allocating U mode stack: %lu pages\n",
 		number_of_pages);
 
@@ -165,7 +245,7 @@ vaddr_t alloc_map_umode_stack()
 // invoked before simple pool out of memory
 static void map_brk_from_pool(vaddr_t aligned_old_brk, usize size)
 {
-	usize number_of_pages = size / PAGE_SIZE;
+	usize number_of_pages = size >> PAGE_SHIFT;
 	paddr_t paddr = alloc_umode_page(number_of_pages);
 	for (int i = 0; i < number_of_pages; i++) {
 		map_page(
@@ -227,7 +307,7 @@ u64 sys_brk_handler(vaddr_t new_brk)
 
 		if (aligned_new_brk > aligned_old_brk) {
 			usize remained_umode_pool_size	= get_umode_page_pool_avail_size();
-			usize required_size				= aligned_old_brk - aligned_new_brk;
+			usize required_size				= aligned_new_brk - aligned_old_brk;
 			show(remained_umode_pool_size);
 			show(required_size);
 

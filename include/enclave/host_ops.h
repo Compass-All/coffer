@@ -3,46 +3,49 @@
 #include <emodules/ecall.h>
 #include <types.h>
 #include <ebi_ecall.h>
-
-#define HOST_EID	0UL
+#include <enclave/eid.h>
 
 // enter
 
-static u64 inline __ecall_ebi_create_enclave(
-	vaddr_t payload_addr,
-	usize payload_len
-)
+static u64 inline __ecall_ebi_create()
 {
 	return __ecall(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_CREATE,
-		(u64)payload_addr,
-		(u64)payload_len,
-		0UL
+		0UL, 0UL, 0UL
 	);
 }
 
-static u64 inline __ecall_ebi_enter_enclave(
-	u64 enclave_id,
-	u64 argc,
-	vaddr_t argv
+static u64 inline __ecall_ebi_enter(
+	u64 	enclave_id,
+	u64 	argc,
+	vaddr_t argv,
+	vaddr_t payload_addr,
+	usize 	payload_size
+
 )
 {
-	return __ecall(
+	return __ecall_5(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_ENTER,
 		enclave_id,
 		argc,
-		(u64)argv
+		argv,
+		payload_addr,
+		payload_size
 	);
 }
 
-// TODO: change return type
-static void inline __ecall_ebi_resume_enclave(u64 enclave_id)
+static u64 inline __ecall_ebi_resume(
+	u64 enclave_id,
+	u64 short_message
+)
 {
-	__ecall(
+	return __ecall(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_RESUME,
-		enclave_id, 0UL, 0UL
+		enclave_id,
+		short_message,
+		0UL
 	);
 }
