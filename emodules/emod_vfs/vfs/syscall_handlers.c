@@ -565,11 +565,7 @@ int syscall_handler_mkdirat(int dirfd, const char *pathname, mode_t mode)
 	if ((error = task_conv(t, pathname, VWRITE, path)) != 0)
 		goto out_errno;
 
-	debug("CP1\n");
-
 	error = sys_mkdir(path, mode);
-
-	debug("CP2\n");
 
 	if (error)
 		goto out_errno;
