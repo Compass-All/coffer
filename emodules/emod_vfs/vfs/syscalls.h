@@ -15,3 +15,4 @@ int sys_ioctl(struct vfscore_file *fp, unsigned long request, void *buf);
 int sys_fstat(struct vfscore_file *fp, struct stat *st);
 int sys_stat(char *path, struct stat *st);
 int sys_lstat(char *path, struct stat *st);
+int sys_mkdir(char *path, mode_t mode);

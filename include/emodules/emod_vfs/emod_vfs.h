@@ -35,6 +35,8 @@ typedef struct {
 	int (*syscall_handler_fstatat)(int dirfd, const char *path, struct stat *st,
 		int flags);
 
+	int (*syscall_handler_mkdirat)(int dirfd, const char *pathname, mode_t mode);
+
 	void *(*syscall_handler_mmap)(void *addr, size_t len, int prot, int flags,
 		int fildes, off_t off);
 

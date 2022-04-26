@@ -540,6 +540,45 @@ int syscall_handler_fstatat(int dirfd, const char *pathname, struct stat *st, in
 	return error;
 }
 
+static mode_t global_umask = S_IWGRP | S_IWOTH;
+
+static inline mode_t apply_umask(mode_t mode)
+{
+	return mode & ~global_umask;
+}
+
+int syscall_handler_mkdirat(int dirfd, const char *pathname, mode_t mode)
+{
+	struct task *t = main_task;
+	char path[PATH_MAX];
+	int error;
+
+	show(mode);
+	show(t);
+	show(global_umask);
+	show(pathname);
+
+	mode = apply_umask(mode);
+
+	show(mode);
+
+	if ((error = task_conv(t, pathname, VWRITE, path)) != 0)
+		goto out_errno;
+
+	debug("CP1\n");
+
+	error = sys_mkdir(path, mode);
+
+	debug("CP2\n");
+
+	if (error)
+		goto out_errno;
+	return 0;
+
+out_errno:
+	return -error;
+}
+
 static struct task _main_task_impl;
 
 void vfscore_init(void)

@@ -45,6 +45,7 @@
 #include "prex.h"
 #include "task.h"
 
+#include "../dependency.h"
 
 /*
  * Convert to full path from the cwd of task and path.
@@ -52,28 +53,39 @@
  * @path: target path
  * @full: full path to be returned
  */
-int
-path_conv(char *wd, const char *cpath, char *full)
+int path_conv(char *wd, const char *cpath, char *full)
 {
 	char path[PATH_MAX];
 	char *src, *tgt, *p, *end;
 	size_t len = 0;
 
+	debug("CP1\n");
+
+	show(path);
+	show(cpath);
 	strlcpy(path, cpath, PATH_MAX);
 	path[PATH_MAX - 1] = '\0';
+
+	debug("CP2\n");
 
 	len = strlen(path);
 	if (len >= PATH_MAX)
 		return ENAMETOOLONG;
 	if (strlen(wd) + len >= PATH_MAX)
 		return ENAMETOOLONG;
+	
+	debug("CP3\n");
+
 	src = path;
 	tgt = full;
 	end = src + len;
 	if (path[0] == '/') {
+		debug("CP4\n");
 		*tgt++ = *src++;
 		len = 1;
+		debug("CP5\n");
 	} else {
+		debug("CP6\n");
 		strlcpy(full, wd, PATH_MAX);
 		len = strlen(wd);
 		tgt += len;
@@ -82,7 +94,9 @@ path_conv(char *wd, const char *cpath, char *full)
 			tgt++;
 			len++;
 		}
+		debug("CP7\n");
 	}
+	debug("CP8\n");
 	while (*src) {
 		p = src;
 		while (*p != '/' && *p != '\0')
@@ -117,8 +131,10 @@ path_conv(char *wd, const char *cpath, char *full)
 		}
 		src = p + 1;
 	}
+	debug("CP9\n");
 	*tgt = '\0';
 
+	debug("CP10\n");
 	return (0);
 }
 
@@ -129,12 +145,19 @@ path_conv(char *wd, const char *cpath, char *full)
  * @full: full path to be returned
  * @acc: access mode
  */
-int
-task_conv(struct task *t, const char *cpath, int acc __unused, char *full)
+int task_conv(struct task *t, const char *cpath, int acc __unused, char *full)
 {
 	int rc;
 
+	show(t);
+	show(t->t_cwd);
+	show(cpath);
+	show(full);
+
 	rc = path_conv(t->t_cwd, cpath, full);
+	
+	debug("CP1\n");
+
 	if (rc != 0) {
 		return (rc);
 	}

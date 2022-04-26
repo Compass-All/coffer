@@ -375,3 +375,34 @@ int sys_lstat(char *path, struct stat *st)
 	drele(ddp);
 	return error;
 }
+
+int sys_mkdir(char *path, mode_t mode)
+{
+	char *name;
+	struct dentry *dp, *ddp;
+	int error;
+
+	debug("sys_mkdir: path=%s mode=%d\n", path, mode);
+
+	error = namei(path, &dp);
+	if (!error) {
+		/* File already exists */
+		drele(dp);
+		return EEXIST;
+	}
+
+	if ((error = lookup(path, &ddp, &name)) != 0) {
+		/* Directory already exists */
+		return error;
+	}
+
+	if ((error = vn_access(ddp->d_vnode, VWRITE)) != 0)
+		goto out;
+	mode &= ~S_IFMT;
+	mode |= S_IFDIR;
+
+	error = VOP_MKDIR(ddp->d_vnode, name, mode);
+ out:
+	drele(ddp);
+	return error;
+}

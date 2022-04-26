@@ -51,7 +51,8 @@
 #define SYS_open 			1024
 #define SYS_link 			1025
 #define SYS_unlink 			1026
-#define SYS_mkdir 			1030
+// #define SYS_mkdir 			1030
+#define SYS_mkdirat 		34	// 0x22
 #define SYS_access 			1033
 #define SYS_stat 			1038
 #define SYS_lstat 			1039
@@ -166,6 +167,8 @@ DEFINE_FS_SYSCALL_HANDLER_2(int, fstat, int, fd, struct stat *, st)
 
 DEFINE_FS_SYSCALL_HANDLER_4(int, fstatat, int, dirfd, const char *, path,
 	struct stat *, st, int, flags)
+
+DEFINE_FS_SYSCALL_HANDLER_3(int, mkdirat, int, dirfd, const char *, pathname, mode_t, mode)
 
 DEFINE_FS_SYSCALL_HANDLER_6(void *, mmap, void *, addr, size_t, len, int, prot,
 	int, flags, int, fildes, off_t, off)
@@ -298,6 +301,16 @@ void syscall_handler(
 		debug("end of syscall fstatat\n");
 		break;
 
+	case SYS_mkdirat:
+		debug("syscall mkdirat\n");
+		ret = (u64)syscall_handler_mkdirat(
+			(int)			regs[CTX_INDEX_a0],
+			(const char *)	regs[CTX_INDEX_a1],
+			(mode_t)		regs[CTX_INDEX_a2]
+		);
+		debug("end of syscall mkdirat\n");
+		break;
+
 	// case SYS_write:
 		// __unused u64 fd		= regs[CTX_INDEX_a0];
 	 	// char *string_ptr 	= (char *)regs[CTX_INDEX_a1];
@@ -341,8 +354,6 @@ void syscall_handler(
 		break;
 
 	case 29:
-		break;
-
 	case 96:
 		break;
 	
