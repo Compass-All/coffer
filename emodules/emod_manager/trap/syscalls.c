@@ -15,6 +15,15 @@
 
 #include <sys/stat.h>
 
+// to be implemented:
+/**
+ * fsync, unlink, ftruncate, fcntl, gettimeofday,
+ * getpid, geteuid, getcwd, time, getdents64,
+ * rt_sigaction, rt_sigprocmask, execve, uname,
+ * readlink, arch_prctl, set_tid_address,
+ * set_robust_list, prlimit64
+ */
+
 // Syscall numbers for RISC-V
 #define SYS_getcwd 			17
 #define SYS_dup 			23
@@ -183,7 +192,7 @@ void syscall_handler(
 	u64 syscall_num = regs[CTX_INDEX_a7];
 	u64 ret = 0;
 
-	debug("handling syscall\n");
+	debug("handling syscall %ld\n", syscall_num);
 	show(syscall_num);
 
 	switch (syscall_num)
@@ -363,7 +372,7 @@ void syscall_handler(
 	}
 	show(ret);
 	debug("(int)ret = %d\n", ret);
-	debug("end of syscall handler\n");
+	debug("end of %ld syscall handler\n", syscall_num);
 
 	write_csr(sepc, sepc + 4);
 	regs[CTX_INDEX_a0] = ret;

@@ -7,6 +7,7 @@
 #include <util/register.h>
 #include <emodules/ecall.h>
 #include <enclave/enclave_ops.h>
+#include "../memory/page_table.h"
 
 #define SCAUSE_ECALL	0x8UL
 
@@ -35,6 +36,25 @@ void exception_handler(
 			printf("\n");
 	}
 	printf("\n");
+
+	switch (scause)
+	{
+	case 0xd:
+		printf("Load page fault\n");
+		paddr_t pa = get_pa(stval);
+		show(pa);
+		u64 *va_try = (u64 *)(pa + linear_map_offset);
+		show(va_try);
+		show(*va_try);
+
+		u64 *va_try_stval = (u64 *)(stval);
+		show(va_try_stval);
+		show(*va_try_stval);
+		break;
+	
+	default:
+		break;
+	}
 
 	panic("Exception unhandled\n");
 }

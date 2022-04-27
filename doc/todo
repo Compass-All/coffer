@@ -2,4 +2,4 @@
 - [x] Refactor message channel.
 - [x] Emodule loader implementation.
 - Emod_alloc implementation.
-- Port file system.
+- [x] Port file system.

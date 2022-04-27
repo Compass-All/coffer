@@ -84,18 +84,14 @@ void *mmap(
 	/* The caller expects the memory to be zeroed */
 	memset(mem, 0, len);
 
-	debug("CP0\n");
-
 	new->begin = mem;
 	new->end = mem + len;
 	new->next = NULL;
 
-	debug("CP1\n");
 	if (!mmap_addr)
 		mmap_addr = new;
 	else
 		last->next = new;
 	
-	debug("CP2\n");
 	return mem;
 }

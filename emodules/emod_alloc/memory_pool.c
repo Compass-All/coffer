@@ -30,11 +30,13 @@ void init_memory_pool()
 	show(pool_brk_pa);
 }
 
+// change this to kmalloc
+// and provide a real malloc
 void *malloc(usize size)
 {
 	usize expected_used_size = used_size + size;
 
-	show(size);
+	debug("[emodule malloc] size = 0x%lx\n", size);
 
 	if (expected_used_size > total_size) {
 		show(expected_used_size);

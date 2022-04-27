@@ -76,7 +76,7 @@ endif
 rootfs: emodules docker prog
 ifeq (, $(wildcard $(ROOTFS))) # ROOTFS not found
 # Make ext2 FS
-	sudo dd if=/dev/zero of=$(ROOTFS) bs=1M count=256
+	sudo dd if=/dev/zero of=$(ROOTFS) bs=1M count=512
 	sudo mkfs.ext2 -F $(ROOTFS)
 # Mount
 	mkdir -p $(MOUNT_POINT)
@@ -110,11 +110,12 @@ board-image: emodules opensbi docker
 	$(DOCKER_RUN) $(MKIMAGE) -E -f $(DOCKER_WORKDIR)/$(ITS_PATH)/u-boot.its $(DOCKER_WORKDIR)/$(ITB_PATH)/u-boot.itb
 
 burn-image:	board-image
-ifneq (, $(shell ls /dev/mmcblk0p2))
-	sudo dd if=$(ITB_PATH)/u-boot.itb of=/dev/mmcblk0p2 bs=2M iflag=fullblock oflag=direct conv=fsync status=progress
-else
-	@printf "\nSD card not inserted\n\n"
-endif
+	@if [ -f /dev/mmcblk0p2 ] ; \
+	then \
+		sudo dd if=$(ITB_PATH)/u-boot.itb of=/dev/mmcblk0p2 bs=2M iflag=fullblock oflag=direct conv=fsync status=progress ; \
+	else \
+		printf "\nSD card not inserted\n\n" ; \
+	fi; \
 
 # do not add "-j" to this target, which leads to UB
 emodules: docker # tools/md2/build/md2
