@@ -35,11 +35,10 @@ __attribute__((section(".text.init")))
 vaddr_t alloc_init(vaddr_t emod_manager_getter)
 {
 	// init api
-	emod_alloc_api = (emod_alloc_api_t) {
-		.malloc = malloc,
-		.calloc = calloc,
-		.free	= free
-	};
+	emod_alloc_api.kmalloc 	= kmalloc;
+	emod_alloc_api.malloc 	= malloc;
+	emod_alloc_api.calloc 	= calloc;
+	emod_alloc_api.free		= free;
 
 	// init emodule
 	emod_alloc = (emod_alloc_t) {
@@ -62,6 +61,7 @@ vaddr_t alloc_init(vaddr_t emod_manager_getter)
 	init_memory_pool();
 
 	show(emod_alloc.emod_alloc_api.malloc);
+	show(emod_alloc.emod_alloc_api.kmalloc);
 
 	return (vaddr_t)get_emod_alloc;
 }

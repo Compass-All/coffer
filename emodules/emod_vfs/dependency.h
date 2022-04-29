@@ -9,7 +9,7 @@ extern emod_manager_t 	emod_manager;
 extern emod_alloc_t		emod_alloc;
 extern emod_debug_t 	emod_debug;
 
-#define malloc 	emod_alloc.emod_alloc_api.malloc
+#define malloc 	emod_alloc.emod_alloc_api.kmalloc
 #define calloc 	emod_alloc.emod_alloc_api.calloc
 #define free	emod_alloc.emod_alloc_api.free
 

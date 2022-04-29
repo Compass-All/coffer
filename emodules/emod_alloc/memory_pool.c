@@ -21,7 +21,7 @@ void init_memory_pool()
 		map_page(
 			pool_brk_va + i * PARTITION_SIZE,
 			pool_brk_pa + i * PARTITION_SIZE,
-			PTE_R | PTE_W | PTE_X,
+			PTE_R | PTE_W | PTE_X | PTE_U,
 			SV39_LEVEL_MEGA
 		);
 	}
@@ -50,6 +50,11 @@ void *malloc(usize size)
 	pool_brk_pa += size;
 
 	return (void *)ret;
+}
+
+void *kmalloc(usize size)
+{
+	return malloc(size);
 }
 
 static void *memset(void *s, int c, usize count)

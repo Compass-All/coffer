@@ -5,6 +5,7 @@
 #include <emodules/emodule_id.h>
 
 typedef struct {
+	void *(*kmalloc)(usize size);
 	void *(*malloc)(usize size);
 	void *(*calloc)(usize number, usize size);
 	void (*free)(void *ptr);
