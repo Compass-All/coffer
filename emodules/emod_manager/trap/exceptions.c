@@ -10,6 +10,7 @@
 #include "../memory/page_table.h"
 
 #define SCAUSE_ECALL	0x8UL
+#define dump(v) printf(#v "\t=\t0x%lx\n", (u64)(v));
 
 void exception_handler(
 	u64* 	regs,
@@ -25,7 +26,7 @@ void exception_handler(
 
 	error("Trapped! Exception!\n");
 
-	show(sepc); show(scause); show(stval);	
+	dump(sepc); dump(scause); dump(stval);	
 	printf("\n");
 
 	printf("Register Dump:\n");
