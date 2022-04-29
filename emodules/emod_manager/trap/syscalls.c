@@ -367,6 +367,7 @@ void syscall_handler(
 		break;
 	
 	default:
+		error("syscall %d\n", syscall_num);
 		panic("Unimplemented syscall\n");
 		break;
 	}
