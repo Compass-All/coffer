@@ -39,17 +39,53 @@ void exception_handler(
 
 	switch (scause)
 	{
+	case 0x0:
+		error("Instruction address misaligned\n");
+		break;
+	case 0x1:
+		error("Instruction access fault\n");
+		break;
+	case 0x2:
+		error("Illegal instruction\n");
+		break;
+	case 0x3:
+		error("Breakpoint\n");
+		break;
+	case 0x4:
+		error("Load address misaligned\n");
+		break;
+	case 0x5:
+		error("Load access fault\n");
+		break;
+	case 0x6:
+		error("Store/AMO address misaligned\n");
+		break;
+	case 0x7:
+		error("Store/AMO access fault\n");
+		break;
+	case 0x8:
+		panic("Should never reach here\n");
+		break;
+	case 0x9:
+		error("Environment call from S-mode\n");
+		break;
+	case 0xa:
+		error("Reserved\n");
+		break;
+	case 0xb:
+		error("Environment call from M-mode\n");
+		break;
+	case 0xc:
+		error("Instruction page fault\n");
+		break;
 	case 0xd:
-		printf("Load page fault\n");
-		paddr_t pa = get_pa(stval);
-		show(pa);
-		u64 *va_try = (u64 *)(pa + linear_map_offset);
-		show(va_try);
-		show(*va_try);
-
-		u64 *va_try_stval = (u64 *)(stval);
-		show(va_try_stval);
-		show(*va_try_stval);
+		error("Load page fault\n");
+		break;
+	case 0xe:
+		error("Reserved for future standard use\n");
+		break;
+	case 0xf:
+		error("Store/AMO page fault\n");
 		break;
 	
 	default:
