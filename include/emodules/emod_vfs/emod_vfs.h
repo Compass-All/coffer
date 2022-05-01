@@ -40,6 +40,8 @@ typedef struct {
 	void *(*syscall_handler_mmap)(void *addr, size_t len, int prot, int flags,
 		int fildes, off_t off);
 
+	int (*syscall_handler_munmap)(void* addr, size_t len);
+
 } emod_vfs_api_t;
 
 typedef struct {

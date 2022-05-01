@@ -182,6 +182,8 @@ DEFINE_FS_SYSCALL_HANDLER_3(int, mkdirat, int, dirfd, const char *, pathname, mo
 DEFINE_FS_SYSCALL_HANDLER_6(void *, mmap, void *, addr, size_t, len, int, prot,
 	int, flags, int, fildes, off_t, off)
 
+DEFINE_FS_SYSCALL_HANDLER_2(int, munmap, void *, addr, size_t, len)
+
 void syscall_handler(
 	u64 	*regs,
 	u64		sepc,
@@ -356,6 +358,15 @@ void syscall_handler(
 			(off_t)			regs[CTX_INDEX_a5]
 		);
 		debug("end of syscall mmap\n");
+		break;
+
+	case SYS_munmap:
+		debug("syscall munmap\n");
+		ret = (u64)syscall_handler_munmap(
+			(void *)	regs[CTX_INDEX_a0],
+			(size_t)	regs[CTX_INDEX_a1]
+		);
+		debug("end of syscall munmap\n");
 		break;
 
 	case SYS_gettimeofday:
