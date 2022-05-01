@@ -25,7 +25,8 @@ RUN tar xJf /root/qemu-${QEMU_VERSION}.tar.xz -C /root
 # MUSL
 ADD tools/musl/patch /root/musl_patch
 RUN mkdir -p /root/musl-cross-make/patches/musl-1.2.3 \
-    && cp /root/musl_patch/0001-memset_main_tls.diff /root/musl-cross-make/patches/musl-1.2.3/0001-memset_main_tls.diff
+    && cp /root/musl_patch/0001-memset_main_tls.diff /root/musl-cross-make/patches/musl-1.2.3/0001-memset_main_tls.diff \
+    && cp /root/musl_patch/0002-pagesize.diff /root/musl-cross-make/patches/musl-1.2.3/0002-pagesize.diff
 
 WORKDIR /root/musl-cross-make
 RUN make TARGET=riscv64-linux-musl install -j$(nproc) 
