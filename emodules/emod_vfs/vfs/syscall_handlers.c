@@ -10,6 +10,8 @@
 #include <string.h>
 #include "stat.h"
 #include "lookup.h"
+#include "fops.h"
+#include "fs.h"
 #include "../dependency.h"
 
 // readv, openat, close, lseek, read, writev, ioctl, fstat
@@ -570,6 +572,93 @@ int syscall_handler_mkdirat(int dirfd, const char *pathname, mode_t mode)
 	if (error)
 		goto out_errno;
 	return 0;
+
+out_errno:
+	return -error;
+}
+
+/*
+ * The file control system call.
+ */
+#define SETFL (O_APPEND | O_ASYNC | O_DIRECT | O_NOATIME | O_NONBLOCK)
+
+int syscall_handler_fcntl(int fd, unsigned int cmd, int arg)
+{
+	struct vfscore_file *fp;
+	int ret = 0, error;
+#if defined(FIONBIO) && defined(FIOASYNC)
+	int tmp;
+#endif
+
+	error = fget(fd, &fp);
+	if (error)
+		goto out_errno;
+
+	// An important note about our handling of FD_CLOEXEC / O_CLOEXEC:
+	// close-on-exec shouldn't have been a file flag (fp->f_flags) - it is a
+	// file descriptor flag, meaning that that two dup()ed file descriptors
+	// could have different values for FD_CLOEXEC. Our current implementation
+	// *wrongly* makes close-on-exec an f_flag (using the bit O_CLOEXEC).
+	// There is little practical difference, though, because this flag is
+	// ignored in OSv anyway, as it doesn't support exec().
+	switch (cmd) {
+	case F_DUPFD:
+		error = fdalloc(fp, &ret);
+		if (error)
+			goto out_errno;
+		break;
+	case F_GETFD:
+		ret = (fp->f_flags & O_CLOEXEC) ? FD_CLOEXEC : 0;
+		break;
+	case F_SETFD:
+		fp->f_flags = (fp->f_flags & ~O_CLOEXEC) |
+				((arg & FD_CLOEXEC) ? O_CLOEXEC : 0);
+		break;
+	case F_GETFL:
+		// As explained above, the O_CLOEXEC should have been in f_flags,
+		// and shouldn't be returned. Linux always returns 0100000 ("the
+		// flag formerly known as O_LARGEFILE) so let's do it too.
+		ret = (vfscore_oflags(fp->f_flags) & ~O_CLOEXEC) | 0100000;
+		break;
+	case F_SETFL:
+		fp->f_flags = vfscore_fflags((vfscore_oflags(fp->f_flags) & ~SETFL) |
+				(arg & SETFL));
+
+#if defined(FIONBIO) && defined(FIOASYNC)
+		/* Sync nonblocking/async state with file flags */
+		tmp = fp->f_flags & FNONBLOCK;
+		vfs_ioctl(fp, FIONBIO, &tmp);
+		tmp = fp->f_flags & FASYNC;
+		vfs_ioctl(fp, FIOASYNC, &tmp);
+#endif
+		break;
+	case F_DUPFD_CLOEXEC:
+		error = fdalloc(fp, &ret);
+		if (error)
+			goto out_errno;
+		fp->f_flags |= O_CLOEXEC;
+		break;
+	case F_SETLK:
+		debug("fcntl(F_SETLK) stubbed\n");
+		break;
+	case F_GETLK:
+		debug("fcntl(F_GETLK) stubbed\n");
+		break;
+	case F_SETLKW:
+		debug("fcntl(F_SETLKW) stubbed\n");
+		break;
+	case F_SETOWN:
+		debug("fcntl(F_SETOWN) stubbed\n");
+		break;
+	default:
+		debug("unsupported fcntl cmd 0x%x\n", cmd);
+		error = EINVAL;
+	}
+
+	fdrop(fp);
+	if (error)
+		goto out_errno;
+	return ret;
 
 out_errno:
 	return -error;

@@ -4,6 +4,11 @@ dmesg -n 1
 mount proc /proc -t proc
 mount sys /sys -t sysfs
 
+# ----- sqlite
+# printf "\n\n\n\n\n\n\n\n\n"
+# printf "################## sqlite ##################\n"
+/prog/host/test_eapp /prog/enclave/sqlite-bench/sqlite-bench
+
 # ----- darknet
 
 # ./darknet detect cfg/yolov3.cfg yolov3.weights data/dog.jpg
@@ -14,7 +19,7 @@ mount sys /sys -t sysfs
 # ./darknet classify cfg/tiny.cfg tiny.weights data/dog.jpg
 # printf "\n\n\n\n\n\n\n\n\n"
 # printf "################## darknet classify ##################\n"
-# /prog/host/test_eapp /prog/enclave/darknet/darknet classify cfg/tiny.cfg tiny.weights data/dog.jpg
+# /prog/host/test_eapp /prog/enclave/darknet/darknet classify /cfg/tiny.cfg /tiny.weights /data/dog.jpg
 
 # ----- end darknet
 
@@ -22,7 +27,7 @@ mount sys /sys -t sysfs
 
 # /prog/host/test_eapp /prog/enclave/eapp_write
 
-/prog/host/test_eapp /prog/enclave/eapp_fs_test
+# /prog/host/test_eapp /prog/enclave/eapp_fs_test
 
 # /prog/host/test_eapp /prog/enclave/eapp_test_message
 

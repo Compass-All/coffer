@@ -202,6 +202,8 @@ DEFINE_FS_SYSCALL_HANDLER_4(int, fstatat, int, dirfd, const char *, path,
 
 DEFINE_FS_SYSCALL_HANDLER_3(int, mkdirat, int, dirfd, const char *, pathname, mode_t, mode)
 
+DEFINE_FS_SYSCALL_HANDLER_3(int, fcntl, int, fd, unsigned int, cmd, int, arg)
+
 DEFINE_FS_SYSCALL_HANDLER_6(void *, mmap, void *, addr, size_t, len, int, prot,
 	int, flags, int, fildes, off_t, off)
 
@@ -222,6 +224,16 @@ void syscall_handler(
 
 	switch (syscall_num)
 	{
+	case SYS_fcntl:
+		debug("syscall open\n");
+		ret = (u64)syscall_handler_fcntl(
+			(int)			regs[CTX_INDEX_a0],
+			(unsigned int)	regs[CTX_INDEX_a1],
+			(int)			regs[CTX_INDEX_a2]
+		);
+		debug("end of syscall open\n");
+		break;
+
 	case SYS_open:
 		debug("syscall open\n");
 		show(regs[CTX_INDEX_a0]);
