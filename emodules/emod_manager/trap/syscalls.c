@@ -207,24 +207,6 @@ DEFINE_FS_SYSCALL_HANDLER_6(void *, mmap, void *, addr, size_t, len, int, prot,
 
 DEFINE_FS_SYSCALL_HANDLER_2(int, munmap, void *, addr, size_t, len)
 
-void try_clock()
-{
-	// 0x101000, 0x1000
-	vaddr_t va = 0xA0000000;
-	paddr_t pa = 0x101000;
-
-	map_page(va, pa, PTE_R, SV39_LEVEL_PAGE);
-
-	while(1) {
-		u64 *ptr = (u64 *)va;
-
-		u64 t1 = ptr[0];
-
-		debug("t1 = %ld\n", t1);
-		debug("%ld\n", t1 / 1000000000);
-	}
-}
-
 void syscall_handler(
 	u64 	*regs,
 	u64		sepc,
