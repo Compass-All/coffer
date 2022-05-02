@@ -38,7 +38,7 @@ QEMU_CMD = -M virt -m 16G -smp 1 -nographic \
         -device loader,file=$(DOCKER_WORKDIR)/$(KERNEL_IMAGE),addr=0x80200000 \
         -drive file=$(DOCKER_WORKDIR)/$(ROOTFS),format=raw,id=hd0 \
         -device virtio-blk-device,drive=hd0 \
-        -append "root=/dev/vda rw console=ttyS0 movablecore=0x140000000" \
+        -append "root=/dev/vda rw console=ttyS0 movablecore=0x240000000" \
 
 PROG_BUILD = $(BUILD_DIR)/prog
 

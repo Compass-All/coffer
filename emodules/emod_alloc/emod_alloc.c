@@ -1,6 +1,6 @@
 #include <emodules/emod_alloc/emod_alloc.h>
 #include "dependency.h"
-#include "memory_pool.h"
+#include "memalloc.h"
 
 // ---------------
 // emodule alloc descriptor
@@ -58,10 +58,6 @@ vaddr_t alloc_init(vaddr_t emod_manager_getter)
 	emod_manager.emod_manager_api.test();
 
 	init_dependency();
-	init_memory_pool();
-
-	show(emod_alloc.emod_alloc_api.malloc);
-	show(emod_alloc.emod_alloc_api.kmalloc);
 
 	return (vaddr_t)get_emod_alloc;
 }

@@ -3,11 +3,12 @@
 #include <types.h>
 #include <emodules/emodule_desc.h>
 #include <emodules/emodule_id.h>
+#include <stddef.h>
 
 typedef struct {
-	void *(*kmalloc)(usize size);
-	void *(*malloc)(usize size);
-	void *(*calloc)(usize number, usize size);
+	void *(*kmalloc)(size_t size);
+	void *(*malloc)(size_t size);
+	void *(*calloc)(size_t number, size_t size);
 	void (*free)(void *ptr);
 } emod_alloc_api_t;
 
