@@ -6,6 +6,7 @@
 
 #define DENTRY_BUCKETS 32
 
+static struct uk_hlist_head fake;
 static struct uk_hlist_head dentry_hash_table[DENTRY_BUCKETS];
 // static UK_HLIST_HEAD(fake);
 // static struct uk_mutex dentry_hash_lock = UK_MUTEX_INITIALIZER(dentry_hash_lock);
@@ -100,6 +101,13 @@ struct dentry *dentry_lookup(struct mount *mp, char *path)
 	return NULL;                /* not found */
 }
 
+void dentry_remove(struct dentry *dp)
+{
+	uk_hlist_del(&dp->d_link);
+	/* put it on a fake list for drele() to work*/
+	uk_hlist_add_head(&dp->d_link, &fake);
+}
+
 void dentry_init(void)
 {
 	int i;
@@ -107,4 +115,6 @@ void dentry_init(void)
 	for (i = 0; i < DENTRY_BUCKETS; i++) {
 		UK_INIT_HLIST_HEAD(&dentry_hash_table[i]);
 	}
+
+	UK_INIT_HLIST_HEAD(&fake);
 }

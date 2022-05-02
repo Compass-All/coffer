@@ -86,6 +86,15 @@ void exception_handler(
 		error("Reserved for future standard use\n");
 		break;
 	case 0xf:
+		vaddr_t va = stval;
+		paddr_t pa = get_pa(va);
+
+		show(pa);
+
+		u64 *ptr = (u64 *)(linear_map_offset + pa);
+		show(ptr);
+		show(*ptr);
+
 		error("Store/AMO page fault\n");
 		break;
 	

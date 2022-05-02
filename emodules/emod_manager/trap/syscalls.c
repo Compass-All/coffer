@@ -29,6 +29,9 @@
 #define SYS_getcwd 			17
 #define SYS_dup 			23
 #define SYS_fcntl 			25
+#define SYS_mkdirat 		34	// 0x22
+#define SYS_unlinkat 		35
+#define SYS_ftruncate		46
 #define SYS_faccessat 		48
 #define SYS_chdir 			49
 #define SYS_openat 			56
@@ -43,6 +46,7 @@
 #define SYS_pwrite 			68
 #define SYS_fstatat 		79
 #define SYS_fstat 			80	// 0x50
+#define SYS_fsync			82
 #define SYS_exit 			93	// 0x5d
 #define SYS_exit_group 		94
 #define SYS_clock_gettime	113
@@ -64,7 +68,6 @@
 #define SYS_link 			1025
 #define SYS_unlink 			1026
 // #define SYS_mkdir 			1030
-#define SYS_mkdirat 		34	// 0x22
 #define SYS_access 			1033
 #define SYS_stat 			1038
 #define SYS_lstat 			1039
@@ -86,7 +89,7 @@ __unused static void *memcpy(void *dest, const void *src, size_t count)
 	return dest;
 }
 
-void load_emod_vfs()
+static void load_emod_vfs()
 {
 	static u8 loaded = 0;
 	
@@ -99,7 +102,24 @@ void load_emod_vfs()
 	}
 }
 
-void syscall_handler_clock_gettime(__unused clockid_t clock_id, struct timespec *tp)
+// simple syscall handlers
+
+#define COFFER_PID	1
+
+static int syscall_handler_getpid()
+{
+	return COFFER_PID;
+}
+
+static int syscall_handler_geteuid()
+{
+	return 0;
+}
+
+static void syscall_handler_clock_gettime(
+	__unused clockid_t clock_id,
+	struct timespec *tp
+)
 {
 	static int init = 0;
 
@@ -118,6 +138,8 @@ void syscall_handler_clock_gettime(__unused clockid_t clock_id, struct timespec 
 
 	return;
 }
+
+// other syscall handlers
 
 #define DEFINE_FS_SYSCALL_HANDLER_1(type, syscall_name, type1, var1)		\
 static type syscall_handler_##syscall_name(type1 var1)						\
@@ -159,6 +181,7 @@ static type syscall_handler_##syscall_name(type1 var1, type2 var2, type3 var3, t
 
 
 
+DEFINE_FS_SYSCALL_HANDLER_2(char *, getcwd, char *, path, size_t, size)
 
 DEFINE_FS_SYSCALL_HANDLER_3(int, open, const char *, pathname,
 	int, flags, mode_t, mode)
@@ -204,6 +227,15 @@ DEFINE_FS_SYSCALL_HANDLER_3(int, mkdirat, int, dirfd, const char *, pathname, mo
 
 DEFINE_FS_SYSCALL_HANDLER_3(int, fcntl, int, fd, unsigned int, cmd, int, arg)
 
+DEFINE_FS_SYSCALL_HANDLER_3(int, getdents, int, fd, struct dirent*, dirp,
+	size_t, count)
+
+DEFINE_FS_SYSCALL_HANDLER_1(int, fsync, int, fd)
+
+DEFINE_FS_SYSCALL_HANDLER_2(int, unlinkat, int, dirfd, const char *, pathname)
+
+DEFINE_FS_SYSCALL_HANDLER_2(int, ftruncate, int, fd, off_t, length)
+
 DEFINE_FS_SYSCALL_HANDLER_6(void *, mmap, void *, addr, size_t, len, int, prot,
 	int, flags, int, fildes, off_t, off)
 
@@ -224,6 +256,15 @@ void syscall_handler(
 
 	switch (syscall_num)
 	{
+	case SYS_getcwd:
+	 	debug("syscall getcwd\n");
+		ret = (u64)syscall_handler_getcwd(
+			(char *)	regs[CTX_INDEX_a0],
+			(size_t)	regs[CTX_INDEX_a1]
+		);
+	 	debug("end of syscall getcwd\n");
+		break;
+
 	case SYS_fcntl:
 		debug("syscall open\n");
 		ret = (u64)syscall_handler_fcntl(
@@ -232,6 +273,15 @@ void syscall_handler(
 			(int)			regs[CTX_INDEX_a2]
 		);
 		debug("end of syscall open\n");
+		break;
+
+	case SYS_unlinkat:
+		debug("syscall unlinkat\n");
+		ret = (u64)syscall_handler_unlinkat(
+			(int)			regs[CTX_INDEX_a0],
+			(const char *)	regs[CTX_INDEX_a1]
+		);
+		debug("end of syscall unlinkat\n");
 		break;
 
 	case SYS_open:
@@ -263,6 +313,17 @@ void syscall_handler(
 		ret = (u64)syscall_handler_close(
 			(int)regs[CTX_INDEX_a0]
 		);
+		debug("end of syscall close\n");
+		break;
+
+	case SYS_getdents:
+		debug("syscall gendents\n");
+		ret = (u64)syscall_handler_getdents(
+			(int)				regs[CTX_INDEX_a0],
+			(struct dirent *)	regs[CTX_INDEX_a1],
+			(size_t)			regs[CTX_INDEX_a2]
+		);
+		debug("end of syscall gendents\n");
 		break;
 
 	case SYS_lseek:
@@ -367,17 +428,34 @@ void syscall_handler(
 		debug("end of syscall mkdirat\n");
 		break;
 
-	// case SYS_write:
-		// __unused u64 fd		= regs[CTX_INDEX_a0];
-	 	// char *string_ptr 	= (char *)regs[CTX_INDEX_a1];
-		// usize len			= regs[CTX_INDEX_a2];
+	case SYS_fsync:
+	 	debug("syscall fsync\n");
+		ret = (u64)syscall_handler_fsync(
+			(int) regs[CTX_INDEX_a0]
+		);
+	 	debug("end of syscall fsync\n");
+		break;
 
-		// for (int i = 0; i < len; i++) {
-		// 	_putchar(*string_ptr);
-		// 	string_ptr++;
-		// }
-		// debug("syscall write finished\n");
-		// break;
+	case SYS_ftruncate:
+		debug("syscall ftruncate\n");
+		ret = (u64)syscall_handler_ftruncate(
+			(int)	regs[CTX_INDEX_a0],
+			(off_t)	regs[CTX_INDEX_a1]
+		);
+		debug("end of syscall ftruncate\n");
+		break;
+
+	case SYS_getpid:
+		debug("syscall getpid\n");
+		ret = (u64)syscall_handler_getpid();
+		debug("end of syscall getpid\n");
+		break;
+
+	case SYS_geteuid:
+		debug("syscall geteuid\n");
+		ret = (u64)syscall_handler_geteuid();
+		debug("end of syscall geteuid\n");
+		break;
 
 	case SYS_exit:
 	case SYS_exit_group:
@@ -432,8 +510,10 @@ void syscall_handler(
 	// 	// todo!();
 	// 	break;
 
-	case 29:
-	case 96:
+// omitted syscalls
+	case 29: // ioctl
+	case 96: // set_tid_address
+	case 55: // fchown
 		break;
 	
 	default:

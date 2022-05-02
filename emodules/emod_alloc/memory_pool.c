@@ -28,6 +28,9 @@ void init_memory_pool()
 
 	show(pool_brk_va);
 	show(pool_brk_pa);
+
+	show(pool_brk_va + number_of_partitions * PARTITION_SIZE);
+	show(pool_brk_pa + number_of_partitions * PARTITION_SIZE);
 }
 
 // change this to kmalloc
@@ -36,7 +39,9 @@ void *malloc(usize size)
 {
 	usize expected_used_size = used_size + size;
 
-	debug("[emodule malloc] size = 0x%lx\n", size);
+	show(size);
+	show(expected_used_size);
+	show(total_size - expected_used_size);
 
 	if (expected_used_size > total_size) {
 		show(expected_used_size);
@@ -46,6 +51,7 @@ void *malloc(usize size)
 
 	vaddr_t ret = pool_brk_va;
 
+	used_size	+= size;
 	pool_brk_va += size;
 	pool_brk_pa += size;
 

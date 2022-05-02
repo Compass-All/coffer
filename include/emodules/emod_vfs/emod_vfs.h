@@ -6,6 +6,7 @@
 
 #include <sys/stat.h>
 #include <emodules/emod_vfs/iovec.h>
+#include <emodules/emod_vfs/dirent.h>
 #include <stddef.h>
 #include <sys/types.h>
 
@@ -38,6 +39,16 @@ typedef struct {
 	int (*syscall_handler_mkdirat)(int dirfd, const char *pathname, mode_t mode);
 
 	int (*syscall_handler_fcntl)(int fd, unsigned int cmd, int arg);
+
+	int (*syscall_handler_getdents)(int fd, struct dirent* dirp, size_t count);
+
+	char *(*syscall_handler_getcwd)(char *path, size_t size);
+
+	int (*syscall_handler_fsync)(int fd);
+
+	int (*syscall_handler_unlinkat)(int dirfd, const char *pathname);
+
+	int (*syscall_handler_ftruncate)(int fd, off_t length);
 
 	void *(*syscall_handler_mmap)(void *addr, size_t len, int prot, int flags,
 		int fildes, off_t off);

@@ -2,6 +2,7 @@
 
 #include "file.h"
 #include <emodules/emod_vfs/iovec.h>
+#include <emodules/emod_vfs/dirent.h>
 #include "stat.h"
 
 int sys_open(char *path, int flags, mode_t mode, struct vfscore_file **fpp);
@@ -16,3 +17,7 @@ int sys_fstat(struct vfscore_file *fp, struct stat *st);
 int sys_stat(char *path, struct stat *st);
 int sys_lstat(char *path, struct stat *st);
 int sys_mkdir(char *path, mode_t mode);
+int sys_readdir(struct vfscore_file *fp, struct dirent *dir);
+int sys_fsync(struct vfscore_file *fp);
+int sys_unlink(char *path);
+int sys_ftruncate(struct vfscore_file *fp, off_t length);

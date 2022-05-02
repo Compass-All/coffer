@@ -3,3 +3,5 @@
 - [x] Emodule loader implementation.
 - Emod_alloc implementation.
 - [x] Port file system.
+
+- [ ] Check why fopen works in the host.

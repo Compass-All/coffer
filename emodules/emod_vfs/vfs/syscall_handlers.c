@@ -12,9 +12,13 @@
 #include "lookup.h"
 #include "fops.h"
 #include "fs.h"
+#include "errptr.h"
 #include "../dependency.h"
 
-// readv, openat, close, lseek, read, writev, ioctl, fstat
+struct __dirstream
+{
+	int fd;
+};
 
 struct task *main_task; /* we only have a single process */
 
@@ -549,7 +553,7 @@ static inline mode_t apply_umask(mode_t mode)
 	return mode & ~global_umask;
 }
 
-int syscall_handler_mkdirat(int dirfd, const char *pathname, mode_t mode)
+int syscall_handler_mkdirat(__unused int dirfd, const char *pathname, mode_t mode)
 {
 	struct task *t = main_task;
 	char path[PATH_MAX];
@@ -661,6 +665,152 @@ int syscall_handler_fcntl(int fd, unsigned int cmd, int arg)
 	return ret;
 
 out_errno:
+	return -error;
+}
+
+int readdir_r(DIR *dir, struct dirent *entry, struct dirent **result)
+{
+	int error;
+	struct vfscore_file *fp;
+
+	error = fget(dir->fd, &fp);
+	if (!error) {
+		error = sys_readdir(fp, entry);
+		fdrop(fp);
+	}
+	// Our dirent has (like Linux) a d_reclen field, but a constant size.
+	entry->d_reclen = sizeof(*entry);
+
+	if (error) {
+		*result = NULL;
+	} else {
+		*result = entry;
+	}
+	return error == ENOENT ? 0 : error;
+}
+
+int syscall_handler_getdents(int fd, struct dirent* dirp, size_t count)
+{
+	if (dirp == NULL || count == 0)
+		return 0;
+
+	DIR dir = {
+		.fd = fd
+	};
+
+	size_t i = 0;
+	struct dirent entry, *result;
+	int error;
+
+	do {
+		error = readdir_r(&dir, &entry, &result);
+		if (error)
+			return -error;
+
+		if (result != NULL) {
+			memcpy(dirp + i, result, sizeof(struct dirent));
+			i++;
+
+		} else
+			break;
+
+	} while (i < count);
+
+	return (i * sizeof(struct dirent));
+}
+
+char *syscall_handler_getcwd(char* path, size_t size)
+{
+	struct task *t = main_task;
+	size_t len = strlen(t->t_cwd) + 1;
+	int error;
+
+	if (size < len) {
+		error = ERANGE;
+		goto out_error;
+	}
+
+	if (!path) {
+		if (!size)
+			size = len;
+		path = (char*)malloc(size);
+		if (!path) {
+			error = ENOMEM;
+			goto out_error;
+		}
+	} else {
+		if (!size) {
+			error = EINVAL;
+			goto out_error;
+		}
+	}
+
+	memcpy(path, t->t_cwd, len);
+	return path;
+
+out_error:
+	return ERR2PTR(-error);
+}
+
+int syscall_handler_fsync(int fd)
+{
+	struct vfscore_file *fp;
+	int error;
+
+	error = fget(fd, &fp);
+	if (error)
+		goto out_error;
+
+	error = sys_fsync(fp);
+	fdrop(fp);
+
+	if (error)
+		goto out_error;
+	return 0;
+
+out_error:
+	return -error;
+}
+
+int syscall_handler_unlinkat(__unused int dirfd, const char *pathname)
+{
+	struct task *t = main_task;
+	char path[PATH_MAX];
+	int error;
+
+	debug("pathname: %s\n", pathname);
+
+	error = ENOENT;
+	if (pathname == NULL)
+		goto out_errno;
+	if ((error = task_conv(t, pathname, VWRITE, path)) != 0)
+		goto out_errno;
+
+	error = sys_unlink(path);
+	if (error)
+		goto out_errno;
+	return 0;
+out_errno:
+	return -error;
+}
+
+int syscall_handler_ftruncate(int fd, off_t length)
+{
+	struct vfscore_file *fp;
+	int error;
+
+	error = fget(fd, &fp);
+	if (error)
+		goto out_error;
+
+	error = sys_ftruncate(fp, length);
+	fdrop(fp);
+
+	if (error)
+		goto out_error;
+	return 0;
+
+out_error:
 	return -error;
 }
 

@@ -147,8 +147,8 @@ static pte_t* test_get_pte(vaddr_t va)
     int i;
     for (i = 0; i < 3; ++i) {
         tmp_entry = &root[layer_offset[i]];
-		// show(tmp_entry);
-		// show(*(u64 *)tmp_entry);
+		show(tmp_entry);
+		show(*(u64 *)tmp_entry);
 
         if (!tmp_entry->v) {
             return NULL;
