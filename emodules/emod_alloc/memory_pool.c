@@ -9,7 +9,7 @@
 static paddr_t 	pool_brk_pa;
 static vaddr_t 	pool_brk_va = POOL_VA_START;
 static usize	used_size = 0;
-static const usize number_of_partitions = 10UL;
+static const usize number_of_partitions = 5000UL;
 static const usize total_size = PARTITION_SIZE * number_of_partitions;
 
 void init_memory_pool()

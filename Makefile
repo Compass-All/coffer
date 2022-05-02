@@ -32,7 +32,7 @@ KERNEL_IMAGE = $(KERNEL_IMAGE_PATH)/Image
 
 QEMU = qemu-system-riscv64
 QEMU_INIT_SCRIPT = tools/rootfs/script
-QEMU_CMD = -M virt -m 8G -smp 1 -nographic \
+QEMU_CMD = -M virt -m 16G -smp 1 -nographic \
         -bios $(DOCKER_WORKDIR)/coffer-opensbi/build/platform/generic/firmware/fw_jump.elf \
         -kernel $(DOCKER_WORKDIR)/$(KERNEL_IMAGE) \
         -device loader,file=$(DOCKER_WORKDIR)/$(KERNEL_IMAGE),addr=0x80200000 \
@@ -131,6 +131,7 @@ opensbi: docker emodules
 clean: docker
 	sudo rm -rf $(BUILD_DIR)
 	sudo make clean -C coffer-opensbi
+	sudo make clean -C coffer_user_mode
 
 clean-kernel:
 	rm $(KERNEL_IMAGE)
