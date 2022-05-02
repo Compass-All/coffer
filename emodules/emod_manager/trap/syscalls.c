@@ -14,6 +14,7 @@
 #include "../memory/page_table.h"
 
 #include <sys/stat.h>
+#include <time.h>
 
 // to be implemented:
 /**
@@ -36,6 +37,7 @@
 #define SYS_lseek 			62
 #define SYS_read 			63
 #define SYS_write 			64	// 0x40
+#define SYS_readv 			65
 #define SYS_writev 			66
 #define SYS_pread 			67
 #define SYS_pwrite 			68
@@ -43,6 +45,7 @@
 #define SYS_fstat 			80	// 0x50
 #define SYS_exit 			93	// 0x5d
 #define SYS_exit_group 		94
+#define SYS_clock_gettime	113
 #define SYS_kill 			129
 #define SYS_rt_sigaction 	134
 #define SYS_times 			153
@@ -94,6 +97,26 @@ void load_emod_vfs()
 
 		loaded = 1;
 	}
+}
+
+void syscall_handler_clock_gettime(__unused clockid_t clock_id, struct timespec *tp)
+{
+	static int init = 0;
+
+	vaddr_t va = 0xA0000000;
+	if (!init) {
+		// 0x101000, 0x1000
+		paddr_t pa = 0x101000;
+		map_page(va, pa, PTE_R, SV39_LEVEL_PAGE);
+	}
+
+	u64 time = *(u64 *)va;
+
+#define NSEC_PER_SEC 1000000000ULL
+	tp->tv_sec	= time / NSEC_PER_SEC;
+	tp->tv_nsec	= time % NSEC_PER_SEC;
+
+	return;
 }
 
 #define DEFINE_FS_SYSCALL_HANDLER_1(type, syscall_name, type1, var1)		\
@@ -184,6 +207,24 @@ DEFINE_FS_SYSCALL_HANDLER_6(void *, mmap, void *, addr, size_t, len, int, prot,
 
 DEFINE_FS_SYSCALL_HANDLER_2(int, munmap, void *, addr, size_t, len)
 
+void try_clock()
+{
+	// 0x101000, 0x1000
+	vaddr_t va = 0xA0000000;
+	paddr_t pa = 0x101000;
+
+	map_page(va, pa, PTE_R, SV39_LEVEL_PAGE);
+
+	while(1) {
+		u64 *ptr = (u64 *)va;
+
+		u64 t1 = ptr[0];
+
+		debug("t1 = %ld\n", t1);
+		debug("%ld\n", t1 / 1000000000);
+	}
+}
+
 void syscall_handler(
 	u64 	*regs,
 	u64		sepc,
@@ -272,6 +313,16 @@ void syscall_handler(
 		debug("end of syscall pwrite\n");
 		break;
 
+	case SYS_readv:
+		debug("syscall readv\n");
+		ret = (u64)syscall_handler_readv(
+			(int)					regs[CTX_INDEX_a0],
+			(const struct iovec *)	regs[CTX_INDEX_a1],
+			(int)					regs[CTX_INDEX_a2]
+		);
+		debug("end of syscall readv\n");
+		break;
+
 	case SYS_writev:
 		debug("syscall writev\n");
 		ret = (u64)syscall_handler_writev(
@@ -349,6 +400,11 @@ void syscall_handler(
 	
 	case SYS_mmap:
 		debug("syscall mmap\n");
+		u64 a1 = regs[CTX_INDEX_a1];
+		if (a1 == 0UL) {
+			debug("mmap len = 0\n");
+			show(sepc);
+		}
 		ret = (u64)syscall_handler_mmap(
 			(void *)		regs[CTX_INDEX_a0],
 			(size_t)		regs[CTX_INDEX_a1],
@@ -369,9 +425,18 @@ void syscall_handler(
 		debug("end of syscall munmap\n");
 		break;
 
-	case SYS_gettimeofday:
-		// todo!();
+	case SYS_clock_gettime:
+		debug("syscall clock_gettime\n");
+		syscall_handler_clock_gettime(
+			(clockid_t)			regs[CTX_INDEX_a0],
+			(struct timespec *)	regs[CTX_INDEX_a1]
+		);
+		debug("end of syscall clock_gettime\n");
 		break;
+
+	// case SYS_gettimeofday:
+	// 	// todo!();
+	// 	break;
 
 	case 29:
 	case 96:
@@ -379,6 +444,13 @@ void syscall_handler(
 	
 	default:
 		error("syscall %d\n", syscall_num);
+		show(regs[CTX_INDEX_a0]);
+		show(regs[CTX_INDEX_a1]);
+		show(regs[CTX_INDEX_a2]);
+		show(regs[CTX_INDEX_a3]);
+		show(regs[CTX_INDEX_a4]);
+		show(regs[CTX_INDEX_a5]);
+
 		panic("Unimplemented syscall\n");
 		break;
 	}
