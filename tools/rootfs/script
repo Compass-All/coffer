@@ -7,7 +7,7 @@ mount sys /sys -t sysfs
 # ----- sqlite
 # printf "\n\n\n\n\n\n\n\n\n"
 # printf "################## sqlite ##################\n"
-/prog/host/test_eapp /prog/enclave/sqlite-bench/sqlite-bench
+/prog/host/test_eapp /prog/enclave/sqlite-bench/sqlite-bench --benchmarks=fillseq
 
 # ----- darknet
 

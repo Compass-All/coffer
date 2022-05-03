@@ -1,6 +1,6 @@
 #pragma once
 
-#include "list.h"
+#include <util/list.h>
 #include "mount.h"
 
 struct vnode;

@@ -1,9 +1,10 @@
-#include "memalloc.h"
+#include "alloc.h"
 #include <types.h>
 #include "dependency.h"
 #include <enclave/enclave_ops.h>
 #include <memory/page_table.h>
 #include <memory/memory.h>
+#include <util/gnu_attribute.h>
 
 typedef char ALIGN[16];
 
@@ -106,6 +107,12 @@ header_t *get_free_block(size_t size)
 {
 	header_t *curr = head;
 	while(curr) {
+		if (curr->s.is_free) {
+			show(size);
+			show(curr->s.size);
+			show(curr->s.is_free);
+			;
+		}
 		/* see if there's a free block that can accomodate requested size */
 		if (curr->s.is_free && curr->s.size >= size)
 			return curr;
@@ -128,6 +135,8 @@ void free(void *block)
 	/* sbrk(0) gives the current program break address */
 	programbreak = sbrk(0);
 
+	show((char*)block + header->s.size);
+	show(programbreak);
 	/*
 	   Check if the block to be freed is the last one in the
 	   linked list. If it is, then we could shrink the size of the
@@ -151,6 +160,9 @@ void free(void *block)
 		   sbrk() with a negative argument decrements the program break.
 		   So memory is released by the program to OS.
 		*/
+		static usize decrease_size = 0;
+		decrease_size += header->s.size - sizeof(header_t);
+		show(decrease_size);
 		sbrk(0 - header->s.size - sizeof(header_t));
 		/* Note: This lock does not really assure thread
 		   safety, because sbrk() itself is not really

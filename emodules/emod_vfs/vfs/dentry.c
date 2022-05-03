@@ -1,5 +1,5 @@
 #include "dentry.h"
-#include "list.h"
+#include <util/list.h>
 #include "vnode.h"
 #include "../dependency.h"
 #include "string.h"

@@ -103,8 +103,8 @@ extern "C" {
 #define MFD_HUGETLB 0x0004U
 #endif
 
+#include <util/list.h>
 #include "../vfs/mount.h"
-#include "../vfs/list.h"
 #include "../vfs/uio.h"
 #include "../vfs/dirent.h"
 #include "../vfs/file.h"

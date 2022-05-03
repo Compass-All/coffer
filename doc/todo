@@ -1,7 +1,8 @@
 - Refactor memory allocation and migration in SM.
 - [x] Refactor message channel.
 - [x] Emodule loader implementation.
-- Emod_alloc implementation.
+- [x] Emod_alloc implementation.
 - [x] Port file system.
+- [x] Check why fopen works in the host.
 
-- [ ] Check why fopen works in the host.
+- [ ] Check the memory leakage problem

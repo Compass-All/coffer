@@ -1,6 +1,6 @@
 #include <emodules/emod_alloc/emod_alloc.h>
 #include "dependency.h"
-#include "memalloc.h"
+#include "alloc.h"
 
 // ---------------
 // emodule alloc descriptor
