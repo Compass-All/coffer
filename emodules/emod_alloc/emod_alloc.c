@@ -1,6 +1,7 @@
 #include <emodules/emod_alloc/emod_alloc.h>
 #include "dependency.h"
 #include "alloc.h"
+#include "heap.h"
 
 // ---------------
 // emodule alloc descriptor
@@ -35,10 +36,10 @@ __attribute__((section(".text.init")))
 vaddr_t alloc_init(vaddr_t emod_manager_getter)
 {
 	// init api
-	emod_alloc_api.kmalloc 	= kmalloc;
-	emod_alloc_api.malloc 	= malloc;
-	emod_alloc_api.calloc 	= calloc;
-	emod_alloc_api.free		= free;
+	emod_alloc_api.kmalloc 	= heap_alloc;
+	emod_alloc_api.malloc 	= heap_alloc;
+	emod_alloc_api.calloc 	= heap_calloc;
+	emod_alloc_api.free		= heap_free;
 
 	// init emodule
 	emod_alloc = (emod_alloc_t) {
@@ -58,6 +59,7 @@ vaddr_t alloc_init(vaddr_t emod_manager_getter)
 	emod_manager.emod_manager_api.test();
 
 	init_dependency();
+	init_heap();
 
 	return (vaddr_t)get_emod_alloc;
 }
