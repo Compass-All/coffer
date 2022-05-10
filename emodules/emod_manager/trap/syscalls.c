@@ -448,8 +448,8 @@ void syscall_handler(
 	
 	case 0xDEAD:
 	    paddr_t get_pa(vaddr_t va);
-		u8* ptr = (u8*) 0xACE00000;
-		paddr_t pa = get_pa((vaddr_t)ptr);
+		volatile u8* ptr = (u8*) 0xACE00000;
+		__unused paddr_t pa = get_pa((vaddr_t)ptr);
 		debug("pa: %lx\n", pa);
 	    for (int i = 0; i < 0x200000; i++) {
 			ptr[i] += i;
