@@ -27,6 +27,9 @@ typedef struct {
 	// panic
 	void 		(*panic)(const char *panic_message);
 
+	// debug
+	paddr_t		(*get_pa)(vaddr_t va);
+
 	// ... to be determined
 } emod_manager_api_t;
 
