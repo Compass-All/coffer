@@ -17,6 +17,6 @@ void map_page(vaddr_t vaddr, paddr_t paddr, u8 flags, u8 level);
 void setup_linear_map();
 
 // test
-__unused paddr_t get_pa(vaddr_t va);
+paddr_t get_pa(vaddr_t va);
 void page_table_test();
 void test_linear_map();
