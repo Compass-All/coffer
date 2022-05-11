@@ -96,14 +96,14 @@ void *heap_alloc(size_t size) {
     if (!wild)
         panic("wild == NULL\n");
     if (wild->size < MIN_WILDERNESS) {
-        uint success = expand(0x200000);
+        uint success = expand(MIN_WILDERNESS - wild->size);
         if (success == 0) {
             panic("expand failed\n");
             return NULL;
         }
     }
     else if (wild->size > MAX_WILDERNESS) {
-        contract(0x200000);
+        contract(MAX_WILDERNESS - wild->size);
     }
 
     found->prev = NULL;
@@ -192,6 +192,10 @@ uint expand(size_t sz) {
 	if (nr_part > 0) {
 		paddr_t pa = __ecall_ebi_mem_alloc(nr_part);
 		vaddr_t va = PARTITION_UP(heap.end);
+
+        show(pa);
+        show(va);
+        show(nr_part);
 
 		for (int i = 0; i < nr_part; i++) {
             show(va + i * PARTITION_SIZE);

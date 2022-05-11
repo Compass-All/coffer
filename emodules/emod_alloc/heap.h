@@ -14,13 +14,11 @@
 
 #define MIN_ALLOC_SZ 4
 
-#define MIN_WILDERNESS (PARTITION_SIZE * 4)
-#define MAX_WILDERNESS 0x1000000
+#define MIN_WILDERNESS 0x20000000
+#define MAX_WILDERNESS 0x200000000
 
 #define BIN_COUNT 0x20
 #define BIN_MAX_IDX (BIN_COUNT - 1)
-
-typedef unsigned int uint;
 
 typedef struct node_t {
     uint hole;
