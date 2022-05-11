@@ -532,6 +532,9 @@ void syscall_handler(
 	debug("(int)ret = %d\n", ret);
 	debug("end of %ld syscall handler\n", syscall_num);
 
+	show(sepc);
+	show(sepc + 4);
+
 	write_csr(sepc, sepc + 4);
 	regs[CTX_INDEX_a0] = ret;
 }
