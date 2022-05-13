@@ -451,8 +451,11 @@ void syscall_handler(
 		volatile u8* ptr = (u8*) 0xACE00000;
 		__unused paddr_t pa = get_pa((vaddr_t)ptr);
 		debug("pa: %lx\n", pa);
-	    for (int i = 0; i < 0x200000; i++) {
-			ptr[i] += i;
+		for (int j = 0; j < 10; j++) {
+			printf("\033[37m[%s] #%d\033[0m\n", __func__, j);
+	    	for (int i = 0; i < 0x200000; i++) {
+				ptr[i] += i;
+			}
 		}
 		break;
 	

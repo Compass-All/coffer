@@ -7,10 +7,12 @@ mount sys /sys -t sysfs
 cat > /test.sh <<EOF
 #!/bin/sh
 
-/prog/host/test_eapp /prog/enclave/tmp &
-/prog/host/test_eapp /prog/enclave/tmp &
+/prog/host/test_eapp /prog/enclave/eapp_device_test &
+/prog/host/test_eapp /prog/enclave/eapp_device_test &
+insmod /device_test.ko &
 
 wait
+rmmod device_test
 EOF
 chmod +x /test.sh
 /test.sh
@@ -18,7 +20,7 @@ chmod +x /test.sh
 
 # /prog/host/test_eapp /prog/enclave/eapp_write
 
-/prog/host/test_eapp /prog/enclave/eapp_fs_test
+# /prog/host/test_eapp /prog/enclave/eapp_fs_test
 
 # /prog/host/test_eapp /prog/enclave/eapp_test_message
 
