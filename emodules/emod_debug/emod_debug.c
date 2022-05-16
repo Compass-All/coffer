@@ -31,7 +31,7 @@ static void hexdump(vaddr_t addr, usize len)
 	const u8 group_size = 4;
 	u32 *ptr = (u32 *)addr;
 
-	paddr_t pa = get_pa(addr);
+	__unused paddr_t pa = get_pa(addr);
 	printf("##### start of hexdump, pa = 0x%lx\n", pa);
 	for (int i = 0; i < len; i += group_size * sizeof(u32),
 		ptr += group_size) {
