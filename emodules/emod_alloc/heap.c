@@ -198,8 +198,6 @@ uint expand(size_t sz) {
         show(nr_part);
 
 		for (int i = 0; i < nr_part; i++) {
-            show(va + i * PARTITION_SIZE);
-            show(pa + i * PARTITION_SIZE);
 			map_page(
 				va + i * PARTITION_SIZE,
 				pa + i * PARTITION_SIZE,
