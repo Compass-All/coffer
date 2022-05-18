@@ -116,6 +116,8 @@ static int syscall_handler_geteuid()
 	return 0;
 }
 
+// tmp, only for qemu
+// TODO: add board support
 static void syscall_handler_clock_gettime(
 	__unused clockid_t clock_id,
 	struct timespec *tp
