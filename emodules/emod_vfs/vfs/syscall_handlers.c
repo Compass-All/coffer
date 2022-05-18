@@ -120,9 +120,15 @@ int syscall_handler_close(int fd)
 {
 	int error;
 
+	if (fd == 0 || fd == 1 || fd == 2) // stdio
+		return 0;
+
+	show(fd);
 	error = fdclose(fd);
 	if (error)
 		goto out_error;
+
+	debug("CP\n");
 
 	return 0;
 
