@@ -4,6 +4,8 @@ MKIMAGE ?= mkimage
 ITS_PATH ?= tools/unmatched
 ITB_PATH ?= $(BUILD_DIR)/itb
 
+BOARD_ROOTFS_PATH ?= /media/prongs/rootfs
+
 DOCKER = sudo docker # Linux only
 DOCKER_WORKDIR = /root/coffer
 DOCKER_RUN = $(DOCKER) run -it --rm \
@@ -117,6 +119,21 @@ burn-image:	board-image
 	else \
 		printf "\nSD card not inserted\n\n" ; \
 	fi;
+
+	@if test -d $(BOARD_ROOTFS_PATH) ; \
+	then \
+		printf "\nupdating prog and emodules\n\n" ; \
+		sudo rm -rf $(BOARD_ROOTFS_PATH)/prog $(BOARD_ROOTFS_PATH)/emodules ; \
+		sudo mkdir $(BOARD_ROOTFS_PATH)/emodules ; \
+		sudo cp -r build/prog /media/prongs/rootfs/prog ; \
+		sudo cp -r build/emodules/*/*.bin /media/prongs/rootfs/emodules ; \
+		sudo umount $(BOARD_ROOTFS_PATH) ; \
+	else \
+		printf "\nrootfs not mounted\n\n" ; \
+	fi;
+
+# TODO: copy emodules and prog to rootfs on SD card
+# copy-file: emodules prog
 
 # do not add "-j" to this target, which leads to UB
 emodules: docker # tools/md2/build/md2
