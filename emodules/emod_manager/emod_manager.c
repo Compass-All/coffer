@@ -35,7 +35,8 @@ static emod_manager_t get_emod_manager();
 
 static void api_test()
 {
-	printf("Emodule manager api testing\n");
+	debug("Emodule manager api testing\n");
+	return;
 }
 
 static void load_emodule(u32 emodule_id)
