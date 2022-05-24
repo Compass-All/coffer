@@ -33,10 +33,12 @@ void init_heap() {
         heap.bins[i] = &bins[i];
     }
 
+    // create header
     node_t *init_region = (node_t *) va;
     init_region->hole = 1;
     init_region->size = (HEAP_INIT_SIZE) - sizeof(node_t) - sizeof(footer_t);
 
+    // create footer    
     create_foot(init_region);
 
     add_node(heap.bins[get_bin_index(init_region->size)], init_region);
@@ -47,23 +49,16 @@ void init_heap() {
     show(0);
 }
 
-void *heap_alloc(size_t size) {
-    show(size);
-
+static node_t *search_fit_node(size_t size, uint *index_ptr)
+{
     uint index = get_bin_index(size);
-    show(index);
 
-    bin_t *temp = (bin_t *) heap.bins[index];
+    bin_t *temp = (bin_t *)heap.bins[index];
     node_t *found = get_best_fit(temp, size);
 
     while (found == NULL) {
         if (index + 1 >= BIN_COUNT) {
-            show(index);
-            node_t *wild = get_wilderness();
-            show(wild);
-            show(wild->size);
-            show(wild->hole);
-            panic("index + 1 >= BIN_COUNT\n");
+            *index_ptr = -1;
             return NULL;
         }
 
@@ -71,8 +66,31 @@ void *heap_alloc(size_t size) {
         found = get_best_fit(temp, size);
     }
 
+    *index_ptr = index;
+    return found;
+}
+
+static size_t get_wild_size()
+{
+    node_t *wild = get_wilderness();
+    return wild->size;
+}
+
+void *heap_alloc(size_t size) {
+    uint index = 0;
+    node_t *found = search_fit_node(size, &index);
+    if (!found) {
+        size_t increment = size + overhead + MIN_ALLOC_SZ + MIN_WILDERNESS
+            - get_wild_size();
+        expand(increment);
+        found = search_fit_node(size, &index);
+        if (!found)
+            panic("cannot alloc\n");
+    }
+
     if ((found->size - size) > (overhead + MIN_ALLOC_SZ)) {
-        node_t *split = (node_t *) (((char *) found + sizeof(node_t) + sizeof(footer_t)) + size);
+        node_t *split = (node_t *) (((char *) found
+            + sizeof(node_t) + sizeof(footer_t)) + size);
         split->size = found->size - size - sizeof(node_t) - sizeof(footer_t);
         split->hole = 1;
 
