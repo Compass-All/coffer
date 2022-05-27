@@ -19,3 +19,8 @@ emodule-genflags += -DEMOD_INIT_BRK=$(EMOD_INIT_BRK)
 emodule-genflags += -DEMOD_MANAGER_LINEAR_START=$(EMOD_MANAGER_LINEAR_START)
 emodule-genflags += -DEMOD_MANAGER_LINEAR_SIZE=$(EMOD_MANAGER_LINEAR_SIZE)
 emodule-genflags += -DEMOD_MANAGER_LINEAR_OFFSET=$(EMOD_MANAGER_LINEAR_OFFSET)
+ifeq ($(TARGET_PLATFORM), qemu)
+emodule-genflags += -D__QEMU__
+else ifeq  ($(TARGET_PLATFORM), unmatched)
+emodule-genflags += -D__UNMATCHED__
+endif

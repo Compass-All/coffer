@@ -1,3 +1,7 @@
+# todo:
+# differnt targets: make qemu and make unmatched
+TARGET_PLATFORM ?= qemu # 1. qemu 2. unmatched
+
 BUILD_DIR = build
 
 MKIMAGE ?= mkimage
@@ -136,15 +140,12 @@ burn-image:	board-image
 # copy-file: emodules prog
 
 # do not add "-j" to this target, which leads to UB
-emodules: docker # tools/md2/build/md2
-	$(DOCKER_MAKE) -C $(DOCKER_WORKDIR)/emodules CROSS_COMPILE=riscv64-unknown-elf-
+emodules: docker
+	$(DOCKER_MAKE) -C $(DOCKER_WORKDIR)/emodules CROSS_COMPILE=riscv64-unknown-elf- TARGET_PLATFORM=$(TARGET_PLATFORM)
 
 opensbi: docker emodules
 	$(DOCKER_MAKE) clean -C $(DOCKER_WORKDIR)/coffer-opensbi 
 	$(DOCKER_MAKE) -C $(DOCKER_WORKDIR)/coffer-opensbi CROSS_COMPILE=riscv64-unknown-elf- PLATFORM=generic -j
-
-# tools/md2/build/md2:
-# 	make -C tools/md2
 
 clean: docker
 	sudo rm -rf $(BUILD_DIR)
