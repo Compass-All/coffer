@@ -18,3 +18,6 @@ emodule-objs-y += vfs/rootfs.o
 emodule-objs-y += ramfs/ramfs_vfsops.o
 emodule-objs-y += ramfs/ramfs_vnops.o
 emodule-objs-y += mmap/mmap.o
+
+emodule-genflags = 
+emodule-genflags += -DMMAP_START_VA=$(MMAP_START_VA)

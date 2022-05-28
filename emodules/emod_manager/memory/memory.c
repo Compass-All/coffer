@@ -19,7 +19,6 @@ volatile static paddr_t payload_pa_start;
 // for emodules va allocation
 static 			vaddr_t emodule_brk = EMOD_INIT_BRK;
 
-#define EUSR_HEAP_START_ALIGNED		0x400000000UL
 // program break, to be initialized
 static vaddr_t prog_brk = 0;
 
@@ -180,11 +179,6 @@ void map_sections()
 	MAP_SECTION(data, 		PTE_R | PTE_W);
 	MAP_SECTION(bss, 		PTE_R | PTE_W);
 }
-
-#define SMODE_STACK_SIZE	0x10000
-#define UMODE_STACK_SIZE	0x10000
-
-#define UMODE_STACK_TOP_VA	0x800000000UL // to be considered
 
 paddr_t alloc_smode_stack()
 {
