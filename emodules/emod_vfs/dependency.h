@@ -9,7 +9,7 @@ extern emod_manager_t 	emod_manager;
 extern emod_alloc_t		emod_alloc;
 extern emod_debug_t 	emod_debug;
 
-#define malloc 	emod_alloc.emod_alloc_api.kmalloc
+#define kmalloc emod_alloc.emod_alloc_api.kmalloc
 #define calloc 	emod_alloc.emod_alloc_api.calloc
 #define free	emod_alloc.emod_alloc_api.free
 
@@ -19,6 +19,7 @@ extern emod_debug_t 	emod_debug;
 	printd("\033[37m[%s] " fmt "\033[0m", __func__, ##__VA_ARGS__)
 #define show(v) 	debug(#v "\t=\t0x%lx\n", (v))
 
-#define panic	emod_manager.emod_manager_api.panic
+#define panic		emod_manager.emod_manager_api.panic
+#define map_page	emod_manager.emod_manager_api.map_page
 
 #define get_pa	emod_manager.emod_manager_api.get_pa

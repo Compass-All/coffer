@@ -38,13 +38,13 @@ struct ramfs_node *ramfs_allocate_node(
 {
 	struct ramfs_node *np;
 
-	np = malloc(sizeof(struct ramfs_node));
+	np = kmalloc(sizeof(struct ramfs_node));
 	if (np == NULL)
 		return NULL;
 	memset(np, 0, sizeof(struct ramfs_node));
 
 	np->rn_namelen = strlen(name);
-	np->rn_name = (char *) malloc(np->rn_namelen + 1);
+	np->rn_name = (char *) kmalloc(np->rn_namelen + 1);
 	if (np->rn_name == NULL) {
 		free(np);
 		return NULL;
@@ -159,7 +159,7 @@ static int ramfs_rename_node(
 		strlcpy(np->rn_name, name, np->rn_namelen + 1);
 	} else {
 		/* Expand name buffer */
-		tmp = (char *) malloc(len + 1);
+		tmp = (char *) kmalloc(len + 1);
 		if (tmp == NULL)
 			return ENOMEM;
 		strlcpy(tmp, name, len + 1);
@@ -337,7 +337,7 @@ static int ramfs_truncate(struct vnode *vp, off_t length)
 	} else if ((size_t) length > np->rn_bufsize) {
 		/* TODO: this could use a page level allocator */
 		new_size = PAGE_UP(length);
-		new_buf = malloc(new_size);
+		new_buf = kmalloc(new_size);
 		if (!new_buf)
 			return EIO;
 		if (np->rn_size != 0) {

@@ -221,10 +221,10 @@ int mount(
 	/*
 	 * Create VFS mount entry.
 	 */
-	mp = malloc(sizeof(struct mount));
+	mp = kmalloc(sizeof(struct mount));
 	if (!mp) {
 		error = ENOMEM;
-		panic("malloc failed\n");
+		panic("kmalloc failed\n");
 		goto err1;
 	}
 	mp->m_count = 0;

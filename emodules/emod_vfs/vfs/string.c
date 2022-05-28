@@ -307,7 +307,7 @@ char *strndup(const char *str, size_t len)
 
 	__len = strnlen(str, len);
 
-	__res = malloc(__len + 1);
+	__res = kmalloc(__len + 1);
 	if (__res) {
 		memcpy(__res, str, __len);
 		__res[__len] = '\0';

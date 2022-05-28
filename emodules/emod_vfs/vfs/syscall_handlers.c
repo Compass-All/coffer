@@ -739,7 +739,7 @@ char *syscall_handler_getcwd(char* path, size_t size)
 	if (!path) {
 		if (!size)
 			size = len;
-		path = (char*)malloc(size);
+		path = (char*)kmalloc(size);
 		if (!path) {
 			error = ENOMEM;
 			goto out_error;
