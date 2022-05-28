@@ -35,13 +35,13 @@ BOARD_DEST ?= /dev/sdb2
 QEMU = qemu-system-riscv64
 QEMU_CORES ?= 4
 QEMU_INIT_SCRIPT = tools/rootfs/script
-QEMU_CMD = -M virt -m 8G -smp $(QEMU_CORES) -nographic \
+QEMU_CMD = -M virt -m 16G -smp $(QEMU_CORES) -nographic \
         -bios $(DOCKER_WORKDIR)/coffer-opensbi/build/platform/generic/firmware/fw_jump.elf \
         -kernel $(DOCKER_WORKDIR)/$(KERNEL_IMAGE) \
         -device loader,file=$(DOCKER_WORKDIR)/$(KERNEL_IMAGE),addr=0x80200000 \
         -drive file=$(DOCKER_WORKDIR)/$(ROOTFS),format=raw,id=hd0 \
         -device virtio-blk-device,drive=hd0 \
-        -append "root=/dev/vda rw console=ttyS0 movablecore=0x140000000" \
+        -append "root=/dev/vda rw console=ttyS0 movablecore=0x240000000" \
 
 PROG_BUILD = $(BUILD_DIR)/prog
 
@@ -79,7 +79,7 @@ endif
 rootfs: emodules docker prog
 ifeq (, $(wildcard $(ROOTFS))) # ROOTFS not found
 # Make ext2 FS
-	sudo dd if=/dev/zero of=$(ROOTFS) bs=1M count=256
+	sudo dd if=/dev/zero of=$(ROOTFS) bs=1M count=512
 	sudo mkfs.ext2 -F $(ROOTFS)
 # Mount
 	mkdir -p $(MOUNT_POINT)
@@ -113,11 +113,13 @@ board-image: emodules opensbi docker
 	$(DOCKER_RUN) $(MKIMAGE) -E -f $(DOCKER_WORKDIR)/$(ITS_PATH)/u-boot.its $(DOCKER_WORKDIR)/$(ITB_PATH)/u-boot.itb
 
 burn-image:	board-image
-ifneq (, $(shell ls $(BOARD_DEST)))
-	sudo dd if=$(ITB_PATH)/u-boot.itb of=$(BOARD_DEST) bs=2M iflag=fullblock oflag=direct conv=fsync status=progress
-else
-	@printf "\nSD card not inserted\n\n"
-endif
+	@if test -b $(BOARD_DEST) ; \
+	then \
+		printf "\nBurning image\n" ;	\
+		sudo dd if=$(ITB_PATH)/u-boot.itb of=$(BOARD_DEST) bs=2M iflag=fullblock oflag=direct conv=fsync status=progress ; \
+	else \
+		printf "\nSD card not inserted\n\n" ; \
+	fi;
 
 # do not add "-j" to this target, which leads to UB
 emodules: docker # tools/md2/build/md2
@@ -133,6 +135,7 @@ opensbi: docker emodules
 clean: docker
 	sudo rm -rf $(BUILD_DIR)
 	sudo make clean -C coffer-opensbi
+	sudo make clean -C coffer_user_mode
 
 clean-kernel:
 	rm $(KERNEL_IMAGE)

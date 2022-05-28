@@ -120,7 +120,6 @@ int vn_stat(struct vnode *vp, struct stat *st)
 
 void vref(struct vnode *vp)
 {
-	debug("vref: ref=%d\n", vp->v_refcnt);
 	vp->v_refcnt++;
 }
 
@@ -157,7 +156,6 @@ void vput(struct vnode *vp)
 
 void vrele(struct vnode *vp)
 {
-	debug("vrele: ref=%d\n", vp->v_refcnt);
 	vp->v_refcnt--;
 	if (vp->v_refcnt > 0) {
 		return;
@@ -207,9 +205,6 @@ struct vnode *vn_lookup(struct mount *mp, uint64_t ino)
 {
 	struct vnode *vp;
 
-	show(mp);
-	show(ino);
-
 	uk_list_for_each_entry(vp, &vnode_table[vn_hash(mp, ino)], v_link) {
 		if (vp->v_mount == mp && vp->v_ino == ino) {
 			vp->v_refcnt++;
@@ -233,8 +228,6 @@ int vfscore_vget(struct mount *mp, uint64_t ino, struct vnode **vpp)
 
 	*vpp = NULL;
 
-	show(ino);
-
 	vp = vn_lookup(mp, ino);
 	if (vp) {
 		*vpp = vp;
@@ -253,13 +246,6 @@ int vfscore_vget(struct mount *mp, uint64_t ino, struct vnode **vpp)
 	vp->v_mount = mp;
 	vp->v_refcnt = 1;
 	vp->v_op = mp->m_op->vfs_vnops;
-
-	show(vp);
-	show(vp->v_names);
-	show(vp->v_ino);
-	show(vp->v_mount);
-	show(vp->v_refcnt);
-	show(vp->v_op);
 
 	/*
 	 * Request to allocate fs specific data for vnode.

@@ -375,3 +375,148 @@ int sys_lstat(char *path, struct stat *st)
 	drele(ddp);
 	return error;
 }
+
+int sys_mkdir(char *path, mode_t mode)
+{
+	char *name;
+	struct dentry *dp, *ddp;
+	int error;
+
+	debug("sys_mkdir: path=%s mode=%d\n", path, mode);
+
+	error = namei(path, &dp);
+	if (!error) {
+		/* File already exists */
+		drele(dp);
+		return EEXIST;
+	}
+
+	if ((error = lookup(path, &ddp, &name)) != 0) {
+		/* Directory already exists */
+		return error;
+	}
+
+	if ((error = vn_access(ddp->d_vnode, VWRITE)) != 0)
+		goto out;
+	mode &= ~S_IFMT;
+	mode |= S_IFDIR;
+
+	error = VOP_MKDIR(ddp->d_vnode, name, mode);
+ out:
+	drele(ddp);
+	return error;
+}
+
+int sys_readdir(struct vfscore_file *fp, struct dirent *dir)
+{
+	struct vnode *dvp;
+	int error;
+
+	debug("sys_readdir: fp=%p\n", fp);
+
+	if (!fp->f_dentry)
+		return ENOTDIR;
+
+	dvp = fp->f_dentry->d_vnode;
+	if (dvp->v_type != VDIR) {
+		return ENOTDIR;
+	}
+	error = VOP_READDIR(dvp, fp, dir);
+	debug("sys_readdir: error=%d path=%s\n",
+				error, dir->d_name);
+	return error;
+}
+
+int sys_fsync(struct vfscore_file *fp)
+{
+	struct vnode *vp;
+	int error;
+
+	debug("sys_fsync: fp=%p\n", fp);
+
+	if (!fp->f_dentry)
+		return EINVAL;
+
+	vp = fp->f_dentry->d_vnode;
+	error = VOP_FSYNC(vp, fp);
+	return error;
+}
+
+int sys_unlink(char *path)
+{
+	char *name;
+	struct dentry *dp, *ddp;
+	struct vnode *vp;
+	int error;
+
+	debug("sys_unlink: path=%s\n", path);
+
+	ddp   = NULL;
+	dp    = NULL;
+	vp    = NULL;
+
+	error = lookup(path, &ddp, &name);
+	if (error != 0) {
+		return (error);
+	}
+
+	debug("CP1\n");
+
+	error = namei_last_nofollow(path, ddp, &dp);
+	if (error != 0) {
+		goto out;
+	}
+
+	debug("CP2\n");
+
+	vp = dp->d_vnode;
+	if (vp->v_type == VDIR) {
+	    // Posix specifies that we should return EPERM here, but Linux
+	    // actually returns EISDIR.
+		error = EISDIR;
+		goto out;
+	}
+	if (vp->v_flags & VROOT) {
+		error = EBUSY;
+		goto out;
+	}
+
+	if ((error = vn_access(ddp->d_vnode, VWRITE)) != 0) {
+	    goto out;
+	}
+	error = VOP_REMOVE(ddp->d_vnode, vp, name);
+
+	debug("CP3\n");
+
+	dentry_remove(dp);
+	drele(ddp);
+	drele(dp);
+
+	debug("CP4\n");
+
+	return error;
+ out:
+
+	if (dp != NULL) {
+		drele(dp);
+	}
+
+	if (ddp != NULL) {
+		drele(ddp);
+	}
+	return error;
+}
+
+int sys_ftruncate(struct vfscore_file *fp, off_t length)
+{
+	struct vnode *vp;
+	int error;
+
+	if (!fp->f_dentry)
+		return EBADF;
+
+	vp = fp->f_dentry->d_vnode;
+	error = VOP_TRUNCATE(vp, length);
+
+	return error;
+}

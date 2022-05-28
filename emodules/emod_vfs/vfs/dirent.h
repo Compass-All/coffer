@@ -17,13 +17,7 @@ typedef struct __dirstream DIR;
 #define _DIRENT_HAVE_D_OFF
 #define _DIRENT_HAVE_D_TYPE
 
-struct dirent {
-	ino_t d_ino;
-	off_t d_off;
-	unsigned short d_reclen;
-	unsigned char d_type;
-	char d_name[256];
-};
+#include <emodules/emod_vfs/dirent.h>
 
 #define d_fileno d_ino
 

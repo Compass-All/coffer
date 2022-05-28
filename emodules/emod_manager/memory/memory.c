@@ -230,6 +230,9 @@ vaddr_t alloc_map_umode_stack()
 	vaddr_t umode_stack_bottom_vaddr =
 		UMODE_STACK_TOP_VA - UMODE_STACK_SIZE;
 
+	show(umode_stack_bottom_paddr);
+	show(umode_stack_bottom_vaddr);
+
 	for (int i = 0; i < number_of_pages; i++) {
 		map_page(
 			umode_stack_bottom_vaddr + i * PAGE_SIZE,
@@ -266,6 +269,7 @@ static paddr_t alloc_partition_from_mmode(usize number_of_partitions)
 }
 
 // invoked after simple pool out of memory, allocating memory from the SM
+// size must be parition aligned
 static void alloc_map_brk_outside_pool(
 	vaddr_t partition_aligned_old_brk,
 	usize size
@@ -273,6 +277,9 @@ static void alloc_map_brk_outside_pool(
 {
 	usize number_of_partitions = size / PARTITION_SIZE;
 	show(number_of_partitions);
+
+	if (size % PARTITION_SIZE)
+		panic("size is not aligned\n");
 
 	paddr_t paddr = alloc_partition_from_mmode(number_of_partitions);
 	for (int i = 0; i < number_of_partitions; i++) {

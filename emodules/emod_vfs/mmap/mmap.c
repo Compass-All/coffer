@@ -84,18 +84,53 @@ void *mmap(
 	/* The caller expects the memory to be zeroed */
 	memset(mem, 0, len);
 
-	debug("CP0\n");
-
 	new->begin = mem;
 	new->end = mem + len;
 	new->next = NULL;
 
-	debug("CP1\n");
 	if (!mmap_addr)
 		mmap_addr = new;
 	else
 		last->next = new;
 	
-	debug("CP2\n");
 	return mem;
+}
+
+int munmap(void* addr, size_t len)
+{
+	struct mmap_addr *tmp = mmap_addr, *prev = NULL;
+
+	if (!len) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	if (!addr)
+		return 0;
+
+	while (tmp) {
+		if (addr >= tmp->begin && addr < tmp->end) {
+			/* We cannot release only some part of the allocation.
+			 * In that case, pretend we have done it and hope
+			 * everything will be fine
+			 */
+			if (len != (__uptr)tmp->end - (__uptr)tmp->begin)
+				return 0;
+
+			/* Caller wants to unmap the whole region. Easy! */
+			if (!prev)
+				mmap_addr = tmp->next;
+			else
+				prev->next = tmp->next;
+
+			free(tmp);
+			free(addr);
+			return 0;
+		}
+
+		tmp = tmp->next;
+	}
+
+	/* No matching region found. But it is ok anyway */
+	return 0;
 }

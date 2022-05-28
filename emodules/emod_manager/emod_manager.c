@@ -35,7 +35,8 @@ static emod_manager_t get_emod_manager();
 
 static void api_test()
 {
-	printf("Emodule manager api testing\n");
+	debug("Emodule manager api testing\n");
+	return;
 }
 
 static void load_emodule(u32 emodule_id)
@@ -98,6 +99,7 @@ void emod_manager_init()
 	emod_manager_api.acquire_emodule 	= acquire_emodule;
 	emod_manager_api.map_page			= map_page;
 	emod_manager_api.panic				= panic;
+	emod_manager_api.get_pa				= get_pa;
 	// ...
 	// todo!
 	show(emod_manager_api.test);

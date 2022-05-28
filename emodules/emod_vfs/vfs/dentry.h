@@ -1,6 +1,6 @@
 #pragma once
 
-#include "list.h"
+#include <util/list.h>
 #include "mount.h"
 
 struct vnode;
@@ -24,3 +24,4 @@ struct dentry *dentry_lookup(struct mount *mp, char *path);
 struct dentry *dentry_alloc(struct dentry *parent_dp,
 	struct vnode *vp, const char *path);
 void dentry_init(void);
+void dentry_remove(struct dentry *dp);

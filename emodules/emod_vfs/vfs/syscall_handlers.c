@@ -10,9 +10,15 @@
 #include <string.h>
 #include "stat.h"
 #include "lookup.h"
+#include "fops.h"
+#include "fs.h"
+#include "errptr.h"
 #include "../dependency.h"
 
-// readv, openat, close, lseek, read, writev, ioctl, fstat
+struct __dirstream
+{
+	int fd;
+};
 
 struct task *main_task; /* we only have a single process */
 
@@ -114,9 +120,15 @@ int syscall_handler_close(int fd)
 {
 	int error;
 
+	if (fd == 0 || fd == 1 || fd == 2) // stdio
+		return 0;
+
+	show(fd);
 	error = fdclose(fd);
 	if (error)
 		goto out_error;
+
+	debug("CP\n");
 
 	return 0;
 
@@ -538,6 +550,274 @@ int syscall_handler_fstatat(int dirfd, const char *pathname, struct stat *st, in
 	fdrop(fp);
 
 	return error;
+}
+
+static mode_t global_umask = S_IWGRP | S_IWOTH;
+
+static inline mode_t apply_umask(mode_t mode)
+{
+	return mode & ~global_umask;
+}
+
+int syscall_handler_mkdirat(__unused int dirfd, const char *pathname, mode_t mode)
+{
+	struct task *t = main_task;
+	char path[PATH_MAX];
+	int error;
+
+	show(mode);
+	show(t);
+	show(global_umask);
+	show(pathname);
+
+	mode = apply_umask(mode);
+
+	show(mode);
+
+	if ((error = task_conv(t, pathname, VWRITE, path)) != 0)
+		goto out_errno;
+
+	error = sys_mkdir(path, mode);
+
+	if (error)
+		goto out_errno;
+	return 0;
+
+out_errno:
+	return -error;
+}
+
+/*
+ * The file control system call.
+ */
+#define SETFL (O_APPEND | O_ASYNC | O_DIRECT | O_NOATIME | O_NONBLOCK)
+
+int syscall_handler_fcntl(int fd, unsigned int cmd, int arg)
+{
+	struct vfscore_file *fp;
+	int ret = 0, error;
+#if defined(FIONBIO) && defined(FIOASYNC)
+	int tmp;
+#endif
+
+	error = fget(fd, &fp);
+	if (error)
+		goto out_errno;
+
+	// An important note about our handling of FD_CLOEXEC / O_CLOEXEC:
+	// close-on-exec shouldn't have been a file flag (fp->f_flags) - it is a
+	// file descriptor flag, meaning that that two dup()ed file descriptors
+	// could have different values for FD_CLOEXEC. Our current implementation
+	// *wrongly* makes close-on-exec an f_flag (using the bit O_CLOEXEC).
+	// There is little practical difference, though, because this flag is
+	// ignored in OSv anyway, as it doesn't support exec().
+	switch (cmd) {
+	case F_DUPFD:
+		error = fdalloc(fp, &ret);
+		if (error)
+			goto out_errno;
+		break;
+	case F_GETFD:
+		ret = (fp->f_flags & O_CLOEXEC) ? FD_CLOEXEC : 0;
+		break;
+	case F_SETFD:
+		fp->f_flags = (fp->f_flags & ~O_CLOEXEC) |
+				((arg & FD_CLOEXEC) ? O_CLOEXEC : 0);
+		break;
+	case F_GETFL:
+		// As explained above, the O_CLOEXEC should have been in f_flags,
+		// and shouldn't be returned. Linux always returns 0100000 ("the
+		// flag formerly known as O_LARGEFILE) so let's do it too.
+		ret = (vfscore_oflags(fp->f_flags) & ~O_CLOEXEC) | 0100000;
+		break;
+	case F_SETFL:
+		fp->f_flags = vfscore_fflags((vfscore_oflags(fp->f_flags) & ~SETFL) |
+				(arg & SETFL));
+
+#if defined(FIONBIO) && defined(FIOASYNC)
+		/* Sync nonblocking/async state with file flags */
+		tmp = fp->f_flags & FNONBLOCK;
+		vfs_ioctl(fp, FIONBIO, &tmp);
+		tmp = fp->f_flags & FASYNC;
+		vfs_ioctl(fp, FIOASYNC, &tmp);
+#endif
+		break;
+	case F_DUPFD_CLOEXEC:
+		error = fdalloc(fp, &ret);
+		if (error)
+			goto out_errno;
+		fp->f_flags |= O_CLOEXEC;
+		break;
+	case F_SETLK:
+		debug("fcntl(F_SETLK) stubbed\n");
+		break;
+	case F_GETLK:
+		debug("fcntl(F_GETLK) stubbed\n");
+		break;
+	case F_SETLKW:
+		debug("fcntl(F_SETLKW) stubbed\n");
+		break;
+	case F_SETOWN:
+		debug("fcntl(F_SETOWN) stubbed\n");
+		break;
+	default:
+		debug("unsupported fcntl cmd 0x%x\n", cmd);
+		error = EINVAL;
+	}
+
+	fdrop(fp);
+	if (error)
+		goto out_errno;
+	return ret;
+
+out_errno:
+	return -error;
+}
+
+int readdir_r(DIR *dir, struct dirent *entry, struct dirent **result)
+{
+	int error;
+	struct vfscore_file *fp;
+
+	error = fget(dir->fd, &fp);
+	if (!error) {
+		error = sys_readdir(fp, entry);
+		fdrop(fp);
+	}
+	// Our dirent has (like Linux) a d_reclen field, but a constant size.
+	entry->d_reclen = sizeof(*entry);
+
+	if (error) {
+		*result = NULL;
+	} else {
+		*result = entry;
+	}
+	return error == ENOENT ? 0 : error;
+}
+
+int syscall_handler_getdents(int fd, struct dirent* dirp, size_t count)
+{
+	if (dirp == NULL || count == 0)
+		return 0;
+
+	DIR dir = {
+		.fd = fd
+	};
+
+	size_t i = 0;
+	struct dirent entry, *result;
+	int error;
+
+	do {
+		error = readdir_r(&dir, &entry, &result);
+		if (error)
+			return -error;
+
+		if (result != NULL) {
+			memcpy(dirp + i, result, sizeof(struct dirent));
+			i++;
+
+		} else
+			break;
+
+	} while (i < count);
+
+	return (i * sizeof(struct dirent));
+}
+
+char *syscall_handler_getcwd(char* path, size_t size)
+{
+	struct task *t = main_task;
+	size_t len = strlen(t->t_cwd) + 1;
+	int error;
+
+	if (size < len) {
+		error = ERANGE;
+		goto out_error;
+	}
+
+	if (!path) {
+		if (!size)
+			size = len;
+		path = (char*)malloc(size);
+		if (!path) {
+			error = ENOMEM;
+			goto out_error;
+		}
+	} else {
+		if (!size) {
+			error = EINVAL;
+			goto out_error;
+		}
+	}
+
+	memcpy(path, t->t_cwd, len);
+	return path;
+
+out_error:
+	return ERR2PTR(-error);
+}
+
+int syscall_handler_fsync(int fd)
+{
+	struct vfscore_file *fp;
+	int error;
+
+	error = fget(fd, &fp);
+	if (error)
+		goto out_error;
+
+	error = sys_fsync(fp);
+	fdrop(fp);
+
+	if (error)
+		goto out_error;
+	return 0;
+
+out_error:
+	return -error;
+}
+
+int syscall_handler_unlinkat(__unused int dirfd, const char *pathname)
+{
+	struct task *t = main_task;
+	char path[PATH_MAX];
+	int error;
+
+	debug("pathname: %s\n", pathname);
+
+	error = ENOENT;
+	if (pathname == NULL)
+		goto out_errno;
+	if ((error = task_conv(t, pathname, VWRITE, path)) != 0)
+		goto out_errno;
+
+	error = sys_unlink(path);
+	if (error)
+		goto out_errno;
+	return 0;
+out_errno:
+	return -error;
+}
+
+int syscall_handler_ftruncate(int fd, off_t length)
+{
+	struct vfscore_file *fp;
+	int error;
+
+	error = fget(fd, &fp);
+	if (error)
+		goto out_error;
+
+	error = sys_ftruncate(fp, length);
+	fdrop(fp);
+
+	if (error)
+		goto out_error;
+	return 0;
+
+out_error:
+	return -error;
 }
 
 static struct task _main_task_impl;

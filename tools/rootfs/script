@@ -16,6 +16,25 @@ rmmod device_test
 EOF
 chmod +x /test.sh
 /test.sh
+# ----- sqlite
+# printf "\n\n\n\n\n\n\n\n\n"
+# printf "################## sqlite ##################\n"
+# /prog/host/test_eapp /prog/enclave/sqlite-bench/sqlite-bench
+
+# ----- darknet
+
+# ./darknet detect cfg/yolov3.cfg yolov3.weights data/dog.jpg
+# printf "\n\n\n\n\n\n\n\n\n"
+# printf "################## darknet detect ##################\n"
+# /prog/host/test_eapp /prog/enclave/darknet/darknet detect /prog/enclave/darknet/cfg/yolov3.cfg /prog/enclave/darknet/yolov3.weights /prog/enclave/darknet/data/dog.jpg
+
+# ./darknet classify cfg/tiny.cfg tiny.weights data/dog.jpg
+# printf "\n\n\n\n\n\n\n\n\n"
+# printf "################## darknet classify ##################\n"
+# /prog/host/test_eapp /prog/enclave/darknet/darknet classify /cfg/tiny.cfg /tiny.weights /data/dog.jpg
+
+# ----- end darknet
+
 # /prog/host/test_eapp /prog/enclave/eapp_rand_malloc
 
 # /prog/host/test_eapp /prog/enclave/eapp_write

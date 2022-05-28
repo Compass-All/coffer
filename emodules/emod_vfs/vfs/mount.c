@@ -1,5 +1,5 @@
 #include "mount.h"
-#include "list.h"
+#include <util/list.h>
 #include "../dependency.h"
 #include "string.h"
 #include "errno.h"

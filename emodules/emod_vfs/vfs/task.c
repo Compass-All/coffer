@@ -45,6 +45,7 @@
 #include "prex.h"
 #include "task.h"
 
+#include "../dependency.h"
 
 /*
  * Convert to full path from the cwd of task and path.
@@ -52,8 +53,7 @@
  * @path: target path
  * @full: full path to be returned
  */
-int
-path_conv(char *wd, const char *cpath, char *full)
+int path_conv(char *wd, const char *cpath, char *full)
 {
 	char path[PATH_MAX];
 	char *src, *tgt, *p, *end;
@@ -67,6 +67,7 @@ path_conv(char *wd, const char *cpath, char *full)
 		return ENAMETOOLONG;
 	if (strlen(wd) + len >= PATH_MAX)
 		return ENAMETOOLONG;
+	
 	src = path;
 	tgt = full;
 	end = src + len;
@@ -129,12 +130,12 @@ path_conv(char *wd, const char *cpath, char *full)
  * @full: full path to be returned
  * @acc: access mode
  */
-int
-task_conv(struct task *t, const char *cpath, int acc __unused, char *full)
+int task_conv(struct task *t, const char *cpath, int acc __unused, char *full)
 {
 	int rc;
 
 	rc = path_conv(t->t_cwd, cpath, full);
+
 	if (rc != 0) {
 		return (rc);
 	}

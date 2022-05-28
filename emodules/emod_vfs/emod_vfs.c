@@ -70,7 +70,15 @@ vaddr_t vfs_init(vaddr_t emod_manager_getter)
 	emod_vfs_api.syscall_handler_write 		= &syscall_handler_write;
 	emod_vfs_api.syscall_handler_fstat 		= &syscall_handler_fstat;
 	emod_vfs_api.syscall_handler_fstatat 	= &syscall_handler_fstatat;
+	emod_vfs_api.syscall_handler_mkdirat 	= &syscall_handler_mkdirat;
+	emod_vfs_api.syscall_handler_fcntl	 	= &syscall_handler_fcntl;
+	emod_vfs_api.syscall_handler_getdents	= &syscall_handler_getdents;
+	emod_vfs_api.syscall_handler_getcwd		= &syscall_handler_getcwd;
+	emod_vfs_api.syscall_handler_fsync		= &syscall_handler_fsync;
+	emod_vfs_api.syscall_handler_unlinkat	= &syscall_handler_unlinkat;
+	emod_vfs_api.syscall_handler_ftruncate	= &syscall_handler_ftruncate;
 	emod_vfs_api.syscall_handler_mmap	 	= &mmap;
+	emod_vfs_api.syscall_handler_munmap	 	= &munmap;
 
 	// init emodule
 	emod_vfs = (emod_vfs_t) {

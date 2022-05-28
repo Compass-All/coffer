@@ -132,9 +132,12 @@ void setup_linear_map()
 	flush_tlb();
 }
 
-// ---------------
-// test
-static pte_t* test_get_pte(vaddr_t va)
+struct walk_page_table_result {
+	u8 		level;	// -1 for not valid
+	pte_t	pte;
+};
+
+static struct walk_page_table_result walk_page_table(vaddr_t va)
 {
 #define MASK_OFFSET 0xfff
 #define MASK_L0 0x1ff000
@@ -144,15 +147,24 @@ static pte_t* test_get_pte(vaddr_t va)
         (va & MASK_L0) >> 12 };
     pte_t* tmp_entry;
 	pte_t* root = &page_table_root[0];
+	struct walk_page_table_result ret = {
+		.level = -1,
+	};
     int i;
+
     for (i = 0; i < 3; ++i) {
         tmp_entry = &root[layer_offset[i]];
-
+		show(tmp_entry);
         if (!tmp_entry->v) {
-            return NULL;
+			printf("not valid\n");
+            return ret;
         }
         if ((tmp_entry->r | tmp_entry->w | tmp_entry->x)) {
-            return tmp_entry;
+			ret.level = i;
+			ret.pte = *tmp_entry;
+			show(ret.level);
+			show(ret.pte);
+            return ret;
         }
 
         root = (pte_t*)((u64)tmp_entry->ppn << PAGE_SHIFT);
@@ -160,14 +172,36 @@ static pte_t* test_get_pte(vaddr_t va)
 			root += linear_map_offset / sizeof(pte_t);
 		}
     }
-    return NULL;
+    return ret;
 }
 
-__unused paddr_t get_pa(vaddr_t va)
+// TODO: consider level here
+paddr_t get_pa(vaddr_t va)
 {
-	sv39_vaddr_t vaddr = va_to_sv39(va);
-	pte_t pte = *test_get_pte(va);
-	return (pte.ppn << PAGE_SHIFT) + vaddr.offset;
+	struct walk_page_table_result result = walk_page_table(va);
+	if (result.level == -1)
+		panic("VA not valid\n");
+	u8 level = result.level;
+	pte_t pte = result.pte;
+
+	show(level);
+	show(*(u64 *)&pte);
+
+	paddr_t base = pte.ppn << PAGE_SHIFT;
+	show(pte.ppn);
+	show(base);
+
+	u8 number_of_ones = PAGE_SHIFT + (2 - level) * SV39_VPN_LEN;
+	u64 mask = (1 << number_of_ones) - 1;
+	u64 offset = mask & va;
+	show(number_of_ones);
+	show(offset);
+
+	paddr_t pa = base + offset;
+
+	show(pa);
+
+	return pa;
 }
 
 __unused void page_table_test()

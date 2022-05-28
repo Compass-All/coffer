@@ -58,7 +58,7 @@ CFLAGS		+=	-fno-pie -no-pie
 ifeq (, $(EMODULES_DEBUG))
 CFLAGS		+= -O2
 else
-CFLAGS		+= -O2
+CFLAGS		+= -O0
 endif
 
 CPPFLAGS	+=	$(GENFLAGS)
