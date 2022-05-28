@@ -8,6 +8,7 @@
 #include <emodules/ecall.h>
 #include <enclave/enclave_ops.h>
 #include "../memory/page_table.h"
+#include "../emod_table/emod_table.h"
 
 #define SCAUSE_ECALL	0x8UL
 #define dump(v) printf(#v "\t=\t0x%lx\n", (u64)(v));
@@ -37,6 +38,8 @@ void exception_handler(
 			printf("\n");
 	}
 	printf("\n");
+
+	dump_emodule_table();
 
 	switch (scause)
 	{

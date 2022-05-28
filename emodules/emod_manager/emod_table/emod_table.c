@@ -63,3 +63,15 @@ vaddr_t get_emodule(u32 emod_id)
 
 	return emodule_getter_addr;
 }
+
+void dump_emodule_table()
+{
+	printf("Dump emodule table:\n");
+	for (int i = 0; i < EMODULE_TABLE_SIZE; i++) {
+		vaddr_t emod_addr = emodule_table[i];
+		if (emod_addr) {
+			printf("Emodule %lu at 0x%lx\n", i, emod_addr);
+		}
+	}
+	printf("End Dump\n");
+}
