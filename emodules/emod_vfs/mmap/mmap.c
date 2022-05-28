@@ -5,6 +5,8 @@
 #include <memory/memory.h>
 #include <string.h>
 #include "../vfs/stat.h"
+#include "enclave/enclave_ops.h"
+#include "../dependency.h"
 
 struct mmap_addr {
 	void *begin;
@@ -14,11 +16,47 @@ struct mmap_addr {
 
 static struct mmap_addr *mmap_addr;
 
+static void *alloc_from_mmode(usize size)
+{
+	static vaddr_t current_va = MMAP_START_VA;
+	void *ret = (void *)current_va;
+
+	vaddr_t cur_aligned = PARTITION_UP(current_va);
+	vaddr_t tar_aligned = PARTITION_UP(current_va + size);
+	usize diff = tar_aligned - cur_aligned;
+	usize nr_part = diff >> PARTITION_SHIFT;
+
+	show(current_va);
+	show(size);
+	show(nr_part);
+
+	if (nr_part > 0) {
+		paddr_t pa = __ecall_ebi_mem_alloc(nr_part);
+		vaddr_t va = cur_aligned;
+		for (int i = 0; i < nr_part; i++) {
+			show(va + i * PARTITION_SIZE);
+			show(pa + i * PARTITION_SIZE);
+			map_page(
+				va + i * PARTITION_SIZE, 
+				pa + i * PARTITION_SIZE,
+				PTE_R | PTE_W | PTE_X | PTE_U,
+				SV39_LEVEL_MEGA
+			);
+		}
+	}
+
+	current_va += size;
+
+	return ret;
+}
+
 static void *memalign(usize align, usize size)
 {
 	usize alloc_size = ROUNDUP(size, align);
-	return malloc(alloc_size);
+	return alloc_from_mmode(alloc_size);
 }
+
+#define mmap_free(_)
 
 void *mmap(
 	void	*addr,
@@ -70,9 +108,9 @@ void *mmap(
 		return (void *) -1;
 	}
 
-	new = malloc(sizeof(struct mmap_addr));
+	new = kmalloc(sizeof(struct mmap_addr));
 	if (!new) {
-		free(mem);
+		mmap_free(mem);
 		errno = ENOMEM;
 		return (void *) -1;
 	}
@@ -100,6 +138,9 @@ int munmap(void* addr, size_t len)
 {
 	struct mmap_addr *tmp = mmap_addr, *prev = NULL;
 
+	show(addr);
+	show(len);
+
 	if (!len) {
 		errno = EINVAL;
 		return -1;
@@ -124,7 +165,8 @@ int munmap(void* addr, size_t len)
 				prev->next = tmp->next;
 
 			free(tmp);
-			free(addr);
+
+			mmap_free(addr);
 			return 0;
 		}
 
