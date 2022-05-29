@@ -6,8 +6,6 @@
 #include <memory/page_table.h>
 #include <memory/memory.h>
 
-#define POOL_VA_START 0xC00000000; // 0xC_0000_0000
-
 uint offset = 8;
 static uint overhead = sizeof(footer_t) + sizeof(node_t);
 
@@ -21,7 +19,7 @@ void init_heap() {
 	    map_page(
 	    	va + i * PARTITION_SIZE,
 	        pa + i * PARTITION_SIZE,
-	    	PTE_R | PTE_W | PTE_X | PTE_U,
+	    	PTE_R | PTE_W | PTE_X,
 	    	SV39_LEVEL_MEGA
 	    );
     }
@@ -46,6 +44,10 @@ void init_heap() {
     heap.start = va;
     heap.end   = (va + HEAP_INIT_SIZE);
 
+    node_t *wild = get_wilderness();
+    show(wild);
+    show(wild->size);
+
     show(0);
 }
 
@@ -58,6 +60,7 @@ static node_t *search_fit_node(size_t size, uint *index_ptr)
 
     while (found == NULL) {
         if (index + 1 >= BIN_COUNT) {
+            debug("not found\n");
             *index_ptr = -1;
             return NULL;
         }
@@ -66,6 +69,8 @@ static node_t *search_fit_node(size_t size, uint *index_ptr)
         found = get_best_fit(temp, size);
     }
 
+    show(found);
+    show(index);
     *index_ptr = index;
     return found;
 }
@@ -73,6 +78,12 @@ static node_t *search_fit_node(size_t size, uint *index_ptr)
 static size_t get_wild_size()
 {
     node_t *wild = get_wilderness();
+    show(wild);
+    if (!wild) {
+        show(heap.start);
+        show(heap.end);
+        panic("NULL wild!\n");
+    }
     return wild->size;
 }
 
@@ -80,14 +91,17 @@ void *heap_alloc(size_t size) {
     uint index = 0;
     node_t *found = search_fit_node(size, &index);
     if (!found) {
-        size_t increment = size + overhead + MIN_ALLOC_SZ + MIN_WILDERNESS
+        debug("not found, increase the wild\n");
+        size_t increment = size + 0x10000
             - get_wild_size();
+        show(increment);
         expand(increment);
         found = search_fit_node(size, &index);
         if (!found)
             panic("cannot alloc\n");
     }
 
+    show(found);
     if ((found->size - size) > (overhead + MIN_ALLOC_SZ)) {
         node_t *split = (node_t *) (((char *) found
             + sizeof(node_t) + sizeof(footer_t)) + size);
@@ -104,7 +118,7 @@ void *heap_alloc(size_t size) {
         add_node(heap.bins[new_idx], split); 
 
         found->size = size; 
-        create_foot(found); 
+        create_foot(found);
     }
 
     found->hole = 0; 
@@ -127,6 +141,8 @@ void *heap_alloc(size_t size) {
     found->prev = NULL;
     found->next = NULL;
 
+    show(wild);
+    show(wild->size);
     show(&found->next);
     return &found->next; 
 }
@@ -154,8 +170,11 @@ void heap_free(void *p) {
     bin_t *list;
     footer_t *new_foot, *old_foot;
 
+    debug("Check Point 1\n");
+
     node_t *head = (node_t *) ((char *) p - offset);
     if (head == (node_t *) (uintptr_t) heap.start) {
+        debug("free heap start node\n");
         head->hole = 1; 
         add_node(heap.bins[get_bin_index(head->size)], head);
         return;
@@ -165,7 +184,13 @@ void heap_free(void *p) {
     footer_t *f = (footer_t *) ((char *) head - sizeof(footer_t));
     node_t *prev = f->header;
     
+    show(next);
+    show(f);
+    show(prev);
+
     if (prev->hole) {
+        debug("prev is free\n");
+
         list = heap.bins[get_bin_index(prev->size)];
         remove_node(list, prev);
 
@@ -177,6 +202,8 @@ void heap_free(void *p) {
     }
 
     if (next->hole) {
+        debug("next is free\n");
+
         list = heap.bins[get_bin_index(next->size)];
         remove_node(list, next);
 
@@ -193,6 +220,7 @@ void heap_free(void *p) {
 
     head->hole = 1;
     add_node(heap.bins[get_bin_index(head->size)], head);
+    debug("Check Point 3\n");
 }
 
 uint expand(size_t sz) {
@@ -219,7 +247,7 @@ uint expand(size_t sz) {
 			map_page(
 				va + i * PARTITION_SIZE,
 				pa + i * PARTITION_SIZE,
-				PTE_R | PTE_W | PTE_X | PTE_U,
+				PTE_R | PTE_W | PTE_X,
 				SV39_LEVEL_MEGA
 			);
 		}
@@ -232,6 +260,8 @@ uint expand(size_t sz) {
 
     wild->size += sz;
 
+    debug("new wild size:\n");
+    show(wild->size);
     create_foot(wild);
     add_node(heap.bins[get_bin_index(wild->size)], wild);
 

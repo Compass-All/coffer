@@ -116,8 +116,19 @@ static int syscall_handler_geteuid()
 	return 0;
 }
 
-// tmp, only for qemu
-// TODO: add board support
+#if defined __QEMU__
+#define MTIME_PA_ALIGNED	0x101000UL
+#define MTIME_PA_OFFSET		0x0
+#define FREQ				1000000000UL
+#elif defined __UNMATCHED__
+#define MTIME_PA_ALIGNED	0x200B000UL
+#define MTIME_PA_OFFSET		0xFF8
+#define FREQ 				1000000UL
+#elif
+#error "unsupported platform"
+#endif
+
+// todo: support ioremap
 static void syscall_handler_clock_gettime(
 	__unused clockid_t clock_id,
 	struct timespec *tp
@@ -125,18 +136,21 @@ static void syscall_handler_clock_gettime(
 {
 	static int init = 0;
 
+	// todo: use config file
 	vaddr_t va = 0xA0000000;
 	if (!init) {
-		// 0x101000, 0x1000
-		paddr_t pa = 0x101000;
+		paddr_t pa = MTIME_PA_ALIGNED;
 		map_page(va, pa, PTE_R, SV39_LEVEL_PAGE);
 	}
 
-	u64 time = *(u64 *)va;
+	u64 offset = MTIME_PA_OFFSET;
+	volatile u64 *mtime_csr = (volatile u64 *)(va + offset);
+	u64 time = *mtime_csr;
 
-#define NSEC_PER_SEC 1000000000ULL
-	tp->tv_sec	= time / NSEC_PER_SEC;
-	tp->tv_nsec	= time % NSEC_PER_SEC;
+	debug("time: %ld\n", time);
+
+	tp->tv_sec	= time / FREQ;
+	tp->tv_nsec	= time % FREQ;
 
 	return;
 }

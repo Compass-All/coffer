@@ -154,7 +154,6 @@ static struct walk_page_table_result walk_page_table(vaddr_t va)
 
     for (i = 0; i < 3; ++i) {
         tmp_entry = &root[layer_offset[i]];
-		show(tmp_entry);
         if (!tmp_entry->v) {
 			printf("not valid\n");
             return ret;
@@ -162,8 +161,6 @@ static struct walk_page_table_result walk_page_table(vaddr_t va)
         if ((tmp_entry->r | tmp_entry->w | tmp_entry->x)) {
 			ret.level = i;
 			ret.pte = *tmp_entry;
-			show(ret.level);
-			show(ret.pte);
             return ret;
         }
 
@@ -179,27 +176,20 @@ static struct walk_page_table_result walk_page_table(vaddr_t va)
 paddr_t get_pa(vaddr_t va)
 {
 	struct walk_page_table_result result = walk_page_table(va);
-	if (result.level == -1)
-		panic("VA not valid\n");
+	if (result.level == (u8)-1) {
+		printf("VA not valid\n");
+		return 0UL;
+	}
 	u8 level = result.level;
 	pte_t pte = result.pte;
 
-	show(level);
-	show(*(u64 *)&pte);
-
 	paddr_t base = pte.ppn << PAGE_SHIFT;
-	show(pte.ppn);
-	show(base);
 
 	u8 number_of_ones = PAGE_SHIFT + (2 - level) * SV39_VPN_LEN;
 	u64 mask = (1 << number_of_ones) - 1;
 	u64 offset = mask & va;
-	show(number_of_ones);
-	show(offset);
 
 	paddr_t pa = base + offset;
-
-	show(pa);
 
 	return pa;
 }

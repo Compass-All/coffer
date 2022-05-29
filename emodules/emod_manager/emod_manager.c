@@ -100,8 +100,7 @@ void emod_manager_init()
 	emod_manager_api.map_page			= map_page;
 	emod_manager_api.panic				= panic;
 	emod_manager_api.get_pa				= get_pa;
-	// ...
-	// todo!
+
 	show(emod_manager_api.test);
 	show(emod_manager_api.acquire_emodule);
 

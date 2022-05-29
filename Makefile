@@ -1,8 +1,14 @@
+# todo:
+# differnt targets: make qemu and make unmatched
+TARGET_PLATFORM ?= qemu # 1. qemu 2. unmatched
+
 BUILD_DIR = build
 
 MKIMAGE ?= mkimage
 ITS_PATH ?= tools/unmatched
 ITB_PATH ?= $(BUILD_DIR)/itb
+
+BOARD_ROOTFS_PATH ?= /media/prongs/rootfs
 
 DOCKER = sudo docker # Linux only
 DOCKER_WORKDIR = /root/coffer
@@ -121,16 +127,28 @@ burn-image:	board-image
 		printf "\nSD card not inserted\n\n" ; \
 	fi;
 
+	@if test -d $(BOARD_ROOTFS_PATH) ; \
+	then \
+		printf "\nupdating prog and emodules\n\n" ; \
+		sudo rm -rf $(BOARD_ROOTFS_PATH)/prog $(BOARD_ROOTFS_PATH)/emodules ; \
+		sudo mkdir $(BOARD_ROOTFS_PATH)/emodules ; \
+		sudo cp -r build/prog /media/prongs/rootfs/prog ; \
+		sudo cp -r build/emodules/*/*.bin /media/prongs/rootfs/emodules ; \
+		sudo umount $(BOARD_ROOTFS_PATH) ; \
+	else \
+		printf "\nrootfs not mounted\n\n" ; \
+	fi;
+
+# TODO: copy emodules and prog to rootfs on SD card
+# copy-file: emodules prog
+
 # do not add "-j" to this target, which leads to UB
-emodules: docker # tools/md2/build/md2
-	$(DOCKER_MAKE) -C $(DOCKER_WORKDIR)/emodules CROSS_COMPILE=riscv64-unknown-elf-
+emodules: docker
+	$(DOCKER_MAKE) -C $(DOCKER_WORKDIR)/emodules CROSS_COMPILE=riscv64-unknown-elf- TARGET_PLATFORM=$(TARGET_PLATFORM)
 
 opensbi: docker emodules
 	$(DOCKER_MAKE) clean -C $(DOCKER_WORKDIR)/coffer-opensbi 
 	$(DOCKER_MAKE) -C $(DOCKER_WORKDIR)/coffer-opensbi CROSS_COMPILE=riscv64-unknown-elf- PLATFORM=generic -j
-
-# tools/md2/build/md2:
-# 	make -C tools/md2
 
 clean: docker
 	sudo rm -rf $(BUILD_DIR)
