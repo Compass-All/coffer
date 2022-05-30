@@ -35,7 +35,7 @@ index d695ab8e..62e8cc6d 100644
  	if (sc < 9) {
  		while (i<2 && 4*small_cnt_tab[sc][i] > usage)
 diff --git a/src/malloc/mallocng/meta.h b/src/malloc/mallocng/meta.h
-index 61ec53f9..3d3d4bd0 100644
+index 61ec53f9..c2acc761 100644
 --- a/src/malloc/mallocng/meta.h
 +++ b/src/malloc/mallocng/meta.h
 @@ -128,7 +128,7 @@ static inline int get_slot_index(const unsigned char *p)
@@ -47,17 +47,16 @@ index 61ec53f9..3d3d4bd0 100644
  	int offset = *(const uint16_t *)(p - 2);
  	int index = get_slot_index(p);
  	if (p[-4]) {
-@@ -168,7 +168,8 @@ static inline size_t get_nominal_size(const unsigned char *p, const unsigned cha
+@@ -168,7 +168,7 @@ static inline size_t get_nominal_size(const unsigned char *p, const unsigned cha
  	assert(reserved <= end-p);
  	assert(!*(end-reserved));
  	// also check the slot's overflow byte
 -	assert(!*end);
 +	assert(!*end); // this assert does not pass
-+	printf("*end = 0x%x\n", *end);
  	return end-reserved-p;
  }
  
-@@ -202,13 +203,13 @@ static inline void *enframe(struct meta *g, int idx, size_t n, int ctr)
+@@ -202,13 +202,13 @@ static inline void *enframe(struct meta *g, int idx, size_t n, int ctr)
  	// cycle offset within slot to increase interval to address
  	// reuse, facilitate trapping double-free.
  	int off = (p[-3] ? *(uint16_t *)(p-2) + 1 : ctr) & 255;
