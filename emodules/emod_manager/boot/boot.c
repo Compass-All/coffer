@@ -76,6 +76,10 @@ void emain_upper_half(
 	paddr_t tmp_pa = 0x140000000;
 	vaddr_t tmp_va = 0xACE00000;
 	map_page(tmp_va, tmp_pa, (u8)(~(PTE_A | PTE_D)), SV39_LEVEL_MEGA);
+
+	tmp_pa = 0x10011000;
+	tmp_va = 0xADD00000;
+	map_page(tmp_va, tmp_pa, (u8)(~(PTE_A | PTE_D)), SV39_LEVEL_PAGE);
 	printf("\033[1;32m[emain_upper_half] Enc#%lu DONE\033[0m\n", eid);
     //////       //////
 
