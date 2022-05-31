@@ -104,11 +104,12 @@ static void load_emod_vfs()
 
 // simple syscall handlers
 
-#define COFFER_PID	1
+// #define COFFER_PID	1
+int coffer_pid = 0;
 
 static int syscall_handler_getpid()
 {
-	return COFFER_PID;
+	return coffer_pid;
 }
 
 static int syscall_handler_geteuid()
@@ -124,7 +125,7 @@ static int syscall_handler_geteuid()
 #define MTIME_PA_ALIGNED	0x200B000UL
 #define MTIME_PA_OFFSET		0xFF8
 #define FREQ 				1000000UL
-#elif
+#else
 #error "unsupported platform"
 #endif
 
