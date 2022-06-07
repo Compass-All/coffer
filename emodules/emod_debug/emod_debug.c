@@ -1,6 +1,7 @@
 #include <emodules/emod_debug/emod_debug.h>
 #include "dependency.h"
 #include "printf.h"
+#include "timer.h"
 #include <util/gnu_attribute.h>
 
 // Emodule Debug Descriptor
@@ -83,6 +84,10 @@ vaddr_t debug_init(vaddr_t emod_manager_getter)
 	emod_debug_api.printf 	= printf_;
 	emod_debug_api.hexdump 	= hexdump;
 	emod_debug_api.assert 	= assert;
+
+	emod_debug_api.start_timer 	= start_timer;
+	emod_debug_api.call_timer 	= call_timer;
+	emod_debug_api.end_timer 	= end_timer;
 
 	emod_debug = (emod_debug_t) {
 		.emod_debug_desc = emod_debug_desc,
