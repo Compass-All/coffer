@@ -128,30 +128,44 @@ static int syscall_handler_geteuid()
 #error "unsupported platform"
 #endif
 
-// todo: support ioremap
+static u64 get_time()
+{
+	static int init = 0;
+
+	vaddr_t va = 0xA0000000; // todo: ioremap
+	if (!init) {
+		paddr_t pa = MTIME_PA_ALIGNED;
+		map_page(va, pa, PTE_R, SV39_LEVEL_PAGE);
+	}
+	u64 offset = MTIME_PA_OFFSET;
+
+	u64 time = *(volatile u64 *)(va + offset);	
+
+	return time;
+}
+
+static void syscall_handler_gettimeofday(
+	struct timeval *tv,
+	__unused char *_
+)
+{
+	u64 time = get_time();
+	debug("time: %ld\n", time);
+
+	tv->tv_sec 	= time / FREQ;
+	tv->tv_usec = time % FREQ;
+	return;
+}
+
 static void syscall_handler_clock_gettime(
 	__unused clockid_t clock_id,
 	struct timespec *tp
 )
 {
-	static int init = 0;
-
-	// todo: use config file
-	vaddr_t va = 0xA0000000;
-	if (!init) {
-		paddr_t pa = MTIME_PA_ALIGNED;
-		map_page(va, pa, PTE_R, SV39_LEVEL_PAGE);
-	}
-
-	u64 offset = MTIME_PA_OFFSET;
-	volatile u64 *mtime_csr = (volatile u64 *)(va + offset);
-	u64 time = *mtime_csr;
-
+	u64 time = get_time();
 	debug("time: %ld\n", time);
-
 	tp->tv_sec	= time / FREQ;
 	tp->tv_nsec	= time % FREQ;
-
 	return;
 }
 
@@ -264,6 +278,11 @@ void syscall_handler(
 	u64		stval
 )
 {
+	// __unused u64 time0, time1; // profiling
+
+	// time0 = read_csr(cycle);
+	// debug("time0 = %ld\n", time0);
+
 	u64 syscall_num = regs[CTX_INDEX_a7];
 	u64 ret = 0;
 
@@ -404,7 +423,7 @@ void syscall_handler(
 		debug("end of syscall writev\n");
 		break;
 
-	case SYS_write:
+	case SYS_write: // check this: increasingly slow
 		debug("syscall write\n");
 		ret = (u64)syscall_handler_write(
 			(int)			regs[CTX_INDEX_a0],
@@ -522,9 +541,14 @@ void syscall_handler(
 		debug("end of syscall clock_gettime\n");
 		break;
 
-	// case SYS_gettimeofday:
-	// 	// todo!();
-	// 	break;
+	case SYS_gettimeofday:
+		debug("syscall gettimeofday\n");
+		syscall_handler_gettimeofday(
+			(struct timeval *)	regs[CTX_INDEX_a0],
+			NULL
+		);
+		debug("end of syscall gettimeofday\n");
+		break;
 
 // omitted syscalls
 	case 29: // ioctl
@@ -553,4 +577,8 @@ void syscall_handler(
 
 	write_csr(sepc, sepc + 4);
 	regs[CTX_INDEX_a0] = ret;
+
+	// time1 = read_csr(cycle);
+	// debug("time1 = %ld\n", time1);
+	// printf("syscall %ld cycles = %ld\n", syscall_num, time1 - time0);
 }
