@@ -14,7 +14,6 @@ static emod_debug_t emod_debug;
 
 // Emodule Debug Functions
 
-// printf from "printf.h"
 #ifdef EMODULES_DEBUG
 #define debug(fmt, ...) printf_(fmt, ##__VA_ARGS__)
 #else
@@ -76,16 +75,14 @@ static emod_debug_t get_emod_debug()
 __attribute__((section(".text.init")))
 vaddr_t debug_init(vaddr_t emod_manager_getter)
 {
-	emod_debug_api = (emod_debug_api_t) {
 #ifdef EMODULES_DEBUG
-		.printd = printf_,
+	emod_debug_api.printd = printf_;
 #else
-		.printd = dummy_printd,
+	emod_debug_api.printd = dummy_printd;
 #endif
-		.printf = printf_,
-		.hexdump = hexdump,
-		.assert = assert
-	};
+	emod_debug_api.printf 	= printf_;
+	emod_debug_api.hexdump 	= hexdump;
+	emod_debug_api.assert 	= assert;
 
 	emod_debug = (emod_debug_t) {
 		.emod_debug_desc = emod_debug_desc,
