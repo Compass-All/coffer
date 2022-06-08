@@ -14,7 +14,11 @@ extern emod_debug_t 	emod_debug;
 #define free	emod_alloc.emod_alloc_api.free
 
 #define printd		emod_debug.emod_debug_api.printd
+#define printf		emod_debug.emod_debug_api.printf
 #define hexdump		emod_debug.emod_debug_api.hexdump
+#define start_timer	emod_debug.emod_debug_api.start_timer
+#define call_timer	emod_debug.emod_debug_api.call_timer
+#define end_timer	emod_debug.emod_debug_api.end_timer
 #define debug(fmt, ...) \
 	printd("\033[37m[%s] " fmt "\033[0m", __func__, ##__VA_ARGS__)
 #define show(v) 	debug(#v "\t=\t0x%lx\n", (v))
