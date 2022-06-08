@@ -45,7 +45,7 @@ void end_timer()
 		if (cycle_record[i])
 			printf_("Check Point %d: %ld\n", i + 1, cycle_record[i]);
 	}
-	printf_("\n");
+	// printf_("\n");
 
 	return;
 }
