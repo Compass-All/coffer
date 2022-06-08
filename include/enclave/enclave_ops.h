@@ -23,12 +23,18 @@ static paddr_t inline __ecall_ebi_mem_alloc(usize number_of_partitions)
 	return paddr;
 }
 
-static void inline __ecall_ebi_puts(paddr_t string_ptr)
+static void inline __ecall_ebi_addr_record(
+	usize 	page_table_offset,
+	paddr_t emod_manager_start_pa_ptr,
+	paddr_t payload_start_pa_ptr
+)
 {
 	__ecall(
 		SBI_EXT_EBI,
-		SBI_EXT_EBI_PUTS,
-		(u64)string_ptr, 0UL, 0UL
+		SBI_EXT_EBI_ADDR_RECORD,
+		page_table_offset,
+		emod_manager_start_pa_ptr,
+		payload_start_pa_ptr
 	);
 }
 
@@ -41,11 +47,11 @@ static void inline __ecall_ebi_exit(u64 exit_val)
 	);
 }
 
-static int inline __ecall_ebi_suspend()
+static u64 inline __ecall_ebi_suspend(u64 short_message)
 {
 	return __ecall(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_SUSPEND,
-		0UL, 0UL, 0UL
+		short_message, 0UL, 0UL
 	);
 }

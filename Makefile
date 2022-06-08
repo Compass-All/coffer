@@ -1,8 +1,14 @@
+# todo:
+# differnt targets: make qemu and make unmatched
+TARGET_PLATFORM ?= qemu # 1. qemu 2. unmatched
+
 BUILD_DIR = build
 
 MKIMAGE ?= mkimage
 ITS_PATH ?= tools/unmatched
 ITB_PATH ?= $(BUILD_DIR)/itb
+
+BOARD_ROOTFS_PATH ?= /media/prongs/rootfs
 
 DOCKER = sudo docker # Linux only
 DOCKER_WORKDIR = /root/coffer
@@ -32,17 +38,17 @@ KERNEL_IMAGE = $(KERNEL_IMAGE_PATH)/Image
 
 QEMU = qemu-system-riscv64
 QEMU_INIT_SCRIPT = tools/rootfs/script
-QEMU_CMD = -M virt -m 8G -smp 1 -nographic \
+QEMU_CMD = -M virt -m 16G -smp 1 -nographic \
         -bios $(DOCKER_WORKDIR)/coffer-opensbi/build/platform/generic/firmware/fw_jump.elf \
         -kernel $(DOCKER_WORKDIR)/$(KERNEL_IMAGE) \
         -device loader,file=$(DOCKER_WORKDIR)/$(KERNEL_IMAGE),addr=0x80200000 \
         -drive file=$(DOCKER_WORKDIR)/$(ROOTFS),format=raw,id=hd0 \
         -device virtio-blk-device,drive=hd0 \
-        -append "root=/dev/vda rw console=ttyS0 movablecore=0x140000000" \
+        -append "root=/dev/vda rw console=ttyS0 movablecore=0x240000000" \
 
 PROG_BUILD = $(BUILD_DIR)/prog
 
-all: dir emodules opensbi board-image rootfs
+all: dir emodules opensbi rootfs
 
 kernel-image: docker
 ifeq (, $(wildcard $(KERNEL_IMAGE))) # kernel image not found
@@ -76,7 +82,7 @@ endif
 rootfs: emodules docker prog
 ifeq (, $(wildcard $(ROOTFS))) # ROOTFS not found
 # Make ext2 FS
-	sudo dd if=/dev/zero of=$(ROOTFS) bs=1M count=256
+	sudo dd if=/dev/zero of=$(ROOTFS) bs=1M count=512
 	sudo mkfs.ext2 -F $(ROOTFS)
 # Mount
 	mkdir -p $(MOUNT_POINT)
@@ -106,23 +112,45 @@ endif
 
 
 board-image: emodules opensbi docker
-	mkdir -p $(ITB_PATH)
+	sudo mkdir -p $(ITB_PATH)
 	$(DOCKER_RUN) $(MKIMAGE) -E -f $(DOCKER_WORKDIR)/$(ITS_PATH)/u-boot.its $(DOCKER_WORKDIR)/$(ITB_PATH)/u-boot.itb
 
+burn-image:	board-image
+	@if test -b /dev/mmcblk0p2 ; \
+	then \
+		printf "\nBurning image\n" ;	\
+		sudo dd if=$(ITB_PATH)/u-boot.itb of=/dev/mmcblk0p2 bs=2M iflag=fullblock oflag=direct conv=fsync status=progress ; \
+	else \
+		printf "\nSD card not inserted\n\n" ; \
+	fi;
+
+	@if test -d $(BOARD_ROOTFS_PATH) ; \
+	then \
+		printf "\nupdating prog and emodules\n\n" ; \
+		sudo rm -rf $(BOARD_ROOTFS_PATH)/prog $(BOARD_ROOTFS_PATH)/emodules ; \
+		sudo mkdir $(BOARD_ROOTFS_PATH)/emodules ; \
+		sudo cp -r build/prog /media/prongs/rootfs/prog ; \
+		sudo cp -r build/emodules/*/*.bin /media/prongs/rootfs/emodules ; \
+		sudo umount $(BOARD_ROOTFS_PATH) ; \
+	else \
+		printf "\nrootfs not mounted\n\n" ; \
+	fi;
+
+# TODO: copy emodules and prog to rootfs on SD card
+# copy-file: emodules prog
+
 # do not add "-j" to this target, which leads to UB
-emodules: tools/md2/build/md2 docker
-	$(DOCKER_MAKE) -C $(DOCKER_WORKDIR)/emodules CROSS_COMPILE=riscv64-unknown-elf-
+emodules: docker
+	$(DOCKER_MAKE) -C $(DOCKER_WORKDIR)/emodules CROSS_COMPILE=riscv64-unknown-elf- TARGET_PLATFORM=$(TARGET_PLATFORM)
 
 opensbi: docker emodules
 	$(DOCKER_MAKE) clean -C $(DOCKER_WORKDIR)/coffer-opensbi 
 	$(DOCKER_MAKE) -C $(DOCKER_WORKDIR)/coffer-opensbi CROSS_COMPILE=riscv64-unknown-elf- PLATFORM=generic -j
 
-tools/md2/build/md2:
-	make -C tools/md2
-
 clean: docker
 	sudo rm -rf $(BUILD_DIR)
 	sudo make clean -C coffer-opensbi
+	sudo make clean -C coffer_user_mode
 
 clean-kernel:
 	rm $(KERNEL_IMAGE)

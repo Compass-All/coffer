@@ -14,8 +14,7 @@ dir:
 	mkdir -p $(build_dir)
 
 $(subdirs):
-	make -C $@ CROSS_COMPILE=$(CROSS_COMPILE)
-	../tools/md2/build/md2 ../build/emodules/$@/$@.bin > ../build/emodules/$@/$@.md2
+	make -C $@ CROSS_COMPILE=$(CROSS_COMPILE) TARGET_PLATFORM=$(TARGET_PLATFORM)
 
 clean:
 	rm -rf $(build_dir)/emodules

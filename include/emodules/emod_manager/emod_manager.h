@@ -14,20 +14,21 @@
 #include <emodules/emodule_desc.h>
 #include <types.h>
 
-#define MESSAGE_LOAD_MODULE	0x717DB77A
-
 typedef struct {
 	// test
-	void (*test)(void);
+	void 		(*test)(void);
 
 	// emodule management
-	vaddr_t (*acquire_emodule)(u32 emod_id);
+	vaddr_t 	(*acquire_emodule)(u32 emod_id);
 
 	// memory management
-	int (*memory_map)(vaddr_t vaddr, paddr_t paaddr, usize len);
+	void 		(*map_page)(vaddr_t vaddr, paddr_t paddr, u8 flags, u8 level);
 
 	// panic
-	// __diverge void panic(const char *panic_message);
+	void 		(*panic)(const char *panic_message);
+
+	// debug
+	paddr_t		(*get_pa)(vaddr_t va);
 
 	// ... to be determined
 } emod_manager_api_t;
@@ -39,3 +40,4 @@ typedef struct {
 
 void emod_manager_init();
 void emod_manager_test();
+vaddr_t acquire_emodule(u32 emodule_id);

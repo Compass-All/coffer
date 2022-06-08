@@ -18,11 +18,23 @@ ARG QEMU_VERSION=5.0.0
 RUN wget https://download.qemu.org/qemu-${QEMU_VERSION}.tar.xz -P /root --no-verbose
 RUN git clone https://github.com/torvalds/linux.git /root/linux
 RUN git clone https://git.busybox.net/busybox /root/busybox
-RUN git clone https://github.com/MstMoonshine/COFFER_prog.git /root/prog
-
-# QEMU
+# RUN git clone https://github.com/MstMoonshine/COFFER_prog.git /root/prog
+RUN git clone https://github.com/richfelker/musl-cross-make.git /root/musl-cross-make
 RUN tar xJf /root/qemu-${QEMU_VERSION}.tar.xz -C /root
 
+# MUSL
+ADD tools/musl/patch /root/musl_patch
+RUN mkdir -p /root/musl-cross-make/patches/musl-1.2.3 \
+    && cp /root/musl_patch/0001-memset_main_tls.diff /root/musl-cross-make/patches/musl-1.2.3/0001-memset_main_tls.diff \
+    && cp /root/musl_patch/0002-assert.diff /root/musl-cross-make/patches/musl-1.2.3/0002-assert.diff
+
+WORKDIR /root/musl-cross-make
+RUN make TARGET=riscv64-linux-musl install -j$(nproc) 
+ENV RISCV_MUSL "/root/musl-cross-make/output"
+ENV PATH "$RISCV_MUSL/bin:$PATH"
+WORKDIR /
+
+# QEMU
 WORKDIR /root/qemu-${QEMU_VERSION}
 RUN ./configure --target-list=riscv64-linux-user,riscv64-softmmu \
     && make -j$(nproc) \

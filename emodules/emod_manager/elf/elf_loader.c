@@ -55,6 +55,36 @@ static int elf_check(Elf64_Ehdr *ehdr, usize elf_size)
 	return 0;
 }
 
+static void *memset(void* dst, int byte, size_t len)
+{
+    size_t offset = 0;
+    uint64_t fill = byte;
+    fill |= fill << 8;
+    fill |= fill << 16;
+    fill |= fill << 32;
+    while (len > 0) {
+        if (len > 8) {
+            *((uint64_t*)(dst + offset)) = fill;
+            offset += 8;
+            len -= 8;
+        } else if (len > 4) {
+            *((uint32_t*)(dst + offset)) = fill & 0xFFFFFFFF;
+            offset += 4;
+            len -= 4;
+        } else if (len > 2) {
+            *((uint16_t*)(dst + offset)) = fill & 0xFFFF;
+            offset += 2;
+            len -= 2;
+        } else {
+            *((uint8_t*)(dst + offset)) = byte;
+            ++offset;
+            --len;
+        }
+    }
+
+	return dst;
+}
+
 static int map_elf(paddr_t elf_paddr)
 {
 	vaddr_t elf_vaddr_linear = elf_paddr + linear_map_offset;
@@ -78,7 +108,7 @@ static int map_elf(paddr_t elf_paddr)
 		vaddr_t start_vaddr = PAGE_DOWN(ph_vaddr);
 		vaddr_t end_vaddr 	= PAGE_UP(ph_vaddr + file_size);
 		paddr_t start_paddr = PAGE_DOWN(ph_paddr);
-		usize number_of_pages = (end_vaddr - start_vaddr) / PAGE_SIZE;
+		usize number_of_pages = (end_vaddr - start_vaddr) >> PAGE_SHIFT;
 		show(start_vaddr); show(end_vaddr); show(start_paddr);
 		show(number_of_pages);
 
@@ -95,7 +125,8 @@ static int map_elf(paddr_t elf_paddr)
 			debug("Allocating more pages\n");
 			// TODO: what if number_of_pages is larger than pool size?
 
-			number_of_pages = (PAGE_UP(mem_size) - PAGE_UP(file_size)) / PAGE_SIZE;
+			number_of_pages = 
+				(PAGE_UP(mem_size) - PAGE_UP(file_size)) >> PAGE_SHIFT;
 			paddr_t extra_page_paddr = alloc_umode_page(number_of_pages);
 
 			show(number_of_pages);
@@ -109,6 +140,11 @@ static int map_elf(paddr_t elf_paddr)
 					SV39_LEVEL_PAGE
 				);
 			}
+
+			debug("zero mem-only portion\n");
+			show(ph_vaddr + file_size);
+			show(mem_size - file_size);
+			memset((void *)(ph_vaddr + file_size), 0, mem_size - file_size);
 		}
 	}
 

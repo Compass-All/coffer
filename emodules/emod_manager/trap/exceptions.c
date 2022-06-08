@@ -7,8 +7,11 @@
 #include <util/register.h>
 #include <emodules/ecall.h>
 #include <enclave/enclave_ops.h>
+#include "../memory/page_table.h"
+#include "../emod_table/emod_table.h"
 
 #define SCAUSE_ECALL	0x8UL
+#define dump(v) printf(#v "\t=\t0x%lx\n", (u64)(v));
 
 void exception_handler(
 	u64* 	regs,
@@ -24,7 +27,7 @@ void exception_handler(
 
 	error("Trapped! Exception!\n");
 
-	show(sepc); show(scause); show(stval);	
+	dump(sepc); dump(scause); dump(stval);	
 	printf("\n");
 
 	printf("Register Dump:\n");
@@ -35,6 +38,63 @@ void exception_handler(
 			printf("\n");
 	}
 	printf("\n");
+
+	dump_emodule_table();
+
+	switch (scause)
+	{
+	case 0x0:
+		error("Instruction address misaligned\n");
+		break;
+	case 0x1:
+		error("Instruction access fault\n");
+		break;
+	case 0x2:
+		error("Illegal instruction\n");
+		break;
+	case 0x3:
+		error("Breakpoint\n");
+		break;
+	case 0x4:
+		error("Load address misaligned\n");
+		break;
+	case 0x5:
+		error("Load access fault\n");
+		break;
+	case 0x6:
+		error("Store/AMO address misaligned\n");
+		break;
+	case 0x7:
+		error("Store/AMO access fault\n");
+		break;
+	case 0x8:
+		panic("Should never reach here\n");
+		break;
+	case 0x9:
+		error("Environment call from S-mode\n");
+		break;
+	case 0xa:
+		error("Reserved\n");
+		break;
+	case 0xb:
+		error("Environment call from M-mode\n");
+		break;
+	case 0xc:
+		error("Instruction page fault\n");
+		break;
+	case 0xd:
+		error("Load page fault\n");
+		break;
+	case 0xe:
+		error("Reserved for future standard use\n");
+		break;
+	case 0xf:
+		error("Store/AMO page fault\n");
+		break;
+	
+	default:
+		break;
+	}
 
 	panic("Exception unhandled\n");
 }

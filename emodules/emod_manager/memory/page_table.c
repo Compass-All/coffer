@@ -44,7 +44,7 @@ static pte_t *get_leaf_pte(vaddr_t vaddr, u8 level, u8 alloc)
 			pte->ppn		= next_table_pa >> PAGE_SHIFT;
 			pte->v			= 1;
 		} else {
-			next_table_pa = pte->ppn << PAGE_SHIFT;
+			next_table_pa = (u64)pte->ppn << PAGE_SHIFT;
 		}
 
 		table_root = (pte_t *)next_table_pa;
@@ -65,6 +65,7 @@ error:
 	return NULL; // should never reach here
 }
 
+// invoked before mmu turned on
 u64 init_satp()
 {
 	paddr_t page_table_root_addr = (paddr_t)&page_table_root;
@@ -93,9 +94,9 @@ void map_page(vaddr_t vaddr, paddr_t paddr, u8 flags, u8 level)
 	pte_t *pte = get_leaf_pte(vaddr, level, GET_PTE_ALLOC);
 
 	if (flags & PTE_R)
-		pte->r = pte->a = 1;
+		pte->r = 1;
 	if (flags & PTE_W)
-		pte->w = pte->d = 1;
+		pte->w = 1;
 	if (flags & PTE_X)
 		pte->x = 1;
 	if (flags & PTE_U)
@@ -104,11 +105,15 @@ void map_page(vaddr_t vaddr, paddr_t paddr, u8 flags, u8 level)
 		pte->g = 1;
 	pte->v = 1;
 
-	pte->ppn = pa.ppn;
+	// always set to 1 if no swap space is used
+	pte->a = 1;
+	pte->d = 1;
+
+	pte->ppn = (u64)pa.ppn;
 
 	// flush_tlb of the page
 	asm volatile(
-		"sfence.vma	%0	\n\t"
+		"sfence.vma	%0, zero	\n\t" // 'zero' cannot be omitted
 		:
 		: "r"(vaddr)
 	);
@@ -127,27 +132,80 @@ void setup_linear_map()
 	flush_tlb();
 }
 
-// ---------------
-// test
-__unused paddr_t get_pa(vaddr_t va, u8 level)
+struct walk_page_table_result {
+	u8 		level;	// -1 for not valid
+	pte_t	pte;
+};
+
+static struct walk_page_table_result walk_page_table(vaddr_t va)
 {
-	sv39_vaddr_t vaddr = va_to_sv39(va);
-	pte_t pte = *get_leaf_pte(va, level, GET_PTE_NO_ALLOC);
-	return (pte.ppn << PAGE_SHIFT) + vaddr.offset;
+#define MASK_OFFSET 0xfff
+#define MASK_L0 0x1ff000
+#define MASK_L1 0x3fe00000
+#define MASK_L2 0x7fc0000000
+    u64 layer_offset[] = { (va & MASK_L2) >> 30, (va & MASK_L1) >> 21,
+        (va & MASK_L0) >> 12 };
+    pte_t* tmp_entry;
+	pte_t* root = &page_table_root[0];
+	struct walk_page_table_result ret = {
+		.level = -1,
+	};
+    int i;
+
+    for (i = 0; i < 3; ++i) {
+        tmp_entry = &root[layer_offset[i]];
+        if (!tmp_entry->v) {
+			printf("not valid\n");
+            return ret;
+        }
+        if ((tmp_entry->r | tmp_entry->w | tmp_entry->x)) {
+			ret.level = i;
+			ret.pte = *tmp_entry;
+            return ret;
+        }
+
+        root = (pte_t*)((u64)tmp_entry->ppn << PAGE_SHIFT);
+		if (read_csr(satp)) {
+			root += linear_map_offset / sizeof(pte_t);
+		}
+    }
+    return ret;
+}
+
+// TODO: consider level here
+paddr_t get_pa(vaddr_t va)
+{
+	struct walk_page_table_result result = walk_page_table(va);
+	if (result.level == (u8)-1) {
+		printf("VA not valid\n");
+		return 0UL;
+	}
+	u8 level = result.level;
+	pte_t pte = result.pte;
+
+	paddr_t base = pte.ppn << PAGE_SHIFT;
+
+	u8 number_of_ones = PAGE_SHIFT + (2 - level) * SV39_VPN_LEN;
+	u64 mask = (1 << number_of_ones) - 1;
+	u64 offset = mask & va;
+
+	paddr_t pa = base + offset;
+
+	return pa;
 }
 
 __unused void page_table_test()
 {
 	show(&page_table_root);
 
-	__unused paddr_t root = get_pa((vaddr_t)&page_table_root, SV39_LEVEL_PAGE);
+	__unused paddr_t root = get_pa((vaddr_t)&page_table_root);
 	show(root);	
 }
 
 __unused void test_linear_map()
 {
 	__unused vaddr_t va = get_emod_manager_pa_start() + linear_map_offset;
-	__unused paddr_t pa = get_pa(va, SV39_LEVEL_MEGA);
+	__unused paddr_t pa = get_pa(va);
 
 	show(va);
 	show(pa);
