@@ -84,6 +84,90 @@ void *memset(void *ptr, int val, size_t len)
 	return ptr;
 }
 
+// void *memcpy(void* dst, const void* src, size_t len)
+// {
+// 	void *ret = dst, *ptr = (void *)src;
+
+// #define COPY_TYPE(type, d, s) do {	\
+// 	*(type *)d = *(type *)s;		\
+// 	d += sizeof(type);				\
+// 	s += sizeof(type);				\
+// 	len -= sizeof(type);			\
+// } while (0)
+
+// 	while (len > 0) { 
+// 		if (len >= sizeof(uint64_t))
+// 			COPY_TYPE(uint64_t, dst, ptr);
+// 		else if (len >= sizeof(uint32_t))
+// 			COPY_TYPE(uint32_t, dst, ptr);
+// 		else if (len >= sizeof(uint16_t))
+// 			COPY_TYPE(uint16_t, dst, ptr);
+// 		else
+// 			COPY_TYPE(uint8_t, dst, ptr);
+// 	}
+
+// 	return ret;
+// }
+
+// #define COPY_AS_TYPE(dst, src, type) *((type*)(dst)) = *((type*)(src))
+
+// void *memcpy(void* dst, const void* src, size_t len)
+// {
+//     size_t offset = 0;
+//     while (len > 0) {
+//         if (len >= 8) {
+//             COPY_AS_TYPE(dst + offset, src + offset, uint64_t);
+//             offset += 8;
+//             len -= 8;
+//         } else if (len >= 4) {
+//             COPY_AS_TYPE(dst + offset, src + offset, uint32_t);
+//             offset += 4;
+//             len -= 4;
+//         } else if (len >= 2) {
+//             COPY_AS_TYPE(dst + offset, src + offset, uint16_t);
+//             offset += 2;
+//             len -= 2;
+//         } else {
+//             COPY_AS_TYPE(dst + offset, src + offset, uint8_t);
+//             ++offset;
+//             --len;
+//         }
+//     }
+
+// 	return dst;
+// }
+
+// byte must be uint8_t
+// void *memset(void* dst, int byte, size_t len)
+// {
+//     size_t offset = 0;
+//     uint64_t fill = byte;
+//     fill |= fill << 8;
+//     fill |= fill << 16;
+//     fill |= fill << 32;
+//     while (len > 0) {
+//         if (len > 8) {
+//             *((uint64_t*)(dst + offset)) = fill;
+//             offset += 8;
+//             len -= 8;
+//         } else if (len > 4) {
+//             *((uint32_t*)(dst + offset)) = fill & 0xFFFFFFFF;
+//             offset += 4;
+//             len -= 4;
+//         } else if (len > 2) {
+//             *((uint16_t*)(dst + offset)) = fill & 0xFFFF;
+//             offset += 2;
+//             len -= 2;
+//         } else {
+//             *((uint8_t*)(dst + offset)) = byte;
+//             ++offset;
+//             --len;
+//         }
+//     }
+
+// 	return dst;
+// }
+
 void *memchr(const void *ptr, int val, size_t len)
 {
 	uintptr_t o = 0;
