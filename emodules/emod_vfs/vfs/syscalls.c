@@ -258,6 +258,7 @@ int sys_write(struct vfscore_file *fp, const struct iovec *iov, size_t niov,
 	uio.uio_offset = offset;
 	uio.uio_resid = bytes;
 	uio.uio_rw = UIO_WRITE;
+	// check this: takes long time
 	error = vfs_write(fp, &uio, (offset == -1) ? 0 : FOF_OFFSET);
 	*count = bytes - uio.uio_resid;
 
