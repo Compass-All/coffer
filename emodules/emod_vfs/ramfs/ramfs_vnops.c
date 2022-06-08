@@ -336,7 +336,7 @@ static int ramfs_truncate(struct vnode *vp, off_t length)
 		}
 	} else if ((size_t) length > np->rn_bufsize) {
 		/* TODO: this could use a page level allocator */
-		new_size = PAGE_UP(length);
+		new_size = PARTITION_UP(length) + 2 * PARTITION_SIZE;
 		new_buf = kmalloc(new_size);
 		if (!new_buf)
 			return EIO;
@@ -451,6 +451,8 @@ static int ramfs_write(
 	int ioflag
 )
 {
+	// start_timer();
+
 	struct ramfs_node *np =  vp->v_data;
 
 	if (vp->v_type == VDIR)
@@ -472,16 +474,29 @@ static int ramfs_write(
 		off_t end_pos = uio->uio_offset + uio->uio_resid;
 
 		if (end_pos > (off_t) np->rn_bufsize) {
+			show(end_pos);
+			show(np->rn_bufsize);
+
 			// XXX: this could use a page level allocator
+			// size_t new_size = PARTITION_UP(end_pos) + 2 * PARTITION_SIZE;
 			size_t new_size = PAGE_UP(end_pos);
+
+			// call_timer();
 			void *new_buf = calloc(1, new_size);
+			// call_timer();
 
 			if (!new_buf)
 				return EIO;
 			if (np->rn_size != 0) {
+				// printf("buf size: 0x%lx\n", vp->v_size);
+				// check this: takes long time
+				// call_timer();
 				memcpy(new_buf, np->rn_buf, vp->v_size);
-				if (np->rn_owns_buf)
+				// call_timer();
+				if (np->rn_owns_buf) {
 					free(np->rn_buf);
+					// call_timer();
+				}
 			}
 			np->rn_buf = (char *) new_buf;
 			np->rn_bufsize = new_size;
@@ -491,16 +506,23 @@ static int ramfs_write(
 		np->rn_owns_buf = true;
 	}
 
+	// call_timer();
+
 	set_times_to_now(
 		&(np->rn_mtime),
 		&(np->rn_ctime),
 		NULL
 	);
-	return vfscore_uiomove(
+	int ret = vfscore_uiomove(
 		np->rn_buf + uio->uio_offset,
 		uio->uio_resid,
 		uio
 	);
+
+	// call_timer();
+	// end_timer();
+
+	return ret;
 }
 
 static int ramfs_rename(
