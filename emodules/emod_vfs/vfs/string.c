@@ -88,12 +88,12 @@ void *memset(void *ptr, int val, size_t len)
 // {
 // 	void *ret = dst, *ptr = (void *)src;
 
-// #define COPY_TYPE(type, d, s) do {	\
-// 	*(type *)d = *(type *)s;		\
-// 	d += sizeof(type);				\
-// 	s += sizeof(type);				\
-// 	len -= sizeof(type);			\
-// } while (0)
+#define COPY_TYPE(type, d, s) do {	\
+	*(type *)d = *(type *)s;		\
+	d += sizeof(type);				\
+	s += sizeof(type);				\
+	len -= sizeof(type);			\
+} while (0)
 
 // 	while (len > 0) { 
 // 		if (len >= sizeof(uint64_t))
