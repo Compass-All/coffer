@@ -55,16 +55,34 @@ static int elf_check(Elf64_Ehdr *ehdr, usize elf_size)
 	return 0;
 }
 
-static void *memset(void *s, int c, usize count)
+static void *memset(void* dst, int byte, size_t len)
 {
-	char *temp = s;
+    size_t offset = 0;
+    uint64_t fill = byte;
+    fill |= fill << 8;
+    fill |= fill << 16;
+    fill |= fill << 32;
+    while (len > 0) {
+        if (len > 8) {
+            *((uint64_t*)(dst + offset)) = fill;
+            offset += 8;
+            len -= 8;
+        } else if (len > 4) {
+            *((uint32_t*)(dst + offset)) = fill & 0xFFFFFFFF;
+            offset += 4;
+            len -= 4;
+        } else if (len > 2) {
+            *((uint16_t*)(dst + offset)) = fill & 0xFFFF;
+            offset += 2;
+            len -= 2;
+        } else {
+            *((uint8_t*)(dst + offset)) = byte;
+            ++offset;
+            --len;
+        }
+    }
 
-	while (count > 0) {
-		count--;
-		*temp++ = c;
-	}
-
-	return s;
+	return dst;
 }
 
 static int map_elf(paddr_t elf_paddr)
