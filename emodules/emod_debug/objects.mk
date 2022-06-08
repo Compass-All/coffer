@@ -5,5 +5,4 @@ emodule-objs-y += timer.o
 emodule-objs-y += dependency.o
 
 
-
-emodule-genflags = -DEMODULES_DEBUG=$(EMODULES_DEBUG)
+# emodule-genflags = -DEMODULES_DEBUG=$(EMODULES_DEBUG)
