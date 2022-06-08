@@ -278,7 +278,7 @@ void syscall_handler(
 	u64		stval
 )
 {
-	// __unused u64 time0, time1; // profiling
+	__unused u64 time0, time1; // profiling
 
 	// time0 = read_csr(cycle);
 	// debug("time0 = %ld\n", time0);
@@ -414,16 +414,19 @@ void syscall_handler(
 		break;
 
 	case SYS_writev:
-		debug("syscall writev\n");
+		// debug("syscall writev\n");
+		time0 = read_csr(cycle);
 		ret = (u64)syscall_handler_writev(
 			(int)					regs[CTX_INDEX_a0],
 			(const struct iovec *)	regs[CTX_INDEX_a1],
 			(int)					regs[CTX_INDEX_a2]
 		);
+		// time1 = read_csr(cycle);
+		// printf("syscall %ld cycles = %ld\n", syscall_num, time1 - time0);
 		debug("end of syscall writev\n");
 		break;
 
-	case SYS_write: // check this: increasingly slow
+	case SYS_write:
 		debug("syscall write\n");
 		ret = (u64)syscall_handler_write(
 			(int)			regs[CTX_INDEX_a0],
