@@ -36,9 +36,12 @@ EMODULE_TARGETS_ABS = $(join $(EMODULE_PATH), $(EMODULE_TARGETS))
 KERNEL_IMAGE_PATH = tools/linux/build
 KERNEL_IMAGE = $(KERNEL_IMAGE_PATH)/Image
 
+BOARD_DEST ?= /dev/sdb2
+
 QEMU = qemu-system-riscv64
+QEMU_CORES ?= 4
 QEMU_INIT_SCRIPT = tools/rootfs/script
-QEMU_CMD = -M virt -m 16G -smp 1 -nographic \
+QEMU_CMD = -M virt -m 16G -smp $(QEMU_CORES) -nographic \
         -bios $(DOCKER_WORKDIR)/coffer-opensbi/build/platform/generic/firmware/fw_jump.elf \
         -kernel $(DOCKER_WORKDIR)/$(KERNEL_IMAGE) \
         -device loader,file=$(DOCKER_WORKDIR)/$(KERNEL_IMAGE),addr=0x80200000 \
@@ -116,10 +119,10 @@ board-image: emodules opensbi docker
 	$(DOCKER_RUN) $(MKIMAGE) -E -f $(DOCKER_WORKDIR)/$(ITS_PATH)/u-boot.its $(DOCKER_WORKDIR)/$(ITB_PATH)/u-boot.itb
 
 burn-image:	board-image
-	@if test -b /dev/mmcblk0p2 ; \
+	@if test -b $(BOARD_DEST) ; \
 	then \
 		printf "\nBurning image\n" ;	\
-		sudo dd if=$(ITB_PATH)/u-boot.itb of=/dev/mmcblk0p2 bs=2M iflag=fullblock oflag=direct conv=fsync status=progress ; \
+		sudo dd if=$(ITB_PATH)/u-boot.itb of=$(BOARD_DEST) bs=2M iflag=fullblock oflag=direct conv=fsync status=progress ; \
 	else \
 		printf "\nSD card not inserted\n\n" ; \
 	fi;

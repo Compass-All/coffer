@@ -24,6 +24,8 @@
         __tmp;                                \
     })
 
+#define current_hartid() ((unsigned int)csr_read(CSR_MHARTID))
+
 #if __riscv_xlen == 64
 #define STORE sd
 #define LOAD ld

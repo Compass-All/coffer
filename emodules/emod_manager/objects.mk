@@ -14,7 +14,6 @@ emodule-objs-y += printf/printf.o
 emodule-objs-y += debug/debug.o
 
 emodule-genflags = 
-
 # emodule-genflags += -DEMODULES_DEBUG=$(EMODULES_DEBUG)
 emodule-genflags += -DEMOD_MANAGER_VA_START=$(EMOD_MANAGER_VA_START)
 emodule-genflags += -DEMOD_INIT_BRK=$(EMOD_INIT_BRK)

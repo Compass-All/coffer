@@ -4,6 +4,18 @@ dmesg -n 1
 mount proc /proc -t proc
 mount sys /sys -t sysfs
 
+cat > /test.sh <<EOF
+#!/bin/sh
+
+/prog/host/test_eapp /prog/enclave/eapp_device_test &
+/prog/host/test_eapp /prog/enclave/eapp_device_test &
+insmod /device_test.ko &
+
+wait
+rmmod device_test
+EOF
+chmod +x /test.sh
+/test.sh
 # ----- sqlite
 
 #   fillseq       write N values in sequential key order in async mode

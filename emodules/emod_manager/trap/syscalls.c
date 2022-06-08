@@ -104,11 +104,12 @@ static void load_emod_vfs()
 
 // simple syscall handlers
 
-#define COFFER_PID	1
+// #define COFFER_PID	1
+int coffer_pid = 0;
 
 static int syscall_handler_getpid()
 {
-	return COFFER_PID;
+	return coffer_pid;
 }
 
 static int syscall_handler_geteuid()
@@ -124,7 +125,7 @@ static int syscall_handler_geteuid()
 #define MTIME_PA_ALIGNED	0x200B000UL
 #define MTIME_PA_OFFSET		0xFF8
 #define FREQ 				1000000UL
-#elif
+#else
 #error "unsupported platform"
 #endif
 
@@ -557,6 +558,19 @@ void syscall_handler(
 	case 29: // ioctl
 	case 96: // set_tid_address
 	case 55: // fchown
+		break;
+	
+	case 0xDEAD:
+	    paddr_t get_pa(vaddr_t va);
+		volatile u8* ptr = (u8*) 0xACE00000;
+		__unused paddr_t pa = get_pa((vaddr_t)ptr);
+		debug("pa: %lx\n", pa);
+		for (int j = 0; j < 10; j++) {
+			printf("\033[37m[%s] #%d\033[0m\n", __func__, j);
+	    	for (int i = 0; i < 0x200000; i++) {
+				ptr[i] += i;
+			}
+		}
 		break;
 	
 	default:
