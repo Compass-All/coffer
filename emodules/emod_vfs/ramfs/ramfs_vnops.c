@@ -478,8 +478,7 @@ static int ramfs_write(
 			show(np->rn_bufsize);
 
 			// XXX: this could use a page level allocator
-			// size_t new_size = PARTITION_UP(end_pos) + 2 * PARTITION_SIZE;
-			size_t new_size = PAGE_UP(end_pos);
+			size_t new_size = PARTITION_UP(end_pos) + 2 * PARTITION_SIZE;
 
 			// call_timer();
 			void *new_buf = calloc(1, new_size);
