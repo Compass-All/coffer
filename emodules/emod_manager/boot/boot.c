@@ -189,4 +189,6 @@ void emain_lower_half()
 	dump_page_table();
 
 	debug("end of emain\n");
+
+	panic("stall here\n");
 }
