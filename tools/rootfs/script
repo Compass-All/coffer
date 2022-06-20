@@ -4,18 +4,6 @@ dmesg -n 1
 mount proc /proc -t proc
 mount sys /sys -t sysfs
 
-cat > /test.sh <<EOF
-#!/bin/sh
-
-/prog/host/test_eapp /prog/enclave/eapp_device_test &
-/prog/host/test_eapp /prog/enclave/eapp_device_test &
-insmod /device_test.ko &
-
-wait
-rmmod device_test
-EOF
-chmod +x /test.sh
-/test.sh
 # ----- sqlite
 
 #   fillseq       write N values in sequential key order in async mode
@@ -31,21 +19,21 @@ chmod +x /test.sh
 #   readrandom    read N times in random order
 #   readrand100K  read N/1000 100K values in sequential order in async mode
 
-printf "\n\n\n\n\n\n\n\n\n"
-printf "################## sqlite help ##################\n"
-/prog/enclave/sqlite-bench/sqlite-bench --help
+# printf "\n\n\n\n\n\n\n\n\n"
+# printf "################## sqlite help ##################\n"
+# /prog/enclave/sqlite-bench/sqlite-bench --help
 
-command="/prog/enclave/sqlite-bench/sqlite-bench \
-	--num=500 \
-	--reads=500 \
-	--histogram=1"
+# command="/prog/enclave/sqlite-bench/sqlite-bench \
+# 	--num=500 \
+# 	--reads=500 \
+# 	--histogram=1"
 
-bench="--benchmarks=fillseq"
+# bench="--benchmarks=fillseq"
 
-printf "\n\n\n"
-# echo $bench
-printf "################## sqlite in enclave ##################\n"
-/prog/host/test_eapp $command $bench
+# printf "\n\n\n"
+# # echo $bench
+# printf "################## sqlite in enclave ##################\n"
+# /prog/host/test_eapp $command $bench
 
 # printf "\n\n\n"
 # # echo $bench
@@ -85,7 +73,7 @@ printf "################## sqlite in enclave ##################\n"
 
 # /prog/host/test_eapp /prog/enclave/eapp_loop_time
 
-# /prog/host/test_eapp /prog/enclave/eapp_write
+/prog/host/test_eapp /prog/enclave/eapp_write
 
 # /prog/host/test_eapp /prog/enclave/eapp_fs_test
 
