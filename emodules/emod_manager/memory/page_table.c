@@ -211,7 +211,7 @@ static void show_pte(vaddr_t va, pte_t pte, u8 level)
 
 	debug(
 		"VA: 0x%lx --> PA: 0x%lx, size: 0x%lx, "
-		"R: %d, W: %d, X: %d, U: %d, A: %d, D: %d, G: %d, V: %d",
+		"R: %d, W: %d, X: %d, U: %d, A: %d, D: %d, G: %d, V: %d\n",
 		va, pa, size,
 		pte.r, pte.w, pte.x, pte.u, pte.a, pte.d, pte.g, pte.v
 	);
