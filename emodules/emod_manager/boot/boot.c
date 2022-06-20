@@ -186,5 +186,7 @@ void emain_lower_half()
 	emod_manager_init();
 	// emod_manager_test();
 
+	dump_page_table();
+
 	debug("end of emain\n");
 }

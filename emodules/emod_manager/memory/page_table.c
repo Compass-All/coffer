@@ -194,6 +194,76 @@ paddr_t get_pa(vaddr_t va)
 	return pa;
 }
 
+static void show_pte(vaddr_t va, pte_t pte, u8 level)
+{
+	if (level > 2)
+		panic("invalid level\n");
+
+	__unused paddr_t	pa = pte.ppn << PAGE_SHIFT;
+	__unused usize		size;
+
+	if (level == SV39_LEVEL_PAGE)
+		size = 0x1000;
+	else if (level == SV39_LEVEL_MEGA)
+		size = 0x200000;
+	else
+		size = 0x40000000;
+
+	debug(
+		"VA: 0x%lx --> PA: 0x%lx, size: 0x%lx, "
+		"R: %d, W: %d, X: %d, U: %d, A: %d, D: %d, G: %d, V: %d",
+		va, pa, size,
+		pte.r, pte.w, pte.x, pte.u, pte.a, pte.d, pte.g, pte,v
+	);
+}
+
+static void __dump_page_table(u8 level, vaddr_t table_va)
+{
+	if (level > 2)
+		panic("invalid level\n");
+
+#define NUM_ENTRY_PER_TABLE	(PAGE_SIZE / sizeof(pte_t))
+	pte_t* root = (pte_t *)table_va;
+
+	sv39_vaddr_t vaddr = {
+		.extension = 0,
+		.offset = 0,
+		.vpn0 = 0,
+		.vpn1 = 0,
+		.vpn2 = 0
+	};
+
+	for (int i = 0; i < NUM_ENTRY_PER_TABLE; i++) {
+		pte_t pte = root[i];
+
+		if (!pte.v)
+			continue;
+
+		if (level == SV39_LEVEL_PAGE)
+			vaddr.vpn0 = i;
+		else if (level == SV39_LEVEL_MEGA)
+			vaddr.vpn1 = i;
+		else
+			vaddr.vpn2 = i;
+
+		if (pte.r | pte.w | pte.x) { // leaf pte
+			vaddr_t va = sv39_to_va(vaddr);
+			show_pte(va, pte, level);
+		} else {
+			paddr_t next_pa = pte.ppn << PAGE_SHIFT;
+			__dump_page_table(
+				level - 1,
+				(vaddr_t)(next_pa + linear_map_offset)
+			);
+		}
+	}
+}
+
+__unused void dump_page_table()
+{
+	__dump_page_table(2, (vaddr_t)&page_table_root[0]);
+}
+
 __unused void page_table_test()
 {
 	show(&page_table_root);

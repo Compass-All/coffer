@@ -15,8 +15,9 @@ extern const paddr_t linear_map_offset;
 u64 init_satp();
 void map_page(vaddr_t vaddr, paddr_t paddr, u8 flags, u8 level);
 void setup_linear_map();
+paddr_t get_pa(vaddr_t va);
 
 // test
-paddr_t get_pa(vaddr_t va);
+__unused void dump_page_table();
 void page_table_test();
 void test_linear_map();
