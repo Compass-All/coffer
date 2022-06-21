@@ -105,9 +105,9 @@ static void load_emod_vfs()
 // simple syscall handlers
 
 // #define COFFER_PID	1
-int coffer_pid = 0;
+u64 coffer_pid = 0;
 
-static int syscall_handler_getpid()
+static u64 syscall_handler_getpid()
 {
 	return coffer_pid;
 }
@@ -562,14 +562,13 @@ void syscall_handler(
 	
 	case 0xDEAD:
 	    paddr_t get_pa(vaddr_t va);
-		volatile u8* ptr = (u8*) 0xACE00000;
+		volatile u8* ptr = (u8*) 0xADD00000;
 		__unused paddr_t pa = get_pa((vaddr_t)ptr);
 		debug("pa: %lx\n", pa);
-		for (int j = 0; j < 10; j++) {
-			printf("\033[37m[%s] #%d\033[0m\n", __func__, j);
-	    	for (int i = 0; i < 0x200000; i++) {
-				ptr[i] += i;
-			}
+	    for (ulong i = 0; i < 500000000ul; i++) {
+			ptr[1] = '\xFF';
+			asm volatile("fence w,o" ::: "memory");
+			flush_tlb();
 		}
 		break;
 	
