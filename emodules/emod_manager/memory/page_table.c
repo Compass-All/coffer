@@ -121,15 +121,15 @@ void map_page(vaddr_t vaddr, paddr_t paddr, u8 flags, u8 level)
 
 void setup_linear_map()
 {
-#define LINEAR_PAGE_SIZE	0x40000000UL
+#define GIGA_PAGE_SIZE	0x40000000UL
 	paddr_t paddr = linear_map_start;
 	for (int i = 0;
-		i < ROUNDUP(linear_map_size, LINEAR_PAGE_SIZE) / LINEAR_PAGE_SIZE;
+		i < ROUNDUP(linear_map_size, GIGA_PAGE_SIZE) / GIGA_PAGE_SIZE;
 		i++) {
 		vaddr_t vaddr = paddr + linear_map_offset;
 		map_page(vaddr, paddr, PTE_R | PTE_W, SV39_LEVEL_GIGA);
 
-		paddr += LINEAR_PAGE_SIZE;
+		paddr += GIGA_PAGE_SIZE;
 	}
 
 	flush_tlb();
