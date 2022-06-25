@@ -101,8 +101,7 @@ static inline sv39_vaddr_t va_to_sv39(vaddr_t va)
 
 static inline vaddr_t sv39_to_va(sv39_vaddr_t sv39_va)
 {
-	vaddr_t va = *(vaddr_t *)&sv39_va;
-	return (va << 25) >> 25;
+	return *(vaddr_t *)&sv39_va;
 }
 
 static inline sv39_paddr_t pa_to_sv39(paddr_t pa)
