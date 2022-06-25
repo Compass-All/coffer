@@ -224,13 +224,14 @@ static void __dump_page_table(u8 level, vaddr_t table_va)
 
 #define NUM_ENTRY_PER_TABLE	(PAGE_SIZE / sizeof(pte_t))
 	pte_t* root = (pte_t *)table_va;
+	show(root);
 
-	sv39_vaddr_t vaddr = {
+	static sv39_vaddr_t vaddr = {
 		.extension = 0,
 		.offset = 0,
 		.vpn0 = 0,
 		.vpn1 = 0,
-		.vpn2 = 0
+		.vpn2 = 0,
 	};
 
 	for (int i = 0; i < NUM_ENTRY_PER_TABLE; i++) {
@@ -243,25 +244,41 @@ static void __dump_page_table(u8 level, vaddr_t table_va)
 			vaddr.vpn0 = i;
 		else if (level == SV39_LEVEL_MEGA)
 			vaddr.vpn1 = i;
-		else
+		else {
 			vaddr.vpn2 = i;
+			vaddr.extension = (vaddr.vpn2 >> 8) ?
+				(1UL << 25) - 1 :
+				0;
+		}
 
 		if (pte.r | pte.w | pte.x) { // leaf pte
+			debug("vpn2: 0x%x,\tvpn1: 0x%x,\tvpn0: 0x%x\n",
+				vaddr.vpn2, vaddr.vpn1, vaddr.vpn0);
 			vaddr_t va = sv39_to_va(vaddr);
 			show_pte(va, pte, level);
 		} else {
 			paddr_t next_pa = pte.ppn << PAGE_SHIFT;
+			show(next_pa);
 			__dump_page_table(
-				level - 1,
+				level + 1,
 				(vaddr_t)(next_pa + linear_map_offset)
 			);
 		}
+	}
+
+	if (level == SV39_LEVEL_PAGE)
+		vaddr.vpn0 = 0;
+	else if (level == SV39_LEVEL_MEGA)
+		vaddr.vpn1 = 1;
+	else {
+		vaddr.vpn2 = 0;
+		vaddr.extension = 0;
 	}
 }
 
 __unused void dump_page_table()
 {
-	__dump_page_table(2, (vaddr_t)&page_table_root[0]);
+	__dump_page_table(0, (vaddr_t)&page_table_root[0]);
 }
 
 __unused void page_table_test()
