@@ -1,4 +1,0 @@
-// #pragma once
-
-// #define MOD_NONSHARE_MMC_REG_ADDR 0x10050000
-// #define MOD_NONSHARE_MMC_REG_SIZE 0x1000
