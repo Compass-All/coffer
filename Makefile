@@ -149,7 +149,7 @@ emodules: docker
 
 opensbi: docker emodules
 	$(DOCKER_MAKE) clean -C $(DOCKER_WORKDIR)/coffer-opensbi 
-	$(DOCKER_MAKE) -C $(DOCKER_WORKDIR)/coffer-opensbi CROSS_COMPILE=riscv64-unknown-elf- PLATFORM=generic -j
+	$(DOCKER_MAKE) -C $(DOCKER_WORKDIR)/coffer-opensbi CROSS_COMPILE=riscv64-unknown-elf- PLATFORM=generic DEBUG=$(DEBUG) -j
 
 clean: docker
 	sudo rm -rf $(BUILD_DIR)
