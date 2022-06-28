@@ -14,7 +14,6 @@ emodule-objs-y += printf/printf.o
 emodule-objs-y += debug/debug.o
 
 emodule-genflags = 
-# emodule-genflags += -DEMODULES_DEBUG=$(EMODULES_DEBUG)
 emodule-genflags += -DEMOD_MANAGER_VA_START=$(EMOD_MANAGER_VA_START)
 emodule-genflags += -DEMOD_INIT_BRK=$(EMOD_INIT_BRK)
 emodule-genflags += -DEMOD_MANAGER_LINEAR_START=$(EMOD_MANAGER_LINEAR_START)
@@ -30,4 +29,8 @@ ifeq ($(TARGET_PLATFORM), qemu)
 emodule-genflags += -D__QEMU__
 else ifeq  ($(TARGET_PLATFORM), unmatched)
 emodule-genflags += -D__UNMATCHED__
+endif
+
+ifeq ($(DEBUG), y)
+emodule-genflags += -D__DEBUG__
 endif

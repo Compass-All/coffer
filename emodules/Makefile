@@ -14,7 +14,10 @@ dir:
 	mkdir -p $(build_dir)
 
 $(subdirs):
-	make -C $@ CROSS_COMPILE=$(CROSS_COMPILE) TARGET_PLATFORM=$(TARGET_PLATFORM)
+	make -C $@ \
+		CROSS_COMPILE=$(CROSS_COMPILE) \
+		TARGET_PLATFORM=$(TARGET_PLATFORM) \
+		DEBUG=$(DEBUG)
 
 clean:
 	rm -rf $(build_dir)/emodules

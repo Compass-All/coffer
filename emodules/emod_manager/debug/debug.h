@@ -3,6 +3,10 @@
 #include "../printf/printf.h"
 #include <types.h>
 
+#ifdef __DEBUG__
+#define EMODULES_DEBUG
+#endif
+
 #ifdef EMODULES_DEBUG
 #define debug(fmt, ...) \
 	printf("\033[37m[%s] " fmt "\033[0m", __func__, ##__VA_ARGS__)
