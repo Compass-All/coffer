@@ -14,6 +14,9 @@ static emod_debug_api_t emod_debug_api;
 static emod_debug_t emod_debug;
 
 // Emodule Debug Functions
+#ifdef __DEBUG__
+#define EMODULES_DEBUG
+#endif
 
 #ifdef EMODULES_DEBUG
 #define debug(fmt, ...) printf_(fmt, ##__VA_ARGS__)

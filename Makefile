@@ -1,6 +1,7 @@
 # todo:
 # differnt targets: make qemu and make unmatched
 TARGET_PLATFORM ?= qemu # 1. qemu 2. unmatched
+DEBUG ?= n
 
 BUILD_DIR = build
 
@@ -144,7 +145,7 @@ burn-image:	board-image
 
 # do not add "-j" to this target, which leads to UB
 emodules: docker
-	$(DOCKER_MAKE) -C $(DOCKER_WORKDIR)/emodules CROSS_COMPILE=riscv64-unknown-elf- TARGET_PLATFORM=$(TARGET_PLATFORM)
+	$(DOCKER_MAKE) -C $(DOCKER_WORKDIR)/emodules CROSS_COMPILE=riscv64-unknown-elf- TARGET_PLATFORM=$(TARGET_PLATFORM) DEBUG=$(DEBUG)
 
 opensbi: docker emodules
 	$(DOCKER_MAKE) clean -C $(DOCKER_WORKDIR)/coffer-opensbi 
