@@ -245,6 +245,9 @@ static void map_brk_from_pool(vaddr_t aligned_old_brk, usize size)
 	usize number_of_pages = size >> PAGE_SHIFT;
 	paddr_t paddr = alloc_umode_page(number_of_pages);
 	for (int i = 0; i < number_of_pages; i++) {
+		show(aligned_old_brk + i * PAGE_SIZE);
+		show(paddr + i * PAGE_SIZE);
+
 		map_page(
 			aligned_old_brk		+ i * PAGE_SIZE,
 			paddr				+ i * PAGE_SIZE,
@@ -256,7 +259,11 @@ static void map_brk_from_pool(vaddr_t aligned_old_brk, usize size)
 
 static paddr_t alloc_partition_from_mmode(usize number_of_partitions)
 {
-	paddr_t allocated_paddr = __ecall_ebi_mem_alloc(number_of_partitions);
+	// the __ecall_ebi_mem_alloc() function all changes the a1 register,
+	// which will in turn influence this number_of_partitions variable
+	// if we pass it directly.
+	volatile u64 n = number_of_partitions;
+	paddr_t allocated_paddr = __ecall_ebi_mem_alloc(n);
 	show(allocated_paddr);
 
 	return allocated_paddr;
@@ -269,7 +276,7 @@ static void alloc_map_brk_outside_pool(
 	usize size
 )
 {
-	usize number_of_partitions = size / PARTITION_SIZE;
+	usize number_of_partitions = size >> PARTITION_SHIFT;
 	show(number_of_partitions);
 
 	if (size % PARTITION_SIZE)
