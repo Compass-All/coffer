@@ -71,9 +71,15 @@ mount sys /sys -t sysfs
 
 # /prog/host/test_eapp /prog/enclave/eapp_rand_malloc
 
+/prog/host/test_eapp /prog/enclave/eapp_fix_malloc 0x200000
+/prog/host/test_eapp /prog/enclave/eapp_fix_malloc 0x200000
+/prog/host/test_eapp /prog/enclave/eapp_fix_malloc 0x200000
+/prog/host/test_eapp /prog/enclave/eapp_fix_malloc 0x200000
+/prog/host/test_eapp /prog/enclave/eapp_fix_malloc 0x200000
+
 # /prog/host/test_eapp /prog/enclave/eapp_loop_time
 
-/prog/host/test_eapp /prog/enclave/eapp_write
+# /prog/host/test_eapp /prog/enclave/eapp_write
 
 # /prog/host/test_eapp /prog/enclave/eapp_fs_test
 
@@ -83,7 +89,22 @@ mount sys /sys -t sysfs
 
 # /prog/host/test_eapp /prog/enclave/eapp_test_message
 
-# /prog/host/resume_eapp 1; /prog/host/resume_eapp 2;
+/prog/host/resume_eapp 1; /prog/host/resume_eapp 2; /prog/host/resume_eapp 3;
+
+/prog/host/exit_eapp 1; 
+/prog/host/exit_eapp 3; 
+
+repeat=5
+for i in `seq 1 $repeat`
+do
+	/prog/host/resume_eapp 2;
+done
+
+# repeat=7
+# for i in `seq 1 $repeat`
+# do
+# 	/prog/host/resume_eapp 1;
+# done
 
 # Enclave
 # /prog/host/test_eapp /prog/enclave/eapp_malloc 4096
