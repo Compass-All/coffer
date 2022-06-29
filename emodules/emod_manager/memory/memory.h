@@ -14,8 +14,8 @@ void wait_until_non_zero(volatile u64 *ptr);
 
 void	set_emod_manager_pa_start(paddr_t pa_start);
 paddr_t	get_emod_manager_pa_start();
-void	set_payload_pa_start(paddr_t pa_start);
-paddr_t	get_payload_pa_start();
+void	set_umode_pool_pa_aligned(paddr_t pa_start);
+paddr_t	get_umode_pool_pa_aligned();
 vaddr_t alloc_map_emodule(usize emodule_size);
 usize 	get_va_pa_offset();
 void 	map_sections();
