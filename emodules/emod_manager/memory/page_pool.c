@@ -87,7 +87,7 @@ static paddr_t get_pool_top(u8 mode)
 		partition_start = get_emod_manager_pa_start();
 		pool_start		= partition_start + smode_pool_desc.offset;
 	} else if (mode == UMODE_POOL) {
-		partition_start = get_payload_pa_start();
+		partition_start = get_umode_pool_pa_aligned();
 		pool_start		= partition_start + umode_pool_desc.offset;
 	} else {
 		panic("Invalid mode!\n");

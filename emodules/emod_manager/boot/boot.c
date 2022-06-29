@@ -142,7 +142,6 @@ void emain_lower_half()
 	show(payload_size);
 	show(argc);
 
-	set_payload_pa_start(payload_pa_start);
 	paddr_t payload_pa_end = payload_pa_start + PAGE_UP(payload_size);
 
 	// currently only support less than one page argv
@@ -153,8 +152,12 @@ void emain_lower_half()
 
 	map_user_argv(user_argv_pa_start, argc);
 
+	paddr_t umode_pool_start = user_argv_pa_end
+		- (user_argv_pa_end % PARTITION_SIZE);
+	show(umode_pool_start);
+	set_umode_pool_pa_aligned(umode_pool_start);
 	init_umode_page_pool(
-		user_argv_pa_end - payload_pa_start,
+		PAGE_UP(user_argv_pa_end) - umode_pool_start,
 		PAGE_DOWN(
 			PARTITION_UP(user_argv_pa_end) - user_argv_pa_end
 		)

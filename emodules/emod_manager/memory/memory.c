@@ -14,7 +14,7 @@ volatile static	paddr_t emod_manager_pa_start;
 const static	vaddr_t emod_manager_va_start = EMOD_MANAGER_VA_START;
 
 // initialized during entering enclave
-volatile static paddr_t payload_pa_start;
+volatile static paddr_t umode_pool_pa_aligned;
 
 // for emodules va allocation
 static 			vaddr_t emodule_brk = EMOD_INIT_BRK;
@@ -43,15 +43,15 @@ paddr_t get_emod_manager_pa_start()
 		return emod_manager_pa_start;
 }
 
-void set_payload_pa_start(paddr_t pa_start)
+void set_umode_pool_pa_aligned(paddr_t pa_start)
 {
-	payload_pa_start = pa_start;
-	show(payload_pa_start);
+	umode_pool_pa_aligned = pa_start;
+	show(umode_pool_pa_aligned);
 }
 
-paddr_t get_payload_pa_start()
+paddr_t get_umode_pool_pa_aligned()
 {
-	return payload_pa_start;
+	return umode_pool_pa_aligned;
 }
 
 static void increase_emodule_brk(usize increment)
@@ -120,7 +120,7 @@ void addr_record(u64 satp_value)
 	__ecall_ebi_addr_record(
 		page_table_offset,
 		(paddr_t)&emod_manager_pa_start,
-		(paddr_t)&payload_pa_start
+		(paddr_t)&umode_pool_pa_aligned
 	);
 }
 
