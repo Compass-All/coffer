@@ -59,7 +59,8 @@ void exception_handler(
 		error("Load address misaligned\n");
 		break;
 	case 0x5:
-		error("Load access fault\n");
+		paddr_t access_fault_pa = get_pa(stval);
+		error("Load access fault: pa = 0x%lx\n", access_fault_pa);
 		break;
 	case 0x6:
 		error("Store/AMO address misaligned\n");
