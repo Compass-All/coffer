@@ -245,9 +245,6 @@ static void map_brk_from_pool(vaddr_t aligned_old_brk, usize size)
 	usize number_of_pages = size >> PAGE_SHIFT;
 	paddr_t paddr = alloc_umode_page(number_of_pages);
 	for (int i = 0; i < number_of_pages; i++) {
-		show(aligned_old_brk + i * PAGE_SIZE);
-		show(paddr + i * PAGE_SIZE);
-
 		map_page(
 			aligned_old_brk		+ i * PAGE_SIZE,
 			paddr				+ i * PAGE_SIZE,
