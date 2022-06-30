@@ -1,0 +1,121 @@
+/bin/busybox --install -s
+dmesg -n 1
+
+mount proc /proc -t proc
+mount sys /sys -t sysfs
+
+# ----- sqlite
+
+#   fillseq       write N values in sequential key order in async mode
+#   fillseqsync   write N/100 values in sequential key order in sync mode
+#   fillseqbatch  batch write N values in sequential key order in async mode
+#   fillrandom    write N values in random key order in async mode
+#   fillrandsync  write N/100 values in random key order in sync mode
+#   fillrandbatch batch write N values in random key order in async mode
+#   overwrite     overwrite N values in random key order in async mode
+#   fillrand100K  write N/1000 100K values in random order in async mode
+#   fillseq100K   wirte N/1000 100K values in sequential order in async mode
+#   readseq       read N times sequentially
+#   readrandom    read N times in random order
+#   readrand100K  read N/1000 100K values in sequential order in async mode
+
+# printf "\n\n\n\n\n\n\n\n\n"
+# printf "################## sqlite help ##################\n"
+# /prog/enclave/sqlite-bench/sqlite-bench --help
+
+# command="/prog/enclave/sqlite-bench/sqlite-bench \
+# 	--num=500 \
+# 	--reads=500 \
+# 	--histogram=1"
+
+# bench="--benchmarks=fillseq"
+
+# printf "\n\n\n"
+# # echo $bench
+# printf "################## sqlite in enclave ##################\n"
+# /prog/host/test_eapp $command $bench
+
+# printf "\n\n\n"
+# # echo $bench
+# printf "################## sqlite in Linux ##################\n"
+# $command $bench
+# rm dbbench_sqlite3*
+
+# ----- darknet
+
+# ./darknet detect cfg/yolov3.cfg yolov3.weights data/dog.jpg
+# printf "\n\n\n\n\n\n\n\n\n"
+# printf "################## darknet detect ##################\n"
+# /prog/host/test_eapp /prog/enclave/darknet/darknet detect /prog/enclave/darknet/cfg/yolov3.cfg /prog/enclave/darknet/yolov3.weights /prog/enclave/darknet/data/dog.jpg
+
+# ./darknet classify cfg/tiny.cfg tiny.weights data/dog.jpg
+# printf "\n\n\n\n\n\n\n\n\n"
+# printf "################## darknet classify ##################\n"
+# /prog/host/test_eapp /prog/enclave/darknet/darknet classify /cfg/tiny.cfg /tiny.weights /data/dog.jpg
+
+# ----- end darknet
+
+# size="0x800000"
+
+# printf "\n\n\n\n\n\n\n\n\n"
+# printf "################## Enclave ##################\n"
+# /prog/host/test_eapp /prog/enclave/eapp_malloc_write $size
+
+# # /prog/host/test_eapp /prog/enclave/eapp_malloc_write 0x10000
+
+# # /prog/host/test_eapp /prog/enclave/eapp_malloc_write_rand 0x200000
+
+# printf "\n\n\n"
+# printf "################## Linux ##################\n"
+# /prog/enclave/eapp_malloc_write $size
+
+# /prog/host/test_eapp /prog/enclave/eapp_rand_malloc
+
+# /prog/host/test_eapp /prog/enclave/eapp_loop_time
+
+# /prog/host/test_eapp /prog/enclave/eapp_write
+
+# /prog/host/test_eapp /prog/enclave/eapp_fs_test
+
+# /prog/host/test_eapp /prog/enclave/eapp_memcpy
+
+# /prog/host/test_eapp /prog/enclave/eapp_gettimeofday
+
+# /prog/host/test_eapp /prog/enclave/eapp_test_message
+
+# Enclave
+# /prog/host/test_eapp /prog/enclave/eapp_malloc 4096
+# Host
+# /prog/enclave/eapp_malloc 0 4096
+
+# printf "\n\n\n\n\n\n\n\n\n"
+# printf "################## test_argv ##################\n"
+# /prog/host/test_eapp /prog/enclave/eapp_test_argv test1 test2
+
+# printf "\n\n\n\n\n\n\n\n\n"
+# printf "################## qsort ##################\n"
+# /prog/host/test_eapp /prog/enclave/rv8/rv8_qsort
+
+# printf "\n\n\n\n\n\n\n\n\n"
+# printf "################## sha512 ##################\n"
+# /prog/host/test_eapp /prog/enclave/rv8/rv8_sha512
+
+# printf "\n\n\n\n\n\n\n\n\n"
+# printf "################## primes ##################\n"
+# /prog/host/test_eapp /prog/enclave/rv8/rv8_primes
+
+# printf "\n\n\n\n\n\n\n\n\n"
+# printf "################## norx ##################\n"
+# /prog/host/test_eapp /prog/enclave/rv8/rv8_norx
+
+# printf "\n\n\n\n\n\n\n\n\n"
+# printf "################## miniz ##################\n"
+# /prog/host/test_eapp /prog/enclave/rv8/rv8_miniz
+
+# printf "\n\n\n\n\n\n\n\n\n"
+# printf "################## dhrystone ##################\n"
+# /prog/host/test_eapp /prog/enclave/rv8/rv8_dhrystone
+
+# printf "\n\n\n\n\n\n\n\n\n"
+# printf "################## aes ##################\n"
+# /prog/host/test_eapp /prog/enclave/rv8/rv8_aes
