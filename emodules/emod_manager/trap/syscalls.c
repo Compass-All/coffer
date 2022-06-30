@@ -4,6 +4,7 @@
 #include "../debug/debug.h"
 #include "../memory/page_pool.h"
 #include "../memory/memory.h"
+#include "../emod_table/emod_table.h"
 #include <util/gnu_attribute.h>
 #include <util/register.h>
 #include <emodules/ecall.h>
@@ -201,7 +202,7 @@ static type syscall_handler_##syscall_name(type1 var1, type2 var2)					\
 	return emod_vfs.emod_vfs_api.syscall_handler_##syscall_name(var1, var2);		\
 }
 #define DEFINE_FS_SYSCALL_HANDLER_3(type, syscall_name, type1, var1, type2, var2, type3, var3)	\
-static type syscall_handler_##syscall_name(type1 var1, type2 var2, type3 var3)					\
+__unused static type syscall_handler_##syscall_name(type1 var1, type2 var2, type3 var3)					\
 {																								\
 	load_emod_vfs();																			\
 	return emod_vfs.emod_vfs_api.syscall_handler_##syscall_name(var1, var2, var3);				\
@@ -288,6 +289,36 @@ DEFINE_FS_SYSCALL_HANDLER_6(void *, mmap, void *, addr, size_t, len, int, prot,
 
 DEFINE_FS_SYSCALL_HANDLER_2(int, munmap, void *, addr, size_t, len)
 
+static inline bool is_stdio(u64 fd)
+{
+	return (
+		fd == 0 ||	// stdin
+		fd == 1 ||	// stdout
+		fd == 2		// stderr
+	);
+}
+
+// tmp: to be moved to emod_stdio
+static int syscall_handler_fstat_stdio(int fd, struct stat *stat)
+{
+    stat->st_dev = 26;
+    stat->st_ino = 6;
+    stat->st_nlink = 1;
+    stat->st_mode = S_IWUSR | S_IRUSR | S_IRGRP;
+    stat->st_uid = 1000;
+    stat->st_gid = 5;
+    stat->st_rdev = 34819;
+    stat->st_size = 0;
+    stat->st_blksize = 1024;
+    stat->st_blocks = 0;
+    return 0;
+}
+
+static int syscall_handler_close_stdio(int fd)
+{
+	return 0;
+}
+
 void syscall_handler(
 	u64 	*regs,
 	u64		sepc,
@@ -362,9 +393,15 @@ void syscall_handler(
 
 	case SYS_close:
 		debug("syscall close\n");
-		ret = (u64)syscall_handler_close(
-			(int)regs[CTX_INDEX_a0]
-		);
+		if (is_stdio(regs[CTX_INDEX_a0])) {
+			ret = (u64)syscall_handler_close_stdio(
+				(int)regs[CTX_INDEX_a0]
+			);
+		} else {
+			ret = (u64)syscall_handler_close(
+				(int)regs[CTX_INDEX_a0]
+			);
+		}
 		debug("end of syscall close\n");
 		break;
 
@@ -431,8 +468,8 @@ void syscall_handler(
 		break;
 
 	case SYS_writev:
-		// debug("syscall writev\n");
-		time0 = read_csr(cycle);
+		debug("syscall writev\n");
+		// time0 = read_csr(cycle);
 		ret = (u64)syscall_handler_writev(
 			(int)					regs[CTX_INDEX_a0],
 			(const struct iovec *)	regs[CTX_INDEX_a1],
@@ -445,20 +482,27 @@ void syscall_handler(
 
 	case SYS_write:
 		debug("syscall write\n");
-		ret = (u64)syscall_handler_write(
-			(int)			regs[CTX_INDEX_a0],
-			(const void *)	regs[CTX_INDEX_a1],
-			(size_t)		regs[CTX_INDEX_a2]
-		);
+		// ret = (u64)syscall_handler_write(
+			// (int)			regs[CTX_INDEX_a0],
+			// (const void *)	regs[CTX_INDEX_a1],
+			// (size_t)		regs[CTX_INDEX_a2]
+		// );
 		debug("end of syscall write\n");
 		break;
 
 	case SYS_fstat:
 		debug("syscall fstat\n");
-		ret = (u64)syscall_handler_fstat(
-			(int)			regs[CTX_INDEX_a0],
-			(struct stat *)	regs[CTX_INDEX_a1]
-		);
+		if (is_stdio(regs[CTX_INDEX_a0])) {
+			ret = syscall_handler_fstat_stdio(
+				(int)			regs[CTX_INDEX_a0],
+				(struct stat *)	regs[CTX_INDEX_a1]	
+			);
+		} else {
+			ret = (u64)syscall_handler_fstat(
+				(int)			regs[CTX_INDEX_a0],
+				(struct stat *)	regs[CTX_INDEX_a1]
+			);
+		}
 		debug("end of syscall fstat\n");
 		break;
 
@@ -516,6 +560,7 @@ void syscall_handler(
 	case SYS_exit_group:
 	 	debug("syscall exit\n");
 		show(get_umode_page_pool_avail_size());
+		dump_emodule_table();	
 		__ecall_ebi_exit(regs[CTX_INDEX_a0]);
 		break;
 
