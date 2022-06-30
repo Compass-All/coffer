@@ -31,7 +31,8 @@ static void *alloc_from_mmode(usize size)
 	show(nr_part);
 
 	if (nr_part > 0) {
-		paddr_t pa = __ecall_ebi_mem_alloc(nr_part);
+		volatile usize n = nr_part;
+		paddr_t pa = __ecall_ebi_mem_alloc(n);
 		vaddr_t va = cur_aligned;
 		for (int i = 0; i < nr_part; i++) {
 			show(va + i * PARTITION_SIZE);
