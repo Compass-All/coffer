@@ -115,10 +115,7 @@ void init_prog_brk()
 
 void addr_record(u64 satp_value)
 {
-	paddr_t page_table_root = satp_value << PAGE_SHIFT;
-	usize page_table_offset = page_table_root - get_emod_manager_pa_start();
 	__ecall_ebi_addr_record(
-		page_table_offset,
 		(paddr_t)&emod_manager_pa_start,
 		(paddr_t)&umode_pool_pa_aligned
 	);
