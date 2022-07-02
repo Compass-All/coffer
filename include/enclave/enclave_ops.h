@@ -24,17 +24,16 @@ static paddr_t inline __ecall_ebi_mem_alloc(usize number_of_partitions)
 }
 
 static void inline __ecall_ebi_addr_record(
-	usize 	page_table_offset,
 	paddr_t emod_manager_start_pa_ptr,
-	paddr_t payload_start_pa_ptr
+	paddr_t umode_pool_pa_aligned_ptr
 )
 {
 	__ecall(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_ADDR_RECORD,
-		page_table_offset,
 		emod_manager_start_pa_ptr,
-		payload_start_pa_ptr
+		umode_pool_pa_aligned_ptr,
+		0UL
 	);
 }
 
