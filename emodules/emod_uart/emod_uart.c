@@ -4,7 +4,11 @@
 #include <emodules/emod_uart/emod_uart.h>
 #include <util/gnu_attribute.h>
 
+#if defined __UNMATCHED__
 #define UART_REG_ADDR 0x10011000UL
+#elif defined __QEMU__
+#define UART_REG_ADDR 0x101000UL
+#endif
 #define UART_REG_SIZE 0x400UL
 
 static emod_desc_t emod_uart_desc = {
@@ -16,11 +20,11 @@ static emod_desc_t emod_uart_desc = {
 static emod_uart_api_t emod_uart_api;
 static emod_uart_t emod_uart;
 
-#ifdef EMODULES_DEBUG
+// #ifdef EMODULES_DEBUG
 #define debug(fmt, ...) printf_(fmt, ##__VA_ARGS__)
-#else
-#define debug(fmt, ...)
-#endif
+// #else
+// #define debug(fmt, ...)
+// #endif
 
 static emod_uart_t get_emod_uart(void)
 {
@@ -31,7 +35,9 @@ __attribute__((section("text.init")))
 vaddr_t
 uart_init(vaddr_t emod_manager_getter)
 {
+    debug("Checkpoint 1\n");
     sifive_uart_init((void*)UART_REG_ADDR, 0, 115200);
+    debug("Checkpoint 2\n");
 
     emod_uart_api.getc = sifive_uart_getc;
     emod_uart_api.putc = sifive_uart_putc;

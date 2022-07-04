@@ -8,6 +8,8 @@
 #include <util/register.h>
 #include <emodules/ecall.h>
 #include <enclave/enclave_ops.h>
+#include <enclave/syscall.h>
+#include <emodules/emod_uart/emod_uart.h>
 #include <emodules/emod_vfs/emod_vfs.h>
 #include <emodules/emod_manager/emod_manager.h>
 #include <emodules/emodule_id.h>
@@ -75,6 +77,7 @@
 #define SYS_getmainvars 	2011
 
 static emod_vfs_t emod_vfs;
+static emod_uart_t emod_uart;
 
 __unused static void *memcpy(void *dest, const void *src, size_t count)
 {
@@ -97,6 +100,19 @@ static void load_emod_vfs()
 		debug("vfs not loaded\n");
 		vaddr_t emod_vfs_getter = acquire_emodule(EMODULE_ID_VFS);
 		emod_vfs = ((emod_vfs_t (*)(void))emod_vfs_getter)();
+
+		loaded = 1;
+	}
+}
+
+static void load_emod_uart(void)
+{
+	static u8 loaded = 0;
+	vaddr_t emod_uart_getter;
+
+	if (!loaded) {
+		emod_uart_getter = acquire_emodule(EMODULE_ID_UART);
+		emod_uart = ((emod_uart_t (*)(void))emod_uart_getter)();
 
 		loaded = 1;
 	}
@@ -560,7 +576,8 @@ void syscall_handler(
 	case 55: // fchown
 		break;
 	
-	case 0xDEAD:
+// Custom syscalls
+	case SYS_test:
 	    paddr_t get_pa(vaddr_t va);
 		volatile u8* ptr = (u8*) 0xADD00000;
 		__unused paddr_t pa = get_pa((vaddr_t)ptr);
@@ -570,6 +587,17 @@ void syscall_handler(
 			asm volatile("fence w,o" ::: "memory");
 			flush_tlb();
 		}
+		break;
+
+	case SYS_uart_getc:
+		load_emod_uart();
+		ret = emod_uart.emod_uart_api.getc();
+		break;
+
+	case SYS_uart_putc:
+		load_emod_uart();
+		emod_uart.emod_uart_api.putc((char) regs[CTX_INDEX_a0]);
+		ret = 0;
 		break;
 	
 	default:
