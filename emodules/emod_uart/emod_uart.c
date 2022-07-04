@@ -1,7 +1,8 @@
 #include "dependency.h"
-#include "tmp_printf.h"
 #include "serial.h"
+#include "tmp_printf.h"
 #include <emodules/emod_uart/emod_uart.h>
+#include <memory/page_table.h>
 #include <util/gnu_attribute.h>
 
 #if defined __UNMATCHED__
@@ -9,6 +10,7 @@
 #elif defined __QEMU__
 #define UART_REG_ADDR 0x101000UL
 #endif
+#define UART_REG_VA 0xBEE0000000UL
 #define UART_REG_SIZE 0x400UL
 
 static emod_desc_t emod_uart_desc = {
@@ -31,13 +33,11 @@ static emod_uart_t get_emod_uart(void)
     return emod_uart;
 }
 
-__attribute__((section("text.init")))
+__attribute__((section(".text.init")))
 vaddr_t
 uart_init(vaddr_t emod_manager_getter)
 {
-    debug("Checkpoint 1\n");
-    sifive_uart_init((void*)UART_REG_ADDR, 0, 115200);
-    debug("Checkpoint 2\n");
+    vaddr_t uart_va = UART_REG_VA;
 
     emod_uart_api.getc = sifive_uart_getc;
     emod_uart_api.putc = sifive_uart_putc;
@@ -55,6 +55,10 @@ uart_init(vaddr_t emod_manager_getter)
 		(void *)emod_manager_getter;
 	emod_manager = get_emod_manager();
 	emod_manager.emod_manager_api.test();
+
+    map_page(uart_va, (paddr_t)UART_REG_ADDR, PTE_V | PTE_R | PTE_W, SV39_LEVEL_PAGE);
+
+    sifive_uart_init((void*)uart_va, 0, 115200);
 
     return (vaddr_t)get_emod_uart;
 }
