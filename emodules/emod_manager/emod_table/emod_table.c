@@ -2,6 +2,7 @@
 #include "../panic/panic.h"
 #include "../debug/debug.h"
 #include <types.h>
+#include <emodules/emodule_id.h>
 
 /**
  * @brief Emodule Table
@@ -24,11 +25,14 @@
 
 static vaddr_t emodule_table[EMODULE_TABLE_SIZE];
 static const usize emodule_size_table[EMODULE_TABLE_SIZE] = {
-	EMODULE_MANAGER_SIZE,
-	EMODULE_DEBUG_SIZE,
-	EMODULE_ALLOC_SIZE,
-	EMODULE_VFS_SIZE,
-	EMODULE_DUMMY_SIZE
+#define EMOD_MAP_SIZE(name) [EMODULE_ID_##name] = EMODULE_##name##_SIZE
+	EMOD_MAP_SIZE(MANAGER),
+	EMOD_MAP_SIZE(DEBUG),
+	EMOD_MAP_SIZE(ALLOC),
+	EMOD_MAP_SIZE(VFS),
+	EMOD_MAP_SIZE(UART),
+	EMOD_MAP_SIZE(DUMMY)
+#undef EMOD_MAP_SIZE
 };
 
 void register_emodule(u32 emod_id, vaddr_t emodule_getter_addr)
