@@ -10,7 +10,7 @@
 #elif defined __QEMU__
 #define UART_REG_ADDR 0x101000UL
 #endif
-#define UART_REG_VA 0xBEE0000000UL
+#define UART_REG_VA 0xBEE000000UL
 #define UART_REG_SIZE 0x400UL
 
 static emod_desc_t emod_uart_desc = {
@@ -56,7 +56,7 @@ uart_init(vaddr_t emod_manager_getter)
 	emod_manager = get_emod_manager();
 	emod_manager.emod_manager_api.test();
 
-    map_page(uart_va, (paddr_t)UART_REG_ADDR, PTE_V | PTE_R | PTE_W, SV39_LEVEL_PAGE);
+    map_page(uart_va, (paddr_t)UART_REG_ADDR, PTE_R | PTE_W, SV39_LEVEL_PAGE);
 
     sifive_uart_init((void*)uart_va, 0, 115200);
 
