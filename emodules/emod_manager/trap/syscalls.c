@@ -15,6 +15,7 @@
 #include <emodules/emod_manager/emod_manager.h>
 #include <emodules/emodule_id.h>
 #include "../memory/page_table.h"
+#include "../util/string.h"
 
 #include <sys/stat.h>
 #include <time.h>
@@ -79,19 +80,6 @@
 
 static emod_vfs_t emod_vfs;
 static emod_uart_t emod_uart;
-
-__unused static void *memcpy(void *dest, const void *src, size_t count)
-{
-	char *temp1	  = dest;
-	const char *temp2 = src;
-
-	while (count > 0) {
-		*temp1++ = *temp2++;
-		count--;
-	}
-
-	return dest;
-}
 
 static void load_emod_vfs()
 {
