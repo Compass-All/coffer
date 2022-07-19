@@ -9,6 +9,8 @@ MKIMAGE ?= mkimage
 ITS_PATH ?= tools/unmatched
 ITB_PATH ?= $(BUILD_DIR)/itb
 
+SIGN_PATH ?= tools/sign
+
 BOARD_ROOTFS_PATH ?= /media/prongs/rootfs
 
 DOCKER = sudo docker # Linux only
@@ -143,8 +145,11 @@ burn-image:	board-image
 # TODO: copy emodules and prog to rootfs on SD card
 # copy-file: emodules prog
 
+tools:
+	$(DOCKER_MAKE) -C $(DOCKER_WORKDIR)/$(SIGN_PATH)
+
 # do not add "-j" to this target, which leads to UB
-emodules: docker
+emodules: docker tools
 	$(DOCKER_MAKE) -C $(DOCKER_WORKDIR)/emodules CROSS_COMPILE=riscv64-unknown-elf- TARGET_PLATFORM=$(TARGET_PLATFORM) DEBUG=$(DEBUG)
 
 opensbi: docker emodules
@@ -159,4 +164,4 @@ clean: docker
 clean-kernel:
 	rm $(KERNEL_IMAGE)
 
-.PHONY: all clean clean-kernel docker rootfs dir board-image kernel-image prog
+.PHONY: all clean clean-kernel docker rootfs dir board-image kernel-image prog tools
