@@ -3,6 +3,8 @@
 #include "../debug/debug.h"
 #include <types.h>
 #include <emodules/emodule_id.h>
+#include <enclave/enclave_ops.h>
+#include <message/short_message.h>
 
 /**
  * @brief Emodule Table
@@ -24,16 +26,6 @@
 #define EMODULE_TABLE_SIZE	0x100
 
 static vaddr_t emodule_table[EMODULE_TABLE_SIZE];
-static const usize emodule_size_table[EMODULE_TABLE_SIZE] = {
-#define EMOD_MAP_SIZE(name) [EMODULE_ID_##name] = EMODULE_##name##_SIZE
-	EMOD_MAP_SIZE(MANAGER),
-	EMOD_MAP_SIZE(DEBUG),
-	EMOD_MAP_SIZE(ALLOC),
-	EMOD_MAP_SIZE(VFS),
-	EMOD_MAP_SIZE(UART),
-	EMOD_MAP_SIZE(DUMMY)
-#undef EMOD_MAP_SIZE
-};
 
 void register_emodule(u32 emod_id, vaddr_t emodule_getter_addr)
 {
@@ -46,12 +38,10 @@ void register_emodule(u32 emod_id, vaddr_t emodule_getter_addr)
 
 usize get_emodule_size(u32 emod_id)
 {
-	if (emod_id >= EMODULE_TABLE_SIZE) {
-		printf("Emodule %u does not exists\n", emod_id);
-		return (vaddr_t)0UL;
-	}
-
-	return emodule_size_table[emod_id];
+	// query emodule size from host deamon
+	usize ret = __ecall_ebi_suspend(GET_MODULE_SIZE | emod_id);
+	debug("emodule %u size: 0x%lx\n", emod_id, ret);
+	return ret;
 }
 
 vaddr_t get_emodule(u32 emod_id)
