@@ -4,6 +4,7 @@ emodule-objs-y += emod_manager.o
 emodule-objs-y += boot/boot.o
 emodule-objs-y += attest/ecc.o
 emodule-objs-y += attest/md2.o
+emodule-objs-y += attest/key.o
 emodule-objs-y += memory/memory.o
 emodule-objs-y += memory/page_pool.o
 emodule-objs-y += memory/page_table.o
@@ -26,6 +27,8 @@ emodule-genflags += -DEUSR_HEAP_START_ALIGNED=$(EUSR_HEAP_START_ALIGNED)
 emodule-genflags += -DUMODE_STACK_TOP_VA=$(UMODE_STACK_TOP_VA)
 emodule-genflags += -DUMODE_STACK_SIZE=$(UMODE_STACK_SIZE)
 emodule-genflags += -DSMODE_STACK_SIZE=$(SMODE_STACK_SIZE)
+emodule-genflags += -DATTEST_PUB_KEY=$(ATTEST_PUB_KEY)
+# emodule-genflags += -DATTEST_PRI_KEY=$(ATTEST_PRI_KEY)
 
 
 ifeq ($(TARGET_PLATFORM), qemu)

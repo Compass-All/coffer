@@ -11,6 +11,9 @@
 #include "memory/page_table.h"
 #include "memory/page_pool.h"
 #include "emod_table/emod_table.h"
+#include "attest/key.h"
+#include "attest/md2.h"
+#include "attest/ecc.h"
 
 #include <emodules/emod_dummy/emod_dummy.h>
 #include <emodules/emod_debug/emod_debug.h>
@@ -39,6 +42,42 @@ static void api_test()
 	return;
 }
 
+static void attest_emodule(vaddr_t emodule_vaddr, usize emodule_size)
+{
+	if (emodule_size <= ECC_BYTES * 2)
+		panic("Invalid emodule size\n");
+
+	usize bare_size = emodule_size - ECC_BYTES * 2;
+	u8 hash[MD2_BLOCK_SIZE * 2];
+	const u8 *sign = (const u8 *)(emodule_vaddr + bare_size);
+	int res;
+
+	md2((const void *)emodule_vaddr, (size_t)bare_size, hash);
+	for (int i = 0; i < MD2_BLOCK_SIZE; i++)
+		hash[i + MD2_BLOCK_SIZE] = hash[i];
+
+#ifdef EMODULES_DEBUG
+	debug("public key:\n");
+	for (int i = 0; i < ECC_BYTES + 1; i++)
+		printf("0x%x ", pub_key[i]);
+	printf("\n");
+	debug("md2 hash:\n");
+	for (int i = 0; i < MD2_BLOCK_SIZE; i++)
+		printf("0x%x ", hash[i]);
+	printf("\n");
+	debug("signature:\n");
+	for (int i = 0; i < ECC_BYTES * 2; i++)
+		printf("0x%x ", sign[i]);
+	printf("\n");
+#endif	
+
+	res = ecdsa_verify(pub_key, hash, sign);
+	if (!res)
+		panic("attestation failed\n");
+
+	printf("Attestation passed\n");
+}
+
 static void load_emodule(u32 emodule_id)
 {
 	show(emodule_id);
@@ -52,11 +91,14 @@ static void load_emodule(u32 emodule_id)
 	__ecall_ebi_listen_message(
 		0UL,
 		vaddr,
-		emodule_size	
+		emodule_size
 	);
 
 	__ecall_ebi_suspend(LOAD_MODULE | emodule_id);
 	wait_until_non_zero((volatile u64 *)vaddr);
+
+	// attestation here, before emodules get executed
+	attest_emodule(vaddr, emodule_size);
 
 	vaddr_t (*init)(vaddr_t) = (void *)vaddr;
 	vaddr_t getter_addr = init((vaddr_t)get_emod_manager);

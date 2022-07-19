@@ -32,7 +32,7 @@ MOUNT_POINT = $(BUILD_DIR)/mnt
 
 EMODULE_DIRS = $(subst emodules/,,$(sort $(dir $(wildcard emodules/*/))))
 EMODULES = $(EMODULE_DIRS:/=)
-EMODULE_TARGETS = $(addsuffix .bin, $(EMODULES))
+EMODULE_TARGETS = $(addsuffix .bin.signed, $(EMODULES))
 EMODULE_PATH = $(addprefix $(BUILD_DIR)/emodules/, $(EMODULE_DIRS))
 EMODULE_TARGETS_ABS = $(join $(EMODULE_PATH), $(EMODULE_TARGETS))
 

@@ -470,11 +470,11 @@ void syscall_handler(
 
 	case SYS_write:
 		debug("syscall write\n");
-		// ret = (u64)syscall_handler_write(
-			// (int)			regs[CTX_INDEX_a0],
-			// (const void *)	regs[CTX_INDEX_a1],
-			// (size_t)		regs[CTX_INDEX_a2]
-		// );
+		ret = (u64)syscall_handler_write(
+			(int)			regs[CTX_INDEX_a0],
+			(const void *)	regs[CTX_INDEX_a1],
+			(size_t)		regs[CTX_INDEX_a2]
+		);
 		debug("end of syscall write\n");
 		break;
 
