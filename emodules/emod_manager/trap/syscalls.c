@@ -548,7 +548,7 @@ void syscall_handler(
 	case SYS_exit_group:
 	 	debug("syscall exit\n");
 		show(get_umode_page_pool_avail_size());
-		dump_emodule_table();	
+		// dump_emodule_table();	
 		__ecall_ebi_exit(regs[CTX_INDEX_a0]);
 		break;
 

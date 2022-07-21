@@ -75,7 +75,7 @@ static void attest_emodule(vaddr_t emodule_vaddr, usize emodule_size)
 	if (!res)
 		panic("attestation failed\n");
 
-	printf("Attestation passed\n");
+	debug("Attestation passed\n");
 }
 
 static void load_emodule(u32 emodule_id)
