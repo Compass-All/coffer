@@ -110,17 +110,22 @@ void emain_upper_half(
 	);
 }
 
-static void set_csr(u64 sepc, u64 sscratch)
+static void init_csr(u64 sepc, u64 sscratch)
 {
 	u64 sstatus = read_csr(sstatus);
     sstatus |= SSTATUS_SUM;		// set SUM
     sstatus &= ~SSTATUS_SPP;	// flip SPP
     write_csr(sstatus, sstatus);
 
-	// write_csr(sie, SIE_SEIE | SIE_SSIE);
-
 	write_csr(sepc, sepc);
 	write_csr(sscratch, sscratch);
+}
+
+static void interrupt_enable()
+{
+	write_csr(sip, 0UL);
+	// write_csr(sie, SIE_SEIE | SIE_SSIE | SIE_STIE);
+	write_csr(sie, SIE_STIE);
 }
 
 void emain_lower_half()
@@ -188,10 +193,12 @@ void emain_lower_half()
 
 	init_prog_brk();
 
-	set_csr(elf_entry, umode_stack_top);
+	init_csr(elf_entry, umode_stack_top);
 
 	emod_manager_init();
 	// emod_manager_test();
+
+	interrupt_enable();
 
 	debug("end of emain\n");
 }

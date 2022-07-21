@@ -4,4 +4,13 @@ dmesg -n 1
 mount proc /proc -t proc
 mount sys /sys -t sysfs
 
-/prog/host/test_eapp /prog/enclave/eapp_write
+
+/prog/host/test_eapp /prog/enclave/rv8/rv8_qsort
+
+# /prog/host/test_eapp /prog/enclave/eapp_infinite & \
+# /prog/host/test_eapp /prog/enclave/eapp_infinite & \
+# /prog/host/test_eapp /prog/enclave/eapp_infinite & \
+# /prog/host/test_eapp /prog/enclave/eapp_infinite & \
+# /prog/host/test_eapp /prog/enclave/eapp_infinite & \
+# /prog/host/test_eapp /prog/enclave/eapp_infinite & \
+# wait

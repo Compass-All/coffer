@@ -12,6 +12,7 @@ emodule-objs-y += elf/elf_loader.o
 emodule-objs-y += panic/panic.o
 emodule-objs-y += trap/exceptions.o
 emodule-objs-y += trap/syscalls.o
+emodule-objs-y += trap/interrupts.o
 emodule-objs-y += emod_table/emod_table.o
 emodule-objs-y += printf/printf.o
 emodule-objs-y += util/string.o

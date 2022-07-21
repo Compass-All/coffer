@@ -1,5 +1,7 @@
 #include "exceptions.h"
 #include "syscalls.h"
+#include "interrupts.h"
+#include <util/csr.h>
 #include <types.h>
 #include "../panic/panic.h"
 #include "../debug/debug.h"
@@ -10,6 +12,7 @@
 #include "../memory/page_table.h"
 #include "../emod_table/emod_table.h"
 
+#define SCAUSE_INTER	(1UL << 63)
 #define SCAUSE_ECALL	0x8UL
 #define dump(v) printf(#v "\t=\t0x%lx\n", (u64)(v));
 
@@ -23,11 +26,17 @@ void exception_handler(
 	if (scause == SCAUSE_ECALL) {
 		syscall_handler(regs, sepc, scause, stval);
 		return;
+	} else if (scause & SCAUSE_INTER) {
+		interrupt_handler(regs, sepc, scause & (~SCAUSE_INTER), stval);
+		return;
 	}
 
 	error("Trapped! Exception!\n");
 
+	u64 sie = read_csr(sie);
+	u64 sip = read_csr(sip);
 	dump(sepc); dump(scause); dump(stval);	
+	dump(sie); dump(sip);
 	printf("\n");
 
 	printf("Register Dump:\n");
