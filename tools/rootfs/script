@@ -5,7 +5,13 @@ mount proc /proc -t proc
 mount sys /sys -t sysfs
 
 
-/prog/host/test_eapp /prog/enclave/rv8/rv8_qsort
+repeat=24
+for i in `seq 1 $repeat`
+do
+	/prog/host/test_eapp /prog/enclave/rv8/rv8_qsort &
+done
+
+watch /prog/host/dump_enc_status
 
 # /prog/host/test_eapp /prog/enclave/eapp_infinite & \
 # /prog/host/test_eapp /prog/enclave/eapp_infinite & \
@@ -14,3 +20,7 @@ mount sys /sys -t sysfs
 # /prog/host/test_eapp /prog/enclave/eapp_infinite & \
 # /prog/host/test_eapp /prog/enclave/eapp_infinite & \
 # wait
+
+# /prog/host/dump_enc_status
+# /prog/host/dump_enc_memory
+# /prog/host/dump_pmp

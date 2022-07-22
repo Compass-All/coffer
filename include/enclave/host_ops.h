@@ -49,3 +49,30 @@ static u64 inline __ecall_ebi_resume(
 		0UL
 	);
 }
+
+static void inline __ecall_dump_enclave_status()
+{
+	__ecall(
+		SBI_EXT_EBI,
+		SBI_EXT_EBI_DEBUG_DUMP_STATUS,
+		0UL, 0UL, 0UL
+	);
+}
+
+static void inline __ecall_dump_enclave_memory()
+{
+	__ecall(
+		SBI_EXT_EBI,
+		SBI_EXT_EBI_DEBUG_DUMP_OWNERSHIP,
+		0UL, 0UL, 0UL
+	);
+}
+
+static void inline __ecall_dump_pmp()
+{
+	__ecall(
+		SBI_EXT_EBI,
+		SBI_EXT_EBI_DEBUG_DUMP_PMP,
+		0UL, 0UL, 0UL
+	);
+}
