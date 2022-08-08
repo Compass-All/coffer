@@ -1,0 +1,27 @@
+imafdc
+Model: SiFive HiFive Unmatched A00
+DRAM:  16 GiB
+1
+Serial number: SF105SZ212200194
+PCB revision: 3
+Ethernet MAC address: 70:b3:d5:92:f7:6c
+CRC: 79ebf514
+EEPROM dump 53 
+10: 5A 32 31 32 32 30 30 31 39 34 01 70 B3 D5 92 F7 
+20: 6C 14 F5 EB 79 
+found SiFive v1
+In:    serial@10010000iFive Unmatched A00
+Net:   eth0: ethernet@10090000
+Hit any key to stop autoboot:  2  0
+=> 
+=> oo
+PCIe Link up, Gen1
+
+Device 0: unknown device
+starting USB...
+Bus xhci_pci: ces... 3 USB Device(s) found
+       scanning usb for storage devices..Scanning mmc 0:3...
+Found /extlinux/extlinux.conf
+Retrieving file: /extlinux/extlinux.conf
+204 bytes read in 9 ms (21.5 KiB/s)
+1:	OpenEmbedded-SiFive-HiFieving file: /Image.gz

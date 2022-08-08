@@ -22,6 +22,4 @@
 #define PARTITION_UP(addr) (ROUNDUP(addr, PARTITION_SIZE))
 #define PARTITION_DOWN(addr) ((addr) & (~((PARTITION_SIZE)-1)))
 
-#define NUM_REGIONS 3
-
 #endif

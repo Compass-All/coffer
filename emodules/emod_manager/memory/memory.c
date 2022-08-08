@@ -251,18 +251,6 @@ static void map_brk_from_pool(vaddr_t aligned_old_brk, usize size)
 	}
 }
 
-static paddr_t alloc_partition_from_mmode(usize number_of_partitions)
-{
-	// the __ecall_ebi_mem_alloc() function all changes the a1 register,
-	// which will in turn influence this number_of_partitions variable
-	// if we pass it directly.
-	volatile u64 n = number_of_partitions;
-	paddr_t allocated_paddr = __ecall_ebi_mem_alloc(n);
-	show(allocated_paddr);
-
-	return allocated_paddr;
-}
-
 // invoked after simple pool out of memory, allocating memory from the SM
 // size must be parition aligned
 static void alloc_map_brk_outside_pool(
@@ -276,14 +264,29 @@ static void alloc_map_brk_outside_pool(
 	if (size % PARTITION_SIZE)
 		panic("size is not aligned\n");
 
-	paddr_t paddr = alloc_partition_from_mmode(number_of_partitions);
-	for (int i = 0; i < number_of_partitions; i++) {
-		map_page(
-			partition_aligned_old_brk	+ i * PARTITION_SIZE,
-			paddr						+ i * PARTITION_SIZE,
-			PTE_U | PTE_W | PTE_R,
-			SV39_LEVEL_MEGA
-		);
+	usize left = number_of_partitions;
+	vaddr_t va = partition_aligned_old_brk;
+
+	while (left > 0) {
+		usize sug = left, allocated;
+		paddr_t pa;
+
+		do {
+			allocated = sug;
+			pa = __ecall_ebi_mem_alloc(sug, &sug);
+		} while (pa == -1UL);
+
+		for (int i = 0; i < number_of_partitions; i++) {
+			map_page(
+				va + i * PARTITION_SIZE,
+				pa + i * PARTITION_SIZE,
+				PTE_U | PTE_W | PTE_R,
+				SV39_LEVEL_MEGA
+			);
+		}
+
+		left -= allocated;
+		va += allocated * PARTITION_SIZE;
 	}
 }
 

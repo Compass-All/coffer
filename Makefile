@@ -11,13 +11,18 @@ ITB_PATH ?= $(BUILD_DIR)/itb
 
 SIGN_PATH ?= tools/sign
 
-BOARD_ROOTFS_PATH ?= /media/prongs/rootfs
+BOARD_ROOTFS_PARTITION ?= /dev/mmcblk0p4
+BOARD_ROOTFS_PATH ?= /run/media/mingde/root
 
 DOCKER = sudo docker # Linux only
 DOCKER_WORKDIR = /root/coffer
 DOCKER_RUN = $(DOCKER) run -it --rm \
 	-v $(shell pwd):$(DOCKER_WORKDIR) \
-	-p 1234:1234 \
+	--device /dev/kvm coffer_dev \
+	env TERM=xterm-256color
+DOCKER_GDB = $(DOCKER) run -it --rm \
+	-v $(shell pwd):$(DOCKER_WORKDIR) \
+	-p 1234 \
 	--device /dev/kvm coffer_dev \
 	env TERM=xterm-256color
 DOCKER_MAKE = $(DOCKER_RUN) make
@@ -39,7 +44,7 @@ EMODULE_TARGETS_ABS = $(join $(EMODULE_PATH), $(EMODULE_TARGETS))
 KERNEL_IMAGE_PATH = tools/linux/build
 KERNEL_IMAGE = $(KERNEL_IMAGE_PATH)/Image
 
-BOARD_DEST ?= /dev/sdb2
+BOARD_DEST ?= /dev/mmcblk0p2
 
 QEMU = qemu-system-riscv64
 QEMU_CORES ?= 4
@@ -50,7 +55,8 @@ QEMU_CMD = -M virt -m 16G -smp $(QEMU_CORES) -nographic \
         -device loader,file=$(DOCKER_WORKDIR)/$(KERNEL_IMAGE),addr=0x80200000 \
         -drive file=$(DOCKER_WORKDIR)/$(ROOTFS),format=raw,id=hd0 \
         -device virtio-blk-device,drive=hd0 \
-        -append "root=/dev/vda rw console=ttyS0 movablecore=0x240000000" \
+        -append "root=/dev/vda rw console=ttyS0 movablecore=0x240000000"
+QEMU_LOG_FILE = ~/tmp/qemu-$(shell date +%Y%m%dT%H%M%S).log
 
 PROG_BUILD = $(BUILD_DIR)/prog
 
@@ -70,7 +76,10 @@ qemu-run: kernel-image docker # rootfs
 	$(DOCKER_RUN) $(QEMU) $(QEMU_CMD)
 
 qemu-gdb: kernel-image docker # rootfs
-	$(DOCKER_RUN) $(QEMU) $(QEMU_CMD) -s -S
+	$(DOCKER_GDB) $(QEMU) $(QEMU_CMD) -s -S
+
+qemu-log: kernel-image docker # rootfs
+	$(DOCKER_RUN) $(QEMU) $(QEMU_CMD) | tee $(QEMU_LOG_FILE)
 
 dir:
 	mkdir -p $(BUILD_DIR)
@@ -130,13 +139,14 @@ burn-image:	board-image
 		printf "\nSD card not inserted\n\n" ; \
 	fi;
 
+# -@sudo mount -t ext4 $(BOARD_ROOTFS_PARTITION) $(BOARD_ROOTFS_PATH)
 	@if test -d $(BOARD_ROOTFS_PATH) ; \
 	then \
 		printf "\nupdating prog and emodules\n\n" ; \
 		sudo rm -rf $(BOARD_ROOTFS_PATH)/prog $(BOARD_ROOTFS_PATH)/emodules ; \
 		sudo mkdir $(BOARD_ROOTFS_PATH)/emodules ; \
-		sudo cp -r build/prog /media/prongs/rootfs/prog ; \
-		sudo cp -r build/emodules/*/*.bin /media/prongs/rootfs/emodules ; \
+		sudo cp -r build/prog $(BOARD_ROOTFS_PATH)/prog ; \
+		sudo cp build/emodules/*/*.bin.signed $(BOARD_ROOTFS_PATH)/emodules ; \
 		sudo umount $(BOARD_ROOTFS_PATH) ; \
 	else \
 		printf "\nrootfs not mounted\n\n" ; \

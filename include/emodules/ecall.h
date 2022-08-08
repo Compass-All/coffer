@@ -44,7 +44,7 @@ static u64 inline __ecall(
 {
     u64 ret;
     SBI_ECALL(__extid, __funid, __arg0, __arg1, __arg2);
-    asm volatile("mv %0, a0": "=r"(ret));
+    asm volatile("mv %0, a0": "=r"(ret) :: "a0", "a1");
     return ret;
 }
 
@@ -61,6 +61,6 @@ static u64 inline __ecall_5(
 {
     u64 ret;
     SBI_ECALL_5(__extid, __funid, __arg0, __arg1, __arg2, __arg3, __arg4);
-    asm volatile("mv %0, a0": "=r"(ret));
+    asm volatile("mv %0, a0": "=r"(ret) :: "a0", "a1");
     return ret;
 }

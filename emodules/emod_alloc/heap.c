@@ -13,26 +13,49 @@ static heap_t heap;
 static bin_t bins[BIN_COUNT];
 
 void init_heap() {
-	paddr_t pa = __ecall_ebi_mem_alloc(HEAP_INIT_PARTITION_NUM);
-	vaddr_t va = POOL_VA_START;
-    for (int i = 0; i < HEAP_INIT_PARTITION_NUM; i++) {
-	    map_page(
-	    	va + i * PARTITION_SIZE,
-	        pa + i * PARTITION_SIZE,
-	    	PTE_R | PTE_W | PTE_X,
-	    	SV39_LEVEL_MEGA
-	    );
-    }
+    usize left = HEAP_INIT_PARTITION_NUM;
 
-    show(pa);
-    show(va);
+    vaddr_t start_va = POOL_VA_START;
+    while (left > 0) {
+        vaddr_t va = start_va;
+        usize sug = left, allocated;
+        paddr_t pa;
+
+        do {
+            allocated = sug;
+            show(allocated);
+            show(sug);
+            pa = __ecall_ebi_mem_alloc(allocated, &sug);
+            show(allocated);
+            show(sug);
+        } while (pa == -1UL);
+
+        show(pa);
+        show(allocated);
+
+        for (int i = 0; i < allocated; i++) {
+            show(i);
+            show(allocated);
+            show(va + i * PARTITION_SIZE);
+            show(pa + i * PARTITION_SIZE);
+    	    map_page(
+    	    	va + i * PARTITION_SIZE,
+    	        pa + i * PARTITION_SIZE,
+    	    	PTE_R | PTE_W | PTE_X,
+    	    	SV39_LEVEL_MEGA
+    	    );
+        }
+
+		left -= allocated;
+        va += allocated * PARTITION_SIZE;
+    }
 
     for (int i = 0; i < BIN_COUNT; i++) {
         heap.bins[i] = &bins[i];
     }
 
     // create header
-    node_t *init_region = (node_t *) va;
+    node_t *init_region = (node_t *) start_va;
     init_region->hole = 1;
     init_region->size = (HEAP_INIT_SIZE) - sizeof(node_t) - sizeof(footer_t);
 
@@ -41,8 +64,8 @@ void init_heap() {
 
     add_node(heap.bins[get_bin_index(init_region->size)], init_region);
 
-    heap.start = va;
-    heap.end   = (va + HEAP_INIT_SIZE);
+    heap.start = start_va;
+    heap.end   = (start_va + HEAP_INIT_SIZE);
 
     node_t *wild = get_wilderness();
     show(wild);
@@ -257,6 +280,7 @@ uint expand(size_t sz) {
 
 	usize nr_part = (PARTITION_UP(heap.end + sz) - PARTITION_UP(heap.end))
 			>> PARTITION_SHIFT;
+    usize left = nr_part;
 
     show(sz);
     show(nr_part);
@@ -265,15 +289,27 @@ uint expand(size_t sz) {
     show(PARTITION_UP(heap.end + sz));
     show(PARTITION_UP(heap.end));
 
-	if (nr_part > 0) {
-		paddr_t pa = __ecall_ebi_mem_alloc(nr_part);
-		vaddr_t va = PARTITION_UP(heap.end);
+	vaddr_t va = PARTITION_UP(heap.end);
+	while (left > 0) {
+        usize sug = left;
+        usize allocated;
+        paddr_t pa;
+
+        do {
+            allocated = sug;
+            pa = __ecall_ebi_mem_alloc(allocated, &sug);
+        } while (pa == -1UL);
 
         show(pa);
         show(va);
         show(nr_part);
 
-		for (int i = 0; i < nr_part; i++) {
+        show(allocated);
+        show(sug);
+
+		for (int i = 0; i < allocated; i++) {
+            show(va + i * PARTITION_SIZE);
+            show(pa + i * PARTITION_SIZE);
 			map_page(
 				va + i * PARTITION_SIZE,
 				pa + i * PARTITION_SIZE,
@@ -281,6 +317,14 @@ uint expand(size_t sz) {
 				SV39_LEVEL_MEGA
 			);
 		}
+
+        left -= allocated;
+        va += allocated * PARTITION_SIZE;
+
+        show(left);
+        show(va);
+
+        panic("stall\n");
 	}
 
     node_t *wild = get_wilderness();

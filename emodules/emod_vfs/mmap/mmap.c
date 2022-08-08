@@ -25,16 +25,23 @@ static void *alloc_from_mmode(usize size)
 	vaddr_t tar_aligned = PARTITION_UP(current_va + size);
 	usize diff = tar_aligned - cur_aligned;
 	usize nr_part = diff >> PARTITION_SHIFT;
+	usize left = nr_part;
+	vaddr_t va = cur_aligned;
 
 	show(current_va);
 	show(size);
 	show(nr_part);
 
-	if (nr_part > 0) {
-		volatile usize n = nr_part;
-		paddr_t pa = __ecall_ebi_mem_alloc(n);
-		vaddr_t va = cur_aligned;
-		for (int i = 0; i < nr_part; i++) {
+	while (left > 0) {
+		usize sug = left, allocated;
+		paddr_t pa;
+
+		do {
+			allocated = sug;
+			pa = __ecall_ebi_mem_alloc(allocated, &sug);
+		} while (pa == -1UL);
+
+		for (int i = 0; i < allocated; i++) {
 			show(va + i * PARTITION_SIZE);
 			show(pa + i * PARTITION_SIZE);
 			map_page(
@@ -44,9 +51,10 @@ static void *alloc_from_mmode(usize size)
 				SV39_LEVEL_MEGA
 			);
 		}
-	}
 
-	current_va += size;
+		left -= allocated;
+		va += allocated * PARTITION_SIZE;
+	}
 
 	return ret;
 }

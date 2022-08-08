@@ -76,3 +76,12 @@ static void inline __ecall_dump_pmp()
 		0UL, 0UL, 0UL
 	);
 }
+
+static void inline __ecall_dump_region()
+{
+	__ecall(
+		SBI_EXT_EBI,
+		SBI_EXT_EBI_DEBUG_DUMP_REGION,
+		0UL, 0UL, 0UL
+	);
+}

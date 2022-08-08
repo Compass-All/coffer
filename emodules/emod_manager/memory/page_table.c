@@ -43,6 +43,8 @@ static pte_t *get_leaf_pte(vaddr_t vaddr, u8 level, u8 alloc)
 			next_table_pa 	= alloc_smode_page(1);
 			pte->ppn		= next_table_pa >> PAGE_SHIFT;
 			pte->v			= 1;
+
+			show(next_table_pa);
 		} else {
 			next_table_pa = (u64)pte->ppn << PAGE_SHIFT;
 		}
@@ -58,6 +60,8 @@ static pte_t *get_leaf_pte(vaddr_t vaddr, u8 level, u8 alloc)
 	if (pte->v == 0 && alloc != GET_PTE_ALLOC)
 		goto error;
 	
+	if (alloc)
+		show(*(u64 *)&pte);
 	return pte;
 
 error:
@@ -92,6 +96,9 @@ void map_page(vaddr_t vaddr, paddr_t paddr, u8 flags, u8 level)
 {
 	sv39_paddr_t pa = pa_to_sv39(paddr);
 	pte_t *pte = get_leaf_pte(vaddr, level, GET_PTE_ALLOC);
+	show(pte);
+	show(vaddr);
+	show(paddr);
 
 	if (flags & PTE_R)
 		pte->r = 1;

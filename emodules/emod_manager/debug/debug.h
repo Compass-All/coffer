@@ -15,6 +15,7 @@
 #endif
 
 #define show(v) debug(#v "\t=\t0x%lx\n", (v));
+#define LOG(v) 	printf("[%s]" #v "\t=\t0x%lx\n", __func__, (v))
 
 #define error(fmt, ...) \
 	printf("\033[1;31m[ERROR] [%s] " fmt "\033[0m",\

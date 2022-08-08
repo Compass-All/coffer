@@ -8,18 +8,28 @@
 // mem_alloc
 // map_register
 
-static paddr_t inline __ecall_ebi_mem_alloc(usize number_of_partitions)
+static paddr_t inline __ecall_ebi_mem_alloc(
+	usize number_of_partitions,
+	usize *suggestion
+)
 {
 	paddr_t paddr;
+	usize ret;
 	__ecall(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_MEM_ALLOC,
 		0UL, number_of_partitions, 0UL
 	);
 	asm volatile (
-		"mv		%0, a1	\n\t"
-		: "=r"(paddr)
+		"mv		%0, a0	\n\t"
+		"mv		%1, a1	\n\t"
+		: "=r"(ret), "=r"(paddr)
+		:
+		: "a0", "a1", "memory"
 	);
+	if (suggestion)
+		*suggestion = ret;
+
 	return paddr;
 }
 
