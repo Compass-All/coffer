@@ -18,7 +18,7 @@ static void timer_interrupt_handler()
 	clear_csr(sstatus, SSTATUS_SIE);
 
 	u64 time = read_csr(time);
-	const u64 interval = 500000;
+	const u64 interval = 10000UL;
 	show(time);
 
 	__ecall(
@@ -27,11 +27,13 @@ static void timer_interrupt_handler()
 	);
 
 	clear_csr(sip, SIP_STIP);
-	show(read_csr(sip));
-
-	__ecall_ebi_suspend(TIMER_INTERRUPT);
-
 	write_csr(sstatus, sstatus | sstatus_spie);
+
+	static u64 count = 1;
+	if (count % 100 == 0) {
+		__ecall_ebi_suspend(TIMER_INTERRUPT);
+	}	
+	count++;
 }
 
 void interrupt_handler(

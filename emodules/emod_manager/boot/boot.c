@@ -124,8 +124,8 @@ static void init_csr(u64 sepc, u64 sscratch)
 static void interrupt_enable()
 {
 	write_csr(sip, 0UL);
-	// write_csr(sie, SIE_SEIE | SIE_SSIE | SIE_STIE);
 	write_csr(sie, SIE_STIE);
+	// write_csr(sie, 0);
 }
 
 void emain_lower_half()
