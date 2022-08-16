@@ -50,6 +50,8 @@ void exception_handler(
 
 	dump_emodule_table();
 
+	paddr_t page_fault_pa;
+
 	switch (scause)
 	{
 	case 0x0:
@@ -93,6 +95,8 @@ void exception_handler(
 		error("Instruction page fault\n");
 		break;
 	case 0xd:
+		page_fault_pa = get_pa(stval);
+		LOG(page_fault_pa);
 		error("Load page fault\n");
 		break;
 	case 0xe:
