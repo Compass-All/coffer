@@ -3,15 +3,7 @@ dmesg -n 1
 
 mount proc /proc -t proc
 mount sys /sys -t sysfs
-
-repeat=48
-for i in `seq 1 $repeat`
-do
-	/prog/host/test_eapp /prog/enclave/rv8/rv8_qsort &
-done
-
-watch -n 3 /prog/host/dump_all
-
+mount -t debugfs none debug
 # /prog/host/dump_enc_status
 # /prog/host/dump_enc_memory
 # /prog/host/dump_pmp
