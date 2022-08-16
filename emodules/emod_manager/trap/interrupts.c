@@ -19,7 +19,6 @@ static void timer_interrupt_handler()
 
 	u64 time = read_csr(time);
 	const u64 interval = 10000UL;
-	show(time);
 
 	__ecall(
 		SBI_EXT_0_1_SET_TIMER, 0UL,
@@ -42,18 +41,9 @@ void interrupt_handler(
 	u64		scause,
 	u64		stval
 ) {
-	debug("interrupt\n");
-	show(sepc);
-	show(scause);
-	show(stval);
-
-	__unused u64 sip = read_csr(sip);
-	show(sip);
-
 	switch (scause)
 	{
 	case INTER_S_TIMER:
-		debug("S TIMER Interrupt\n");
 		timer_interrupt_handler();
 		break;
 	
@@ -61,6 +51,4 @@ void interrupt_handler(
 		panic("Unknown interrupt\n");
 		break;
 	}
-
-	debug("end of interrupt\n");
 }

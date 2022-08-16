@@ -1,5 +1,6 @@
 #pragma once
 #include <types.h>
+#include <util/fence.h>
 
 #define SBI_ECALL(__extid, __funid, __arg0, __arg1, __arg2)     \
     ({                                                          \
@@ -43,8 +44,10 @@ static u64 inline __ecall(
 )
 {
     u64 ret;
+    FENCE();
     SBI_ECALL(__extid, __funid, __arg0, __arg1, __arg2);
-    asm volatile("mv %0, a0": "=r"(ret) :: "a0", "a1");
+    asm volatile("mv %0, a0": "=r"(ret) :: "a0", "a1", "memory");
+    FENCE();
     return ret;
 }
 
@@ -60,7 +63,9 @@ static u64 inline __ecall_5(
 )
 {
     u64 ret;
+    FENCE();
     SBI_ECALL_5(__extid, __funid, __arg0, __arg1, __arg2, __arg3, __arg4);
-    asm volatile("mv %0, a0": "=r"(ret) :: "a0", "a1");
+    asm volatile("mv %0, a0": "=r"(ret) :: "a0", "a1", "memory");
+    FENCE();
     return ret;
 }

@@ -1,27 +1,453 @@
-imafdc
-Model: SiFive HiFive Unmatched A00
-DRAM:  16 GiB
-1
-Serial number: SF105SZ212200194
-PCB revision: 3
-Ethernet MAC address: 70:b3:d5:92:f7:6c
-CRC: 79ebf514
-EEPROM dump 53 
-10: 5A 32 31 32 32 30 30 31 39 34 01 70 B3 D5 92 F7 
-20: 6C 14 F5 EB 79 
-found SiFive v1
-In:    serial@10010000iFive Unmatched A00
-Net:   eth0: ethernet@10090000
-Hit any key to stop autoboot:  2  0
-=> 
-=> oo
-PCIe Link up, Gen1
+[1;33m[Core 4][sbi_timer_event_start] Enclave 0 setting next event: 77916857 (timecmp: 74056856	74256856	74256857	74256857)
+[0m[1;33m[Core 2][sbi_timer_event_start] Enclave 0 setting next event: 74260857 (timecmp: 74056856	74256856	74256857	74256857)
+[0m[1;33m[Core 3][sbi_timer_event_start] Enclave 0 setting next event: 74260856 (timecmp: 74056856	74256856	74256857	74256857)
+[0m
+sh-5.1# 
+sh-5.1# /prog/host/test_eapp /prog/enclave/rv8/rv8_qsort &
+[1] 235
+sh-5.1# [Core 1][sbi_ecall_ebi_handler] funcid	=	0x18f
+[Core 2][process_ipi_ebi_postboot_init] Hart #2 received ipi_ebi_postboot_init
+[Core 1][sbi_ecall_ebi_handler] SBI_EXT_EBI_CREATE
+[Core 3][process_ipi_ebi_postboot_init] Hart #3 received ipi_ebi_postboot_init
+[Core 1][create_enclave] eid	=	0x1
+[Core 4][process_ipi_ebi_postboot_init] Hart #4 received ipi_ebi_postboot_init
+[Core 1][alloc_partitions_for_enclave] number_of_partitions	=	0x1
+[Core 1][alloc_partitions_for_enclave] try expanding exising region
+[Core 1][alloc_partitions_for_enclave] try allocating new region
+[Core 1][alloc_n_partitions] n	=	0x1
+[Core 1][alloc_n_partitions] start to scan free, head = 0
+[Core 1][alloc_n_partitions] ret_idx	=	0x0
+[Core 1][alloc_n_partitions] max_len	=	0xe00
+[Core 1][alloc_n_partitions] ret_idx	=	0x6ff
+[Core 1][alloc_partitions_for_enclave] number_of_partitions	=	0x1
+[Core 1][alloc_partitions_for_enclave] ret_idx	=	0x6ff
+[Core 1][ebi_create_handler] boot_info.eid	=	0x1
+[Core 1][activate_lpmp] napot_addr	=	0x31fefffff
+[Core 1][ebi_create_handler] current_hartid()	=	0x1
+[Core 1][ebi_create_handler] hart #1 enc #1
+[Core 1][process_ipi_ebi_postboot_init] Hart #1 received ipi_ebi_postboot_init
+[Core 1][activate_lpmp] napot_addr	=	0x31fefffff
+[37m[emain_upper_half] Beginning of emain upper half
+[0m[37m[emain_upper_half] eid	=	0x1
+[0m[37m[emain_upper_half] emod_manager_pa_start	=	0x31fe00000
+[0m[37m[emain_upper_half] emod_manager_size	=	0xf948
+[0m[37m[set_emod_manager_pa_start] emod_manager_pa_start	=	0x31fe00000
+[0m[37m[init_smode_page_pool] offset	=	0x10000
+[0m[37m[init_smode_page_pool] size	=	0x1f0000
+[0m[37m[alloc_page] mode	=	0x1
+[0m[37m[alloc_page] allocating 1 pages
+[0m[37m[alloc_page] 1 pages used in total, 495 pages left
+[0m[37m[alloc_page] pool_top	=	0x31fe10000
+[0m[37m[get_leaf_pte] next_table_pa	=	0x31fe10000
+[0m[37m[alloc_page] mode	=	0x1
+[0m[37m[alloc_page] allocating 1 pages
+[0m[37m[alloc_page] 2 pages used in total, 494 pages left
+[0m[37m[alloc_page] pool_top	=	0x31fe11000
+[0m[37m[get_leaf_pte] next_table_pa	=	0x31fe11000
+[0m[37m[map_sections] text:
+[0m[37m[map_sections] section.offset	=	0x0
+[0m[37m[map_sections] section.size	=	0x6d30
+[0m[37m[map_sections] section.vaddr	=	0xffffffe000000000
+[0m[37m[map_sections] section.flags	=	0x8
+[0m[37m[__map_section] mem_sec.offset	=	0x0
+[0m[37m[__map_section] mem_sec.size	=	0x6d30
+[0m[37m[__map_section] mem_sec.vaddr	=	0xffffffe000000000
+[0m[37m[__map_section] mem_sec.flags	=	0x8
+[0m[37m[map_sections] init_data:
+[0m[37m[map_sections] section.offset	=	0x7000
+[0m[37m[map_sections] section.size	=	0x0
+[0m[37m[map_sections] section.vaddr	=	0xffffffe000007000
+[0m[37m[map_sections] section.flags	=	0x6
+[0m[37m[__map_section] mem_sec.offset	=	0x7000
+[0m[37m[__map_section] mem_sec.size	=	0x0
+[0m[37m[__map_section] mem_sec.vaddr	=	0xffffffe000007000
+[0m[37m[__map_section] mem_sec.flags	=	0x6
+[0m[37m[map_sections] rodata:
+[0m[37m[map_sections] section.offset	=	0x7000
+[0m[37m[map_sections] section.size	=	0x2b78
+[0m[37m[map_sections] section.vaddr	=	0xffffffe000007000
+[0m[37m[map_sections] section.flags	=	0x2
+[0m[37m[__map_section] mem_sec.offset	=	0x7000
+[0m[37m[__map_section] mem_sec.size	=	0x2b78
+[0m[37m[__map_section] mem_sec.vaddr	=	0xffffffe000007000
+[0m[37m[__map_section] mem_sec.flags	=	0x2
+[0m[37m[map_sections] srodata:
+[0m[37m[map_sections] section.offset	=	0xa000
+[0m[37m[map_sections] section.size	=	0xe0
+[0m[37m[map_sections] section.vaddr	=	0xffffffe00000a000
+[0m[37m[map_sections] section.flags	=	0x2
+[0m[37m[__map_section] mem_sec.offset	=	0xa000
+[0m[37m[__map_section] mem_sec.size	=	0xe0
+[0m[37m[__map_section] mem_sec.vaddr	=	0xffffffe00000a000
+[0m[37m[__map_section] mem_sec.flags	=	0x2
+[0m[37m[map_sections] data:
+[0m[37m[map_sections] section.offset	=	0xb000
+[0m[37m[map_sections] section.size	=	0xb0
+[0m[37m[map_sections] section.vaddr	=	0xffffffe00000b000
+[0m[37m[map_sections] section.flags	=	0x6
+[0m[37m[__map_section] mem_sec.offset	=	0xb000
+[0m[37m[__map_section] mem_sec.size	=	0xb0
+[0m[37m[__map_section] mem_sec.vaddr	=	0xffffffe00000b000
+[0m[37m[__map_section] mem_sec.flags	=	0x6
+[0m[37m[map_sections] bss:
+[0m[37m[map_sections] section.offset	=	0xc000
+[0m[37m[map_sections] section.size	=	0x3948
+[0m[37m[map_sections] section.vaddr	=	0xffffffe00000c000
+[0m[37m[map_sections] section.flags	=	0x6
+[0m[37m[__map_section] mem_sec.offset	=	0xc000
+[0m[37m[__map_section] mem_sec.size	=	0x3948
+[0m[37m[__map_section] mem_sec.vaddr	=	0xffffffe00000c000
+[0m[37m[__map_section] mem_sec.flags	=	0x6
+[0m[37m[alloc_smode_stack] allocating S mode stack: 16 pages
+[0m[37m[alloc_page] mode	=	0x1
+[0m[37m[alloc_page] allocating 16 pages
+[0m[37m[alloc_page] 18 pages used in total, 478 pages left
+[0m[37m[alloc_page] pool_top	=	0x31fe12000
+[0m[37m[emain_upper_half] satp_value	=	0x800000000031fe0e
+[0m[37m[emain_upper_half] smode_sp	=	0xffffffe000022000
+[0m[37m[emain_upper_half] va_pa_offset	=	0xffffffdce0200000
+[0m[Core 1][sbi_ecall_ebi_handler] funcid	=	0x196
+[Core 1][sbi_ecall_ebi_handler] SBI_EXT_EBI_ADDR_RECORD
+[Core 1][sbi_ecall_ebi_handler] funcid	=	0x193
+[Core 1][sbi_ecall_ebi_handler] SBI_EXT_EBI_SUSPEND
+[Core 1][ebi_suspend_handler] Suspending enclave 1, sepc = 0x31fe00024
+[Core 1][ebi_suspend_handler] Resuming to host: 0x10758
+[Core 1][ebi_suspend_handler] regs->a0	=	0x1
+enclave created: eid = 1
+File /prog/enclave/rv8/rv8_qsort len: 0x1fd98
+[Enclave 1] payload len = 0x1fd98
+payload at 0x76390
+[Core 2][sbi_ecall_ebi_handler] funcid	=	0x190
+[Core 2][sbi_ecall_ebi_handler] SBI_EXT_EBI_ENTER
+[Core 2][ebi_enter_handler] current_hartid()	=	0x2
+[Core 2][ebi_enter_handler] Entering enclave 1
+[Core 2][enter_enclave] number_of_partitions	=	0x1
+[Core 2][alloc_partitions_for_enclave] number_of_partitions	=	0x1
+[Core 2][alloc_partitions_for_enclave] try expanding exising region
+[Core 2][__enclave_expand_region] Add to original region
+[Core 2][__enclave_expand_region] start	=	0x31fe00000
+[Core 2][__enclave_expand_region] size + cur->size	=	0x400000
+[Core 2][enter_enclave] umode_payload_pa_start	=	0x320000000
+[Core 2][ebi_enter_handler] enter_tick[eid]	=	0x4ca4083
+[37m[emain_lower_half] Beginning of emain lower half
+[0m[37m[emain_lower_half] payload_pa_start	=	0x320000000
+[0m[37m[emain_lower_half] payload_size	=	0x1fd98
+[0m[37m[emain_lower_half] argc	=	0x1
+[0m[37m[emain_lower_half] user_argv_pa_start	=	0x320020000
+[0m[37m[emain_lower_half] user_argv_pa_end	=	0x320021000
+[0m[37m[map_user_argv] i	=	0x0
+[0m[37m[map_user_argv] user_argv_ptr[i]	=	0x200000008
+[0m[37m[map_user_argv] offset	=	0x8
+[0m[37m[alloc_page] mode	=	0x1
+[0m[37m[alloc_page] allocating 1 pages
+[0m[37m[alloc_page] 19 pages used in total, 477 pages left
+[0m[37m[alloc_page] pool_top	=	0x31fe22000
+[0m[37m[get_leaf_pte] next_table_pa	=	0x31fe22000
+[0m[37m[alloc_page] mode	=	0x1
+[0m[37m[alloc_page] allocating 1 pages
+[0m[37m[alloc_page] 20 pages used in total, 476 pages left
+[0m[37m[alloc_page] pool_top	=	0x31fe23000
+[0m[37m[get_leaf_pte] next_table_pa	=	0x31fe23000
+[0m[37m[map_user_argv] user_argv_va	=	0x200000000
+[0m[37m[map_user_argv] user_argv_pa	=	0x320020000
+[0m[37m[emain_lower_half] umode_pool_start	=	0x320000000
+[0m[37m[set_umode_pool_pa_aligned] umode_pool_pa_aligned	=	0x320000000
+[0m[37m[init_umode_page_pool] offset	=	0x21000
+[0m[37m[init_umode_page_pool] size	=	0x1df000
+[0m[37m[alloc_map_umode_stack] allocating U mode stack: 16 pages
+[0m[37m[alloc_page] mode	=	0x0
+[0m[37m[alloc_page] allocating 16 pages
+[0m[37m[alloc_page] 16 pages used in total, 463 pages left
+[0m[37m[alloc_page] pool_top	=	0x320021000
+[0m[37m[alloc_map_umode_stack] umode_stack_bottom_paddr	=	0x320021000
+[0m[37m[alloc_map_umode_stack] umode_stack_bottom_vaddr	=	0x1ffff0000
+[0m[37m[alloc_page] mode	=	0x1
+[0m[37m[alloc_page] allocating 1 pages
+[0m[37m[alloc_page] 21 pages used in total, 475 pages left
+[0m[37m[alloc_page] pool_top	=	0x31fe24000
+[0m[37m[get_leaf_pte] next_table_pa	=	0x31fe24000
+[0m[37m[alloc_page] mode	=	0x1
+[0m[37m[alloc_page] allocating 1 pages
+[0m[37m[alloc_page] 22 pages used in total, 474 pages left
+[0m[37m[alloc_page] pool_top	=	0x31fe25000
+[0m[37m[get_leaf_pte] next_table_pa	=	0x31fe25000
+[0m[37m[emain_lower_half] user_argv_va	=	0x200000000
+[0m[37m[emain_lower_half] umode_stack_top	=	0x1fffff000
+[0m[37m[load_elf] Loading ELF
+[0m[37m[load_elf] elf_paddr	=	0x320000000
+[0m[37m[load_elf] elf_size	=	0x1fd98
+[0m[37m[map_elf] Loading program header (i = 0)
+[0m[37m[map_elf] ph_vaddr	=	0x10000
+[0m[37m[map_elf] ph_paddr	=	0x320000000
+[0m[37m[map_elf] file_size	=	0xd958
+[0m[37m[map_elf] mem_size	=	0xd958
+[0m[37m[map_elf] start_vaddr	=	0x10000
+[0m[37m[map_elf] end_vaddr	=	0x1e000
+[0m[37m[map_elf] start_paddr	=	0x320000000
+[0m[37m[map_elf] number_of_pages	=	0xe
+[0m[37m[alloc_page] mode	=	0x1
+[0m[37m[alloc_page] allocating 1 pages
+[0m[37m[alloc_page] 23 pages used in total, 473 pages left
+[0m[37m[alloc_page] pool_top	=	0x31fe26000
+[0m[37m[get_leaf_pte] next_table_pa	=	0x31fe26000
+[0m[37m[alloc_page] mode	=	0x1
+[0m[37m[alloc_page] allocating 1 pages
+[0m[37m[alloc_page] 24 pages used in total, 472 pages left
+[0m[37m[alloc_page] pool_top	=	0x31fe27000
+[0m[37m[get_leaf_pte] next_table_pa	=	0x31fe27000
+[0m[37m[map_elf] Loading program header (i = 1)
+[0m[37m[map_elf] ph_vaddr	=	0x1e958
+[0m[37m[map_elf] ph_paddr	=	0x32000d958
+[0m[37m[map_elf] file_size	=	0x1178
+[0m[37m[map_elf] mem_size	=	0x1208
+[0m[37m[map_elf] start_vaddr	=	0x1e000
+[0m[37m[map_elf] end_vaddr	=	0x20000
+[0m[37m[map_elf] start_paddr	=	0x32000d000
+[0m[37m[map_elf] number_of_pages	=	0x2
+[0m[37m[map_elf] Allocating more pages
+[0m[37m[alloc_page] mode	=	0x0
+[0m[37m[alloc_page] allocating 0 pages
+[0m[37m[alloc_page] 16 pages used in total, 463 pages left
+[0m[37m[alloc_page] pool_top	=	0x320031000
+[0m[37m[map_elf] number_of_pages	=	0x0
+[0m[37m[map_elf] extra_page_paddr	=	0x320031000
+[0m[37m[map_elf] zero mem-only portion
+[0m[37m[map_elf] ph_vaddr + file_size	=	0x1fad0
+[0m[37m[map_elf] mem_size - file_size	=	0x90
+[0m[37m[emain_lower_half] elf_entry	=	0x1012c
+[0m[37m[init_prog_brk] get_prog_brk()	=	0x3ffe31000
+[0m[37m[emod_manager_init] emod_manager_api.test	=	0xffffffe000000156
+[0m[37m[emod_manager_init] emod_manager_api.acquire_emodule	=	0xffffffe0000003aa
+[0m[37m[register_emodule] emodule_getter_addr	=	0xffffffe000000102
+[0m[37m[emain_lower_half] end of emain
+[0m[1;33m[Core 2][sbi_timer_event_start] Enclave 1 setting next event: 80764255 (timecmp: 80756857	80300857	80756856	80756857)
+[0m[37m[syscall_handler] handling syscall 214
+[0m[37m[syscall_handler] syscall_num	=	0xd6
+[0m[37m[syscall_handler] syscall brk
+[0m[37m[sys_brk_handler] syscall brk handler
+[0m[37m[sys_brk_handler] old_brk	=	0x3ffe31000
+[0m[37m[sys_brk_handler] new_brk	=	0x0
+[0m[37m[sys_brk_handler] querying program break addr
+[0m[37m[syscall_handler] end of syscall brk
+[0m[37m[syscall_handler] ret	=	0x3ffe31000
+[0m[37m[syscall_handler] (int)ret = -1896448
+[0m[37m[syscall_handler] end of 214 syscall handler
+[0m[37m[syscall_handler] sepc	=	0x1b504
+[0m[37m[syscall_handler] sepc + 4	=	0x1b508
+[0m[37m[syscall_handler] handling syscall 214
+[0m[37m[syscall_handler] syscall_num	=	0xd6
+[0m[37m[syscall_handler] syscall brk
+[0m[37m[sys_brk_handler] syscall brk handler
+[0m[37m[sys_brk_handler] old_brk	=	0x3ffe31000
+[0m[37m[sys_brk_handler] new_brk	=	0x40bced230
+[0m[37m[sys_brk_handler] trying to grow program break from 0x3ffe31000 to 0x40bced230
+[0m[37m[sys_brk_handler] aligned_old_brk	=	0x3ffe31000
+[0m[37m[sys_brk_handler] aligned_new_brk	=	0x40bcee000
+[0m[37m[sys_brk_handler] remained_umode_pool_size	=	0x1cf000
+[0m[37m[sys_brk_handler] required_size	=	0xbebd000
+[0m[37m[alloc_page] mode	=	0x0
+[0m[37m[alloc_page] allocating 463 pages
+[0m[37m[alloc_page] 479 pages used in total, 0 pages left
+[0m[37m[alloc_page] pool_top	=	0x320031000
+[0m[37m[alloc_page] mode	=	0x1
+[0m[37m[alloc_page] allocating 1 pages
+[0m[37m[alloc_page] 25 pages used in total, 471 pages left
+[0m[37m[alloc_page] pool_top	=	0x31fe28000
+[0m[37m[get_leaf_pte] next_table_pa	=	0x31fe28000
+[0m[37m[alloc_page] mode	=	0x1
+[0m[37m[alloc_page] allocating 1 pages
+[0m[37m[alloc_page] 26 pages used in total, 470 pages left
+[0m[37m[alloc_page] pool_top	=	0x31fe29000
+[0m[37m[get_leaf_pte] next_table_pa	=	0x31fe29000
+[0m[37m[sys_brk_handler] get_umode_page_pool_avail_size()	=	0x0
+[0m[37m[sys_brk_handler] Pool used up. Temporary old_brk set to 0x400000000
+[0m[37m[sys_brk_handler] partition_aligned_new_brk	=	0x40be00000
+[0m[37m[sys_brk_handler] partition_aligned_old_brk	=	0x400000000
+[0m[37m[alloc_map_brk_outside_pool] number_of_partitions	=	0x5f
+[0m[Core 2][sbi_ecall_ebi_handler] funcid	=	0x195
+[Core 2][sbi_ecall_ebi_handler] SBI_EXT_EBI_MEM_ALLOC
+[Core 2][alloc_partitions_for_enclave] number_of_partitions	=	0x5f
+[Core 2][alloc_partitions_for_enclave] try expanding exising region
+[Core 2][__enclave_expand_region] Add to original region
+[Core 2][__enclave_expand_region] start	=	0x31fe00000
+[Core 2][__enclave_expand_region] size + cur->size	=	0xc200000
+[1;33m[Core 1][sbi_timer_event_start] Enclave 0 setting next event: 81777480 (timecmp: 81780857	80829223	81780856	81780856)
+[0m[1;33m[Core 3][sbi_timer_event_start] Enclave 0 setting next event: 81784856 (timecmp: 81780857	80829223	81780856	81780856)
+[0m[1;33m[Core 4][sbi_timer_event_start] Enclave 0 setting next event: 81784856 (timecmp: 81780857	80829223	81780856	81780856)
+[0m[   59.987239] rcu-torture: rcu_torture_read_exit: Start of episode
+[   60.137949] rcu-torture: rcu_torture_read_exit: End of episode
+[37m[alloc_page] mode	=	0x1
+[0m[37m[alloc_page] allocating 1 pages
+[0m[37m[alloc_page] 27 pages used in total, 469 pages left
+[0m[37m[alloc_page] pool_top	=	0x31fe2a000
+[0m[37m[get_leaf_pte] next_table_pa	=	0x31fe2a000
+[0m[37m[syscall_handler] end of syscall brk
+[0m[37m[syscall_handler] ret	=	0x40bced230
+[0m[37m[syscall_handler] (int)ret = 198103600
+[0m[37m[syscall_handler] end of 214 syscall handler
+[0m[37m[syscall_handler] sepc	=	0x1b51c
+[0m[37m[syscall_handler] sepc + 4	=	0x1b520
+[0m[37m[syscall_handler] handling syscall 214
+[0m[37m[syscall_handler] syscall_num	=	0xd6
+[0m[37m[syscall_handler] syscall brk
+[0m[37m[sys_brk_handler] syscall brk handler
+[0m[37m[sys_brk_handler] old_brk	=	0x40bced230
+[0m[37m[sys_brk_handler] new_brk	=	0x40bcee000
+[0m[37m[sys_brk_handler] trying to grow program break from 0x40bced230 to 0x40bcee000
+[0m[37m[sys_brk_handler] aligned_old_brk	=	0x40bcee000
+[0m[37m[sys_brk_handler] aligned_new_brk	=	0x40bcee000
+[0m[37m[syscall_handler] end of syscall brk
+[0m[37m[syscall_handler] ret	=	0x40bcee000
+[0m[37m[syscall_handler] (int)ret = 198107136
+[0m[37m[syscall_handler] end of 214 syscall handler
+[0m[37m[syscall_handler] sepc	=	0x1b51c
+[0m[37m[syscall_handler] sepc + 4	=	0x1b520
+[0m[Core 2][sbi_ecall_ebi_handler] funcid	=	0x193
+[Core 2][sbi_ecall_ebi_handler] SBI_EXT_EBI_SUSPEND
+[Core 2][ebi_suspend_handler] Suspending enclave 1, sepc = 0x101bc
+[Core 2][ebi_suspend_handler] Resuming to host: 0x107d8
+[Core 2][ebi_suspend_handler] regs->a0	=	0x2233445500000000
+[Core 2][sbi_ecall_ebi_handler] funcid	=	0x194
+[Core 2][sbi_ecall_ebi_handler] SBI_EXT_EBI_RESUME
+[Core 2][ebi_resume_handler] Resuming enclave 1
+[Core 2][ebi_resume_handler] short_message	=	0x0
+[1;33m[Core 2][sbi_timer_event_start] Enclave 1 setting next event: 83394269 (timecmp: 83384856	83368856	83384856	83384857)
+[0mshort message: 0x2233445500000000
 
-Device 0: unknown device
-starting USB...
-Bus xhci_pci: ces... 3 USB Device(s) found
-       scanning usb for storage devices..Scanning mmc 0:3...
-Found /extlinux/extlinux.conf
-Retrieving file: /extlinux/extlinux.conf
-204 bytes read in 9 ms (21.5 KiB/s)
-1:	OpenEmbedded-SiFive-HiFieving file: /Image.gz
+
+Enclave 1 interrupted, count = 1
+
+[   62.485987] rcu-torture: rtc: 000000002522a250 ver: 1032 tfle: 0 rta: 1033 rtaf: 0 rtf: 1023 rtmbe: 0 rtmbkf: 0/803 rtbe: 0 rtbke: 0 rtbre: 0 rtbf: 0 rtb: 0 nt: 16243 onoff: 0/0:0/0 -1,0:-1,0 0:0 (HZ=250) barrier: 0/0:0 read-exits: 84 nocb-toggles: 0:0
+[   62.507754] rcu-torture: Reader Pipe:  39305630 1452 0 0 0 0 0 0 0 0 0
+[   62.514240] rcu-torture: Reader Batch:  39304014 3069 0 0 0 0 0 0 0 0 0
+[   62.520840] rcu-torture: Free-Block Circulation:  1032 1031 1030 1029 1028 1027 1026 1025 1024 1023 0
+[Core 2][sbi_ecall_ebi_handler] funcid	=	0x193
+[Core 2][sbi_ecall_ebi_handler] SBI_EXT_EBI_SUSPEND
+[Core 2][ebi_suspend_handler] Suspending enclave 1, sepc = 0x101bc
+[Core 2][ebi_suspend_handler] Resuming to host: 0x10856
+[Core 2][ebi_suspend_handler] regs->a0	=	0x2233445500000000
+[Core 2][sbi_ecall_ebi_handler] funcid	=	0x194
+[Core 2][sbi_ecall_ebi_handler] SBI_EXT_EBI_RESUME
+[Core 2][ebi_resume_handler] Resuming enclave 1
+[Core 2][ebi_resume_handler] short_message	=	0x0
+[1;33m[Core 2][sbi_timer_event_start] Enclave 1 setting next event: 84427252 (timecmp: 84420857	84400856	84420857	84420857)
+[0mshort message: 0x2233445500000000
+
+
+Enclave 1 interrupted, count = 2
+
+[Core 2][sbi_ecall_ebi_handler] funcid	=	0x193
+[Core 2][sbi_ecall_ebi_handler] SBI_EXT_EBI_SUSPEND
+[Core 2][ebi_suspend_handler] Suspending enclave 1, sepc = 0x101bc
+[Core 2][ebi_suspend_handler] Resuming to host: 0x10856
+[Core 2][ebi_suspend_handler] regs->a0	=	0x2233445500000000
+[Core 2][sbi_ecall_ebi_handler] funcid	=	0x194
+[Core 2][sbi_ecall_ebi_handler] SBI_EXT_EBI_RESUME
+[Core 2][ebi_resume_handler] Resuming enclave 1
+[Core 2][ebi_resume_handler] short_message	=	0x0
+[1;33m[Core 2][sbi_timer_event_start] Enclave 1 setting next event: 85460235 (timecmp: 85452856	85436857	85452856	85452857)
+[0mshort message: 0x2233445500000000
+
+
+Enclave 1 interrupted, count = 3
+
+[Core 2][sbi_ecall_ebi_handler] funcid	=	0x193
+[Core 2][sbi_ecall_ebi_handler] SBI_EXT_EBI_SUSPEND
+[Core 2][ebi_suspend_handler] Suspending enclave 1, sepc = 0x102b0
+[Core 2][ebi_suspend_handler] Resuming to host: 0x10856
+[Core 2][ebi_suspend_handler] regs->a0	=	0x2233445500000000
+[Core 2][sbi_ecall_ebi_handler] funcid	=	0x194
+[Core 2][sbi_ecall_ebi_handler] SBI_EXT_EBI_RESUME
+[Core 2][ebi_resume_handler] Resuming enclave 1
+[Core 2][ebi_resume_handler] short_message	=	0x0
+[1;33m[Core 2][sbi_timer_event_start] Enclave 1 setting next event: 86493229 (timecmp: 86484857	86468856	86484857	86484857)
+[0mshort message: 0x2233445500000000
+
+
+Enclave 1 interrupted, count = 4
+
+[Core 2][sbi_ecall_ebi_handler] funcid	=	0x193
+[Core 2][sbi_ecall_ebi_handler] SBI_EXT_EBI_SUSPEND
+[Core 2][ebi_suspend_handler] Suspending enclave 1, sepc = 0x1055c
+[Core 2][ebi_suspend_handler] Resuming to host: 0x10856
+[Core 2][ebi_suspend_handler] regs->a0	=	0x2233445500000000
+short me[Core 2][sbi_ecall_ebi_handler] funcid	=	0x194
+[Core 2][sbi_ecall_ebi_handler] SBI_EXT_EBI_RESUME
+[Core 2][ebi_resume_handler] Resuming enclave 1
+[Core 2][ebi_resume_handler] short_message	=	0x0
+[1;33m[Core 2][sbi_timer_event_start] Enclave 1 setting next event: 87532112 (timecmp: 87522815	87508857	87524857	87524857)
+[0mssage: 0x2233445500000000
+
+
+Enclave 1 interrupted, count = 5
+
+[Core 2][sbi_ecall_ebi_handler] funcid	=	0x193
+[Core 2][sbi_ecall_ebi_handler] SBI_EXT_EBI_SUSPEND
+[Core 2][ebi_suspend_handler] Suspending enclave 1, sepc = 0x107bc
+[Core 2][ebi_suspend_handler] Resuming to host: 0x10856
+[Core 2][ebi_suspend_handler] regs->a0	=	0x2233445500000000
+[Core 2][sbi_ecall_ebi_handler] funcid	=	0x194
+[Core 2][sbi_ecall_ebi_handler] SBI_EXT_EBI_RESUME
+[Core 2][ebi_resume_handler] Resuming enclave 1
+[Core 2][ebi_resume_handler] short_message	=	0x0
+[1;33m[Core 2][sbi_timer_event_start] Enclave 1 setting next event: 88565113 (timecmp: 88556856	88540856	88556856	88556856)
+[0mshort message: 0x2233445500000000
+
+
+Enclave 1 interrupted, count = 6
+
+[37m[syscall_handler] handling syscall 80
+[0m[37m[syscall_handler] syscall_num	=	0x50
+[0m[37m[syscall_handler] syscall fstat
+[0m[37m[syscall_handler] end of syscall fstat
+[0m[37m[syscall_handler] ret	=	0x0
+[0m[37m[syscall_handler] (int)ret = 0
+[0m[37m[syscall_handler] end of 80 syscall handler
+[0m[37m[syscall_handler] sepc	=	0x1b42c
+[0m[37m[syscall_handler] sepc + 4	=	0x1b430
+[0m[37m[syscall_handler] handling syscall 64
+[0m[37m[syscall_handler] syscall_num	=	0x40
+[0m[37m[syscall_handler] syscall write
+[0m[37m[load_emod_vfs] vfs not loaded
+[0m[37m[get_emodule] Warning: emodule 3 not loaded
+[0m[37m[acquire_emodule] loading emodule
+[0m[37m[acquire_emodule] emodule_id	=	0x3
+[0m[37m[load_emodule] emodule_id	=	0x3
+[0m[Core 2][sbi_ecall_ebi_handler] funcid	=	0x193
+[Core 2][sbi_ecall_ebi_handler] SBI_EXT_EBI_SUSPEND
+[Core 2][ebi_suspend_handler] Suspending enclave 1, sepc = 0x1b550
+[Core 2][ebi_suspend_handler] Resuming to host: 0x10856
+[Core 2][ebi_suspend_handler] regs->a0	=	0xcafe00000003
+short message: 0xcafe00000003
+Querying size of emodule 3
+[Core 2][sbi_ecall_ebi_handler] funcid	=	0x194
+[Core 2][sbi_ecall_ebi_handler] SBI_EXT_EBI_RESUME
+[Core 2][ebi_resume_handler] Resuming enclave 1
+[Core 2][ebi_resume_handler] short_message	=	0xc930
+[37m[get_emodule_size] emodule 3 size: 0xc930
+[0m[37m[load_emodule] emodule_size	=	0xc930
+[0m[37m[alloc_page] mode	=	0x1
+[0m[37m[alloc_page] allocating 13 pages
+[0m[37m[alloc_page] 40 pages used in total, 456 pages left
+[0m[37m[alloc_page] pool_top	=	0x31fe2b000
+[0m[37m[alloc_page] mode	=	0x1
+[0m[37m[alloc_page] allocating 1 pages
+[0m[37m[alloc_page] 41 pages used in total, 455 pages left
+[0m[37m[alloc_page] pool_top	=	0x31fe38000
+[0m[37m[get_leaf_pte] next_table_pa	=	0x31fe38000
+[0m[37m[alloc_page] mode	=	0x1
+[0m[37m[alloc_page] allocating 1 pages
+[0m[37m[alloc_page] 42 pages used in total, 454 pages left
+[0m[37m[alloc_page] pool_top	=	0x31fe39000
+[0m[37m[get_leaf_pte] next_table_pa	=	0x31fe39000
+[0m[37m[load_emodule] vaddr	=	0xfffffff000000000
+[0m[Core 2][sbi_ecall_ebi_handler] funcid	=	0x1b8
+[Core 2][sbi_ecall_ebi_handler] SBI_EXT_EBI_LISTEN_MESSAGE
+[Core 2][ebi_listen_message_handler] current_eid	=	0x1
+[Core 2][check_privilege_mode] get_current_eid()	=	0x1
+[Core 2][check_privilege_mode] mpp	=	0x0
+[1;41m[panic ERROR] [Core 2] Message channel cannot be started in U mode enclave
+[0m[1;33m[Core 1][sbi_timer_event_start] Enclave 0 setting next event: 92408857 (timecmp: 92404856	89000857	92404857	92404856)
+[0m[1;33m[Core 3][sbi_timer_event_start] Enclave 0 setting next event: 92408857 (timecmp: 92404856	89000857	92404857	92408856)
+[0m[1;33m[Core 4][sbi_timer_event_start] Enclave 0 setting next event: 92412856 (timecmp: 92404856	89000857	92404857	92408856)
+[0m

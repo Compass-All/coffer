@@ -30,11 +30,6 @@ static pte_t *get_leaf_pte(vaddr_t vaddr, u8 level, u8 alloc)
 		u64 vpn = get_vpn(va, i);
 		pte_t *pte = &table_root[vpn];
 
-		if (alloc == 0 && level == SV39_LEVEL_MEGA) {
-			show(*pte);
-			show(pte->ppn);
-		}
-
 		paddr_t next_table_pa;
 		if (pte->v == 0) {
 			if (alloc != GET_PTE_ALLOC)
@@ -60,8 +55,6 @@ static pte_t *get_leaf_pte(vaddr_t vaddr, u8 level, u8 alloc)
 	if (pte->v == 0 && alloc != GET_PTE_ALLOC)
 		goto error;
 	
-	if (alloc)
-		show(*(u64 *)&pte);
 	return pte;
 
 error:
@@ -96,9 +89,6 @@ void map_page(vaddr_t vaddr, paddr_t paddr, u8 flags, u8 level)
 {
 	sv39_paddr_t pa = pa_to_sv39(paddr);
 	pte_t *pte = get_leaf_pte(vaddr, level, GET_PTE_ALLOC);
-	show(pte);
-	show(vaddr);
-	show(paddr);
 
 	if (flags & PTE_R)
 		pte->r = 1;
