@@ -182,7 +182,6 @@ static struct walk_page_table_result walk_page_table(vaddr_t va)
     return ret;
 }
 
-// TODO: consider level here
 paddr_t get_pa(vaddr_t va)
 {
 	struct walk_page_table_result result = walk_page_table(va);
