@@ -44,6 +44,8 @@ EMODULE_TARGETS_ABS = $(join $(EMODULE_PATH), $(EMODULE_TARGETS))
 KERNEL_IMAGE_PATH = tools/linux/build
 KERNEL_IMAGE = $(KERNEL_IMAGE_PATH)/Image
 
+KERNEL_MODULE_PATH = tools/linux/modules
+
 BOARD_DEST ?= /dev/mmcblk0p2
 
 QEMU = qemu-system-riscv64
@@ -55,7 +57,7 @@ QEMU_CMD = -M virt -m 16G -smp $(QEMU_CORES) -nographic \
         -device loader,file=$(DOCKER_WORKDIR)/$(KERNEL_IMAGE),addr=0x80200000 \
         -drive file=$(DOCKER_WORKDIR)/$(ROOTFS),format=raw,id=hd0 \
         -device virtio-blk-device,drive=hd0 \
-        -append "root=/dev/vda rw console=ttyS0 movablecore=0x240000000"
+        -append "root=/dev/vda rw console=ttyS0 movablecore=0x300000000"
 QEMU_LOG_FILE = ~/tmp/qemu-$(shell date +%Y%m%dT%H%M%S).log
 
 PROG_BUILD = $(BUILD_DIR)/prog
@@ -103,7 +105,7 @@ ifeq (, $(wildcard $(ROOTFS))) # ROOTFS not found
 	mkdir -p $(MOUNT_POINT)
 	sudo mount -o loop $(ROOTFS) $(MOUNT_POINT)
 # Setup busybox
-	cd $(MOUNT_POINT) && sudo mkdir -p bin etc dev lib sys proc sbin tmp usr usr/bin usr/lib usr/sbin
+	cd $(MOUNT_POINT) && sudo mkdir -p bin etc dev lib sys proc debug sbin tmp usr usr/bin usr/lib usr/sbin
 	$(DOCKER_RUN) cp $(DOCKER_BUSYBOX_PATH)/busybox $(DOCKER_WORKDIR)/$(MOUNT_POINT)/bin
 	sudo ln -s ../bin/busybox $(MOUNT_POINT)/sbin/init
 	sudo ln -s ../bin/busybox $(MOUNT_POINT)/bin/sh
@@ -122,6 +124,8 @@ endif
 # Copy prog
 	sudo rm -rf $(MOUNT_POINT)/prog
 	sudo cp -r $(PROG_BUILD) $(MOUNT_POINT)/
+# Copy kernel module
+	sudo cp $(KERNEL_MODULE_PATH)/cma_malloc.ko $(MOUNT_POINT)
 
 	sudo umount $(MOUNT_POINT)
 
