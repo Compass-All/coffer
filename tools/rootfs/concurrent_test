@@ -4,13 +4,34 @@ dmesg -n 1
 mount proc /proc -t proc
 mount sys /sys -t sysfs
 
-repeat=4
+
+echo 0 > /proc/sys/kernel/hung_task_panic
+echo 0 > /proc/sys/kernel/softlockup_panic
+taskset 0x1 /bin/sh
+
+repeat=819
 for i in `seq 1 $repeat`
 do
-	/prog/host/test_eapp /prog/enclave/rv8/rv8_qsort &
+	taskset 0xe /prog/host/test_eapp /prog/enclave/rv8/rv8_primes &
 done
 
-watch -n 5 /prog/host/dump_all
+watch -n 4 /prog/host/dump_all
+
+
+
+repeat=2
+for i in `seq 1 $repeat`
+do
+	taskset 0x2 /prog/host/test_eapp /prog/enclave/rv8/rv8_primes &
+done
+
+/prog/host/test_eapp /prog/enclave/rv8/rv8_qsort &
+/prog/host/test_eapp /prog/enclave/rv8/rv8_qsort &
+
+taskset 0x2 /prog/host/test_eapp /prog/enclave/rv8/rv8_qsort &
+taskset 0x2 /prog/host/test_eapp /prog/enclave/rv8/rv8_qsort &
+
+watch -n 2 /prog/host/dump_all
 
 # /prog/host/dump_enc_status
 # /prog/host/dump_enc_memory
@@ -18,10 +39,10 @@ watch -n 5 /prog/host/dump_all
 
 /prog/host/create_enclave
 
-repeat=12
+repeat=2
 for i in `seq 1 $repeat`
 do
-	/prog/host/create_enclave &
+	taskset 0x1 /prog/host/create_enclave &
 done
 
 repeat=20
@@ -40,3 +61,15 @@ done
 /prog/host/enter_enclave 7 /prog/enclave/rv8/rv8_qsort &
 
 cat /etc/sysctl.conf | grep vm
+
+
+dmesg -n 1
+echo 1 > /proc/sys/kernel/hung_task_panic
+echo 20 > /proc/sys/kernel/hung_task_timeout_secs
+echo 1 > /proc/sys/kernel/hung_task_all_cpu_backtrace
+echo ttySIF0 > /sys/module/kgdboc/parameters/kgdboc
+
+echo 1 >/proc/sys/kernel/lock_stat
+
+#less /proc/lock_stat
+#grep : /proc/lock_stat | head
