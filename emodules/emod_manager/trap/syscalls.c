@@ -5,6 +5,7 @@
 #include "../memory/page_pool.h"
 #include "../memory/memory.h"
 #include "../emod_table/emod_table.h"
+#include "../eval/eval.h"
 #include <util/gnu_attribute.h>
 #include <util/register.h>
 #include <emodules/ecall.h>
@@ -86,9 +87,15 @@ static void load_emod_vfs()
 	static u8 loaded = 0;
 	
 	if (!loaded) {
+		START_TIMER(module);
+		STOP_TIMER(syscall);
+
 		debug("vfs not loaded\n");
 		vaddr_t emod_vfs_getter = acquire_emodule(EMODULE_ID_VFS);
 		emod_vfs = ((emod_vfs_t (*)(void))emod_vfs_getter)();
+
+		START_TIMER(syscall);
+		STOP_TIMER(module);
 
 		loaded = 1;
 	}
@@ -100,8 +107,14 @@ static void load_emod_uart(void)
 	vaddr_t emod_uart_getter;
 
 	if (!loaded) {
+		START_TIMER(module);
+		STOP_TIMER(syscall);
+
 		emod_uart_getter = acquire_emodule(EMODULE_ID_UART);
 		emod_uart = ((emod_uart_t (*)(void))emod_uart_getter)();
+
+		START_TIMER(syscall);
+		STOP_TIMER(module);
 
 		loaded = 1;
 	}
@@ -314,11 +327,7 @@ void syscall_handler(
 	u64		stval
 )
 {
-	__unused u64 time0, time1; // profiling
-
-	// time0 = read_csr(cycle);
-	// debug("time0 = %ld\n", time0);
-
+	START_TIMER(syscall);
 	u64 syscall_num = regs[CTX_INDEX_a7];
 	u64 ret = 0;
 
@@ -549,6 +558,7 @@ void syscall_handler(
 	 	debug("syscall exit\n");
 		show(get_umode_page_pool_avail_size());
 		// dump_emodule_table();	
+		dump_timer();
 		__ecall_ebi_exit(regs[CTX_INDEX_a0]);
 		break;
 
@@ -655,7 +665,5 @@ void syscall_handler(
 	write_csr(sepc, sepc + 4);
 	regs[CTX_INDEX_a0] = ret;
 
-	// time1 = read_csr(cycle);
-	// debug("time1 = %ld\n", time1);
-	// printf("syscall %ld cycles = %ld\n", syscall_num, time1 - time0);
+	STOP_TIMER(syscall);
 }

@@ -7,7 +7,22 @@ mount sys /sys -t sysfs
 
 echo 0 > /proc/sys/kernel/hung_task_panic
 echo 0 > /proc/sys/kernel/softlockup_panic
+echo 0 > /proc/sys/kernel/watchdog
+dmesg -n 1
+echo "1 1 1 1" > /proc/sys/kernel/printk
 taskset 0x1 /bin/sh
+taskset 0xe /prog/host/test_eapp /prog/enclave/eapp_write
+
+repeat=41
+for i in `seq 1 $repeat`
+do
+	taskset 0xe /prog/host/test_eapp /prog/enclave/rv8/rv8_qsort &
+done
+
+watch -n 4 /prog/host/dump_all
+
+taskset 0xe strace -c /prog/enclave/rv8/rv8_qsort &
+
 
 repeat=819
 for i in `seq 1 $repeat`
@@ -15,14 +30,28 @@ do
 	taskset 0xe /prog/host/test_eapp /prog/enclave/rv8/rv8_primes &
 done
 
-watch -n 4 /prog/host/dump_all
-
-
-
-repeat=2
+repeat=80
 for i in `seq 1 $repeat`
 do
-	taskset 0x2 /prog/host/test_eapp /prog/enclave/rv8/rv8_primes &
+	taskset 0xe /prog/host/test_eapp /prog/enclave/rv8/rv8_aes &
+done
+
+repeat=80
+for i in `seq 1 $repeat`
+do
+	taskset 0xe /prog/host/test_eapp /prog/enclave/rv8/rv8_norx &
+done
+
+repeat=1024
+for i in `seq 1 $repeat`
+do
+	taskset 0xe /prog/host/test_eapp /prog/enclave/rv8/rv8_sha512 &
+done
+
+repeat=273
+for i in `seq 1 $repeat`
+do
+	taskset 0xe /prog/host/test_eapp /prog/enclave/rv8/rv8_miniz &
 done
 
 /prog/host/test_eapp /prog/enclave/rv8/rv8_qsort &
@@ -49,7 +78,6 @@ repeat=20
 for i in `seq 1 $repeat`
 do
 	/prog/host/enter_enclave $i /prog/enclave/rv8/rv8_qsort &
-	sleep 1s
 done
 
 /prog/host/enter_enclave 1 /prog/enclave/rv8/rv8_qsort &
@@ -73,3 +101,11 @@ echo 1 >/proc/sys/kernel/lock_stat
 
 #less /proc/lock_stat
 #grep : /proc/lock_stat | head
+
+/prog/host/test_happ /prog/enclave/rv8/rv8_qsort
+
+repeat=4
+for i in `seq 1 $repeat`
+do
+	taskset 0xe /prog/host/test_eapp /prog/enclave/rv8/rv8_qsort &
+done

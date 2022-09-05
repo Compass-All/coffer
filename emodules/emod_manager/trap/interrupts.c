@@ -1,6 +1,7 @@
 #include "interrupts.h"
 #include "../debug/debug.h"
 #include "../panic/panic.h"
+#include "../eval/eval.h"
 #include <util/register.h>
 #include <util/csr.h>
 #include <util/gnu_attribute.h>
@@ -13,6 +14,8 @@
 
 static void timer_interrupt_handler()
 {
+	START_TIMER(interrupt);
+	
 	u64 sstatus = read_csr(sstatus);
 	u64 sstatus_spie = sstatus & SSTATUS_SIE;
 	clear_csr(sstatus, SSTATUS_SIE);
@@ -30,9 +33,13 @@ static void timer_interrupt_handler()
 
 	static u64 count = 1;
 	if (count % 100 == 0) {
+		STOP_TIMER(interrupt);
 		__ecall_ebi_suspend(TIMER_INTERRUPT);
+		START_TIMER(interrupt);
 	}	
 	count++;
+
+	STOP_TIMER(interrupt);
 }
 
 void interrupt_handler(

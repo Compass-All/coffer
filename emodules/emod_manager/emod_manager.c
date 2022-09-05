@@ -10,6 +10,7 @@
 #include "memory/memory.h"
 #include "memory/page_table.h"
 #include "memory/page_pool.h"
+#include "eval/eval.h"
 #include "emod_table/emod_table.h"
 #include "attest/key.h"
 #include "attest/md2.h"
@@ -94,8 +95,10 @@ static void load_emodule(u32 emodule_id)
 		emodule_size
 	);
 
+	STOP_TIMER(module);
 	__ecall_ebi_suspend(LOAD_MODULE | emodule_id);
 	wait_until_non_zero((volatile u64 *)vaddr);
+	START_TIMER(module);
 
 	// attestation here, before emodules get executed
 	attest_emodule(vaddr, emodule_size);

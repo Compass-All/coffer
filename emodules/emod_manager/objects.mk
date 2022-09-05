@@ -16,6 +16,7 @@ emodule-objs-y += trap/interrupts.o
 emodule-objs-y += emod_table/emod_table.o
 emodule-objs-y += printf/printf.o
 emodule-objs-y += util/string.o
+emodule-objs-y += eval/eval.o
 emodule-objs-y += debug/debug.o
 
 emodule-genflags = 

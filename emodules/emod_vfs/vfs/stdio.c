@@ -13,9 +13,10 @@
 
 void _putc(char c)
 {
-	register uintptr_t a0 asm("a0") = (uintptr_t)(c);
-	register uintptr_t a7 asm("a7") = (uintptr_t)(0x1);
-	asm volatile("ecall": "+r"(a0): "r"(a7): "memory");
+	return;
+	// register uintptr_t a0 asm("a0") = (uintptr_t)(c);
+	// register uintptr_t a7 asm("a7") = (uintptr_t)(0x1);
+	// asm volatile("ecall": "+r"(a0): "r"(a7): "memory");
 }
 
 int _getc()

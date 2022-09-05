@@ -4,6 +4,9 @@ dmesg -n 1
 mount proc /proc -t proc
 mount sys /sys -t sysfs
 mount -t debugfs none debug
+
+# /prog/host/test_eapp /prog/enclave/eapp_write
+
 # /prog/host/dump_enc_status
 # /prog/host/dump_enc_memory
 # /prog/host/dump_pmp

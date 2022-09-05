@@ -64,3 +64,12 @@ static u64 inline __ecall_ebi_suspend(u64 short_message)
 		short_message, 0UL, 0UL
 	);
 }
+
+static u64 inline __ecall_ebi_get_eid()
+{
+	return __ecall(
+		SBI_EXT_EBI,
+		SBI_EXT_EBI_GET_EID,
+		0UL, 0UL, 0UL
+	);
+}

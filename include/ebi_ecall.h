@@ -23,6 +23,8 @@
 #define SBI_EXT_EBI_SEND_MESSAGE 				441
 #define SBI_EXT_EBI_STOP_LISTEN 				442
 
+#define SBI_EXT_EBI_GET_EID		 				450
+
 #define SBI_EXT_EBI_DEBUG 						499
 
 #define SBI_EXT_EBI_DEBUG_DUMP_STATUS			500

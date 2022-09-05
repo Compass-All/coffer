@@ -100,7 +100,7 @@ ifeq (, $(wildcard $(ROOTFS))) # ROOTFS not found
 	sudo dd if=/dev/zero of=$(ROOTFS) bs=1M count=512
 	sudo mkfs.ext2 -F $(ROOTFS)
 # Mount
-	mkdir -p $(MOUNT_POINT)
+	sudo mkdir -p $(MOUNT_POINT)
 	sudo mount -o loop $(ROOTFS) $(MOUNT_POINT)
 # Setup busybox
 	cd $(MOUNT_POINT) && sudo mkdir -p bin etc dev lib sys proc sbin tmp usr usr/bin usr/lib usr/sbin
