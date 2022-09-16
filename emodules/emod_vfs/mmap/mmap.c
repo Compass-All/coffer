@@ -54,6 +54,7 @@ static void *alloc_from_mmode(usize size)
 
 		left -= allocated;
 		va += allocated * PARTITION_SIZE;
+		current_va += allocated * PARTITION_SIZE;
 	}
 
 	return ret;
