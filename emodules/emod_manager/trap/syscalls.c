@@ -15,6 +15,8 @@
 #include <emodules/emod_vfs/emod_vfs.h>
 #include <emodules/emod_manager/emod_manager.h>
 #include <emodules/emodule_id.h>
+#include <message/message.h>
+#include <message/short_message.h>
 #include "../memory/page_table.h"
 #include "../util/string.h"
 
@@ -186,6 +188,30 @@ static void syscall_handler_clock_gettime(
 	tp->tv_sec	= time / FREQ;
 	tp->tv_nsec	= time % FREQ;
 	return;
+}
+
+static void syscall_handler_get_file_from_host(
+	const char *path,
+	u32 filename_len,
+	vaddr_t dst_addr,
+	usize len
+)
+{
+	show(filename_len);
+	__ecall_ebi_suspend(GET_FILE | filename_len);
+
+	debug("sending filename: %s\n", path);
+	__ecall_ebi_send_message(0UL, (vaddr_t)path, (usize)filename_len);
+
+	debug("listen to file\n");
+	*(u64 *)dst_addr = 0;
+	__ecall_ebi_listen_message(0UL, dst_addr, len);
+	__ecall_ebi_suspend(GET_FILE | filename_len);
+	wait_until_non_zero((volatile u64 *)dst_addr);
+
+	debug("got file\n");
+
+	hexdump(dst_addr, 0x20);
 }
 
 // other syscall handlers
@@ -640,6 +666,16 @@ void syscall_handler(
 	case SYS_uart_putc:
 		load_emod_uart();
 		emod_uart.emod_uart_api.putc((char) regs[CTX_INDEX_a0]);
+		ret = 0;
+		break;
+
+	case SYS_get_file_from_host:
+		syscall_handler_get_file_from_host(
+			(const char *)	regs[CTX_INDEX_a0],
+			(u32)			regs[CTX_INDEX_a1],
+			(vaddr_t)		regs[CTX_INDEX_a2],
+			(usize)			regs[CTX_INDEX_a3]
+		);
 		ret = 0;
 		break;
 	
