@@ -21,6 +21,8 @@ extern emod_debug_t 	emod_debug;
 #define end_timer	emod_debug.emod_debug_api.end_timer
 #define debug(fmt, ...) \
 	printd("\033[37m[%s] " fmt "\033[0m", __func__, ##__VA_ARGS__)
+#define DEBUG(fmt, ...) \
+	printf("\033[37m[%s] " fmt "\033[0m", __func__, ##__VA_ARGS__)
 #define show(v) 	debug(#v "\t=\t0x%lx\n", (v))
 
 #define panic		emod_manager.emod_manager_api.panic
