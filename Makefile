@@ -22,7 +22,6 @@ DOCKER_RUN = $(DOCKER) run -it --rm \
 	env TERM=xterm-256color
 DOCKER_GDB = $(DOCKER) run -it --rm \
 	-v $(shell pwd):$(DOCKER_WORKDIR) \
-	-p 1234 \
 	--device /dev/kvm coffer_dev \
 	env TERM=xterm-256color
 DOCKER_MAKE = $(DOCKER_RUN) make
