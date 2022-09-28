@@ -103,6 +103,8 @@ void exception_handler(
 		error("Reserved for future standard use\n");
 		break;
 	case 0xf:
+		page_fault_pa = get_pa(stval);
+		LOG(page_fault_pa);
 		error("Store/AMO page fault\n");
 		break;
 	
