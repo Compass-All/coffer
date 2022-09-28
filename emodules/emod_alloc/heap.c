@@ -323,8 +323,6 @@ uint expand(size_t sz) {
 
         show(left);
         show(va);
-
-        panic("stall\n");
 	}
 
     node_t *wild = get_wilderness();
