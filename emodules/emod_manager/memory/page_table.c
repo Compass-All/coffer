@@ -176,7 +176,7 @@ paddr_t get_pa(vaddr_t va)
 {
 	struct walk_page_table_result result = walk_page_table(va);
 	if (result.level == (u8)-1) {
-		printf("VA not valid\n");
+		printf("VA 0x%lx not valid\n", va);
 		return 0UL;
 	}
 	u8 level = result.level;
@@ -208,7 +208,7 @@ static void show_pte(vaddr_t va, pte_t pte, u8 level)
 	else
 		size = 0x40000000;
 
-	debug(
+	printf(
 		"VA: 0x%lx --> PA: 0x%lx, size: 0x%lx, "
 		"R: %d, W: %d, X: %d, U: %d, A: %d, D: %d, G: %d, V: %d\n",
 		va, pa, size,
@@ -251,7 +251,7 @@ static void __dump_page_table(u8 level, vaddr_t table_va)
 		}
 
 		if (pte.r | pte.w | pte.x) { // leaf pte
-			debug("vpn2: 0x%x,\tvpn1: 0x%x,\tvpn0: 0x%x\n",
+			printf("vpn2: 0x%x,\tvpn1: 0x%x,\tvpn0: 0x%x\n",
 				vaddr.vpn2, vaddr.vpn1, vaddr.vpn0);
 			vaddr_t va = sv39_to_va(vaddr);
 			show_pte(va, pte, level);
