@@ -63,6 +63,11 @@ static void *alloc_from_mmode(usize size)
 static void *memalign(usize align, usize size)
 {
 	usize alloc_size = ROUNDUP(size, align);
+
+	static usize total = 0;
+	total += alloc_size;
+	//DEBUG("total size: 0x%lx\n", total);
+
 	return alloc_from_mmode(alloc_size);
 }
 
@@ -130,7 +135,8 @@ void *mmap(
 
 	debug("len = 0x%x\n", len);
 	/* The caller expects the memory to be zeroed */
-	memset(mem, 0, len);
+	// always zero
+	// memset(mem, 0, len);
 
 	new->begin = mem;
 	new->end = mem + len;
@@ -140,6 +146,8 @@ void *mmap(
 		mmap_addr = new;
 	else
 		last->next = new;
+
+	//DEBUG("addr = 0x%lx, len = 0x%lx\n", mem, len);
 	
 	return mem;
 }
@@ -159,6 +167,8 @@ int munmap(void* addr, size_t len)
 	if (!addr)
 		return 0;
 
+	//DEBUG("addr = 0x%lx, len = 0x%lx\n", addr, len);
+
 	while (tmp) {
 		if (addr >= tmp->begin && addr < tmp->end) {
 			/* We cannot release only some part of the allocation.
@@ -177,6 +187,9 @@ int munmap(void* addr, size_t len)
 			free(tmp);
 
 			mmap_free(addr);
+
+			//DEBUG("actually freed\n");
+
 			return 0;
 		}
 
