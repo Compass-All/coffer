@@ -204,14 +204,13 @@ static void syscall_handler_get_file_from_host(
 	__ecall_ebi_send_message(0UL, (vaddr_t)path, (usize)filename_len);
 
 	debug("listen to file\n");
-	*(u64 *)dst_addr = 0;
 	__ecall_ebi_listen_message(0UL, dst_addr, len);
 	__ecall_ebi_suspend(GET_FILE | filename_len);
-	wait_until_non_zero((volatile u64 *)dst_addr);
 
 	debug("got file\n");
 
 	hexdump(dst_addr, 0x20);
+	hexdump(dst_addr + len - 0x20, 0x20);
 }
 
 // other syscall handlers
@@ -339,6 +338,17 @@ static int syscall_handler_fstat_stdio(int fd, struct stat *stat)
     stat->st_blksize = 1024;
     stat->st_blocks = 0;
     return 0;
+}
+
+static int syscall_handler_write_stdio(int fd, const char *buf, size_t count)
+{
+	if (fd != 1)
+		panic("unknown fd\n");
+
+	for (int i = 0; i < count; i++)
+		_putchar(buf[i]);
+
+	return count;
 }
 
 static int syscall_handler_close_stdio(int fd)
@@ -505,11 +515,19 @@ void syscall_handler(
 
 	case SYS_write:
 		debug("syscall write\n");
-		ret = (u64)syscall_handler_write(
-			(int)			regs[CTX_INDEX_a0],
-			(const void *)	regs[CTX_INDEX_a1],
-			(size_t)		regs[CTX_INDEX_a2]
-		);
+		if (is_stdio(regs[CTX_INDEX_a0])) {
+			ret = (u64)syscall_handler_write_stdio(
+				(int)			regs[CTX_INDEX_a0],
+				(const char *)	regs[CTX_INDEX_a1],
+				(size_t)		regs[CTX_INDEX_a2]
+			);
+		} else {
+			ret = (u64)syscall_handler_write(
+				(int)			regs[CTX_INDEX_a0],
+				(const void *)	regs[CTX_INDEX_a1],
+				(size_t)		regs[CTX_INDEX_a2]
+			);
+		}
 		debug("end of syscall write\n");
 		break;
 
@@ -584,6 +602,7 @@ void syscall_handler(
 	 	debug("syscall exit\n");
 		show(get_umode_page_pool_avail_size());
 		// dump_emodule_table();	
+		// dump_page_table();
 		dump_timer();
 		__ecall_ebi_exit(regs[CTX_INDEX_a0]);
 		break;
