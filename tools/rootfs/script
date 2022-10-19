@@ -5,8 +5,16 @@ mount proc /proc -t proc
 mount sys /sys -t sysfs
 mount -t debugfs none debug
 
-# /prog/host/test_eapp /prog/enclave/eapp_write
+/prog/host/test_eapp /prog/enclave/eapp_write
 
 # /prog/host/dump_enc_status
 # /prog/host/dump_enc_memory
 # /prog/host/dump_pmp
+
+# command="/prog/enclave/sqlite-bench/sqlite-bench \
+# 	--num=500 \
+# 	--reads=500 \
+# 	--histogram=1"
+
+# bench="--benchmarks=fillseq"
+# /prog/host/test_eapp $command $bench

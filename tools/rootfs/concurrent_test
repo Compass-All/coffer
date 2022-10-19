@@ -5,19 +5,27 @@ mount proc /proc -t proc
 mount sys /sys -t sysfs
 
 
+taskset 0xe /prog/host/test_eapp /prog/enclave/eapp_write
+# echo 1 > /proc/sys/kernel/lock_stat
+
 echo 0 > /proc/sys/kernel/hung_task_panic
 echo 0 > /proc/sys/kernel/softlockup_panic
 echo 0 > /proc/sys/kernel/watchdog
 dmesg -n 1
-echo "1 1 1 1" > /proc/sys/kernel/printk
 taskset 0x1 /bin/sh
-taskset 0xe /prog/host/test_eapp /prog/enclave/eapp_write
 
-repeat=41
+repeat=42
 for i in `seq 1 $repeat`
 do
 	taskset 0xe /prog/host/test_eapp /prog/enclave/rv8/rv8_qsort &
 done
+
+repeat=5
+for i in `seq 1 $repeat`
+do
+	taskset 0xe /prog/host/test_eapp /prog/enclave/rv8/rv8_bigint
+done
+
 
 watch -n 4 /prog/host/dump_all
 
@@ -30,7 +38,7 @@ do
 	taskset 0xe /prog/host/test_eapp /prog/enclave/rv8/rv8_primes &
 done
 
-repeat=80
+repeat=81
 for i in `seq 1 $repeat`
 do
 	taskset 0xe /prog/host/test_eapp /prog/enclave/rv8/rv8_aes &
@@ -52,6 +60,18 @@ repeat=273
 for i in `seq 1 $repeat`
 do
 	taskset 0xe /prog/host/test_eapp /prog/enclave/rv8/rv8_miniz &
+done
+
+repeat=1024
+for i in `seq 1 $repeat`
+do
+	taskset 0xe /prog/host/test_eapp /prog/enclave/rv8/rv8_dhrystone &
+done
+
+repeat=1024
+for i in `seq 1 $repeat`
+do
+	taskset 0xe /prog/host/test_eapp /prog/enclave/rv8/rv8_bigint &
 done
 
 /prog/host/test_eapp /prog/enclave/rv8/rv8_qsort &
@@ -97,7 +117,7 @@ echo 20 > /proc/sys/kernel/hung_task_timeout_secs
 echo 1 > /proc/sys/kernel/hung_task_all_cpu_backtrace
 echo ttySIF0 > /sys/module/kgdboc/parameters/kgdboc
 
-echo 1 >/proc/sys/kernel/lock_stat
+echo 1 > /proc/sys/kernel/lock_stat
 
 #less /proc/lock_stat
 #grep : /proc/lock_stat | head
@@ -108,4 +128,30 @@ repeat=4
 for i in `seq 1 $repeat`
 do
 	taskset 0xe /prog/host/test_eapp /prog/enclave/rv8/rv8_qsort &
+done
+
+repeat=16
+for i in `seq 1 $repeat`
+do
+	/prog/host/test_eapp /prog/enclave/rv8/rv8_qsort &
+done
+
+
+repeat=16
+for i in `seq 1 $repeat`
+do
+	taskset 0xe /prog/host/ebi_call 51966 &
+done
+
+
+
+repeat=81
+start=2
+for i in `seq 1 $repeat`
+do
+	taskset 0xe /prog/host/create_enclave &
+done
+for i in `seq $start $(($repeat + $start - 1))`
+do
+	taskset 0xe /prog/host/enter_enclave $i /prog/enclave/rv8/rv8_aes &
 done

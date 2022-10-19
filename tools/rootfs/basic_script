@@ -23,12 +23,16 @@ mount sys /sys -t sysfs
 # printf "################## sqlite help ##################\n"
 # /prog/enclave/sqlite-bench/sqlite-bench --help
 
-# command="/prog/enclave/sqlite-bench/sqlite-bench \
-# 	--num=500 \
-# 	--reads=500 \
-# 	--histogram=1"
+command="/prog/enclave/sqlite-bench/sqlite-bench \
+	--num=500 \
+	--reads=500 \
+	--histogram=1"
 
-# bench="--benchmarks=fillseq"
+bench="--benchmarks=fillseq100K"
+# /prog/host/test_eapp $command $bench
+
+$command $bench
+rm dbbench_sqlite3*
 
 # printf "\n\n\n"
 # # echo $bench
@@ -43,10 +47,11 @@ mount sys /sys -t sysfs
 
 # ----- darknet
 
-# ./darknet detect cfg/yolov3.cfg yolov3.weights data/dog.jpg
+# ./darknet_origin detect cfg/yolov3.cfg yolov3.weights data/dog.jpg
+# ./darknet_origin classify cfg/tiny.cfg tiny.weights data/dog.jpg
 # printf "\n\n\n\n\n\n\n\n\n"
 # printf "################## darknet detect ##################\n"
-# /prog/host/test_eapp /prog/enclave/darknet/darknet detect /prog/enclave/darknet/cfg/yolov3.cfg /prog/enclave/darknet/yolov3.weights /prog/enclave/darknet/data/dog.jpg
+# /prog/host/test_eapp /prog/enclave/darknet/darknet detect /cfg/yolov3.cfg /yolov3.weights /data/dog.jpg
 
 # ./darknet classify cfg/tiny.cfg tiny.weights data/dog.jpg
 # printf "\n\n\n\n\n\n\n\n\n"
@@ -119,3 +124,6 @@ mount sys /sys -t sysfs
 # printf "\n\n\n\n\n\n\n\n\n"
 # printf "################## aes ##################\n"
 # /prog/host/test_eapp /prog/enclave/rv8/rv8_aes
+
+
+/prog/host/test_eapp /prog/enclave/musl_eapp/eapp_fs_test
