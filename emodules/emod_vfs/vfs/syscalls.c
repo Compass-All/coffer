@@ -171,7 +171,6 @@ int sys_read(struct vfscore_file *fp, const struct iovec *iov, size_t niov,
 		off_t offset, size_t *count)
 {
 	int error = 0;
-	struct iovec *copy_iov;
 	if ((fp->f_flags & UK_FREAD) == 0)
 		return EBADF;
 
@@ -199,9 +198,7 @@ int sys_read(struct vfscore_file *fp, const struct iovec *iov, size_t niov,
 	 *  zeros the iov_len fields when it reads from disk, so we
 	 *  have to copy iov. "
 	 */
-	copy_iov = calloc(sizeof(struct iovec), niov);
-	if (!copy_iov)
-		return ENOMEM;
+	struct iovec copy_iov[niov];
 	memcpy(copy_iov, iov, sizeof(struct iovec)*niov);
 
 	uio.uio_iov = copy_iov;
@@ -212,7 +209,7 @@ int sys_read(struct vfscore_file *fp, const struct iovec *iov, size_t niov,
 	error = vfs_read(fp, &uio, (offset == -1) ? 0 : FOF_OFFSET);
 	*count = bytes - uio.uio_resid;
 
-	free(copy_iov);
+	// free(copy_iov);
 	return error;
 }
 
@@ -220,7 +217,6 @@ int sys_read(struct vfscore_file *fp, const struct iovec *iov, size_t niov,
 int sys_write(struct vfscore_file *fp, const struct iovec *iov, size_t niov,
 		off_t offset, size_t *count)
 {
-	struct iovec *copy_iov;
 	int error = 0;
 	if ((fp->f_flags & UK_FWRITE) == 0)
 		return EBADF;
@@ -248,9 +244,7 @@ int sys_write(struct vfscore_file *fp, const struct iovec *iov, size_t niov,
 	 *  iov_len fields when it writes to disk, so we have to copy iov.
 	 */
 	/* std::vector<iovec> copy_iov(iov, iov + niov); */
-	copy_iov = calloc(sizeof(struct iovec), niov);
-	if (!copy_iov)
-		return ENOMEM;
+	struct iovec copy_iov[niov];
 	memcpy(copy_iov, iov, sizeof(struct iovec)*niov);
 
 	uio.uio_iov = copy_iov;
@@ -262,7 +256,7 @@ int sys_write(struct vfscore_file *fp, const struct iovec *iov, size_t niov,
 	error = vfs_write(fp, &uio, (offset == -1) ? 0 : FOF_OFFSET);
 	*count = bytes - uio.uio_resid;
 
-	free(copy_iov);
+	// free(copy_iov);
 	return error;
 }
 
