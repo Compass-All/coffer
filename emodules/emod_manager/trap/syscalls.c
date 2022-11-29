@@ -153,7 +153,7 @@ static u64 get_time()
 {
 	static int init = 0;
 
-	vaddr_t va = 0xA0000000; // todo: ioremap
+	vaddr_t va = 0x600000000; // todo: ioremap
 	if (!init) {
 		paddr_t pa = MTIME_PA_ALIGNED;
 		map_page(va, pa, PTE_R, SV39_LEVEL_PAGE);

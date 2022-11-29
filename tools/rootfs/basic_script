@@ -28,8 +28,8 @@ command="/prog/enclave/sqlite-bench/sqlite-bench \
 	--reads=500 \
 	--histogram=1"
 
-bench="--benchmarks=fillseq100K"
-# /prog/host/test_eapp $command $bench
+bench="--benchmarks=overwrite"
+/prog/host/test_eapp $command $bench
 
 $command $bench
 rm dbbench_sqlite3*
