@@ -9,6 +9,7 @@ typedef struct {
 	void *(*kmalloc)(size_t size);
 	void *(*malloc)(size_t size);
 	void *(*calloc)(size_t number, size_t size);
+	void *(*memalign)(size_t size, size_t align);
 	void (*free)(void *ptr);
 } emod_alloc_api_t;
 
