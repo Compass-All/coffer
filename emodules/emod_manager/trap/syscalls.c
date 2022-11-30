@@ -367,7 +367,12 @@ void syscall_handler(
 	u64 syscall_num = regs[CTX_INDEX_a7];
 	u64 ret = 0;
 
-	debug("handling syscall %ld\n", syscall_num);
+	debug("---------------\n");
+
+	show(regs);
+	show(sepc);
+
+	debug("syscall %ld begins\n", syscall_num);
 	show(syscall_num);
 
 	switch (syscall_num)
@@ -615,11 +620,6 @@ void syscall_handler(
 	
 	case SYS_mmap:
 		debug("syscall mmap\n");
-		u64 a1 = regs[CTX_INDEX_a1];
-		if (a1 == 0UL) {
-			debug("mmap len = 0\n");
-			show(sepc);
-		}
 		ret = (u64)syscall_handler_mmap(
 			(void *)		regs[CTX_INDEX_a0],
 			(size_t)		regs[CTX_INDEX_a1],
@@ -716,6 +716,8 @@ void syscall_handler(
 
 	show(sepc);
 	show(sepc + 4);
+
+	debug("---------------\n");
 
 	write_csr(sepc, sepc + 4);
 	regs[CTX_INDEX_a0] = ret;
