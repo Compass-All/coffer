@@ -11,64 +11,50 @@
 struct mmap_addr {
 	void *begin;
 	void *end;
+	vaddr_t smode_va;
 	struct mmap_addr *next;
 };
 
 static struct mmap_addr *mmap_addr;
 
-static void *alloc_from_mmode(usize size)
+static void *map_memalign(usize size, usize align, vaddr_t *smode_va)
 {
-	static vaddr_t current_va = MMAP_START_VA;
-	void *ret = (void *)current_va;
+	static vaddr_t cur_va = MMAP_START_VA;
 
-	vaddr_t cur_aligned = PARTITION_UP(current_va);
-	vaddr_t tar_aligned = PARTITION_UP(current_va + size);
-	usize diff = tar_aligned - cur_aligned;
-	usize nr_part = diff >> PARTITION_SHIFT;
-	usize left = nr_part;
-	vaddr_t va = cur_aligned;
+	void *smode_addr = memalign(size, align);
+	paddr_t pa = get_pa((vaddr_t)smode_addr);
+	show(smode_addr);
+	show(pa);
 
-	show(current_va);
-	show(size);
-	show(nr_part);
+	u8 level = (align >= PARTITION_SIZE) ? SV39_LEVEL_MEGA : SV39_LEVEL_PAGE;
+	usize page_size = (align >= PARTITION_SIZE) ? PARTITION_SIZE : PAGE_SIZE;
 
-	while (left > 0) {
-		usize sug = left, allocated;
-		paddr_t pa;
+	vaddr_t map_va_start;
+	paddr_t map_pa_start, map_pa_end;
 
-		do {
-			allocated = sug;
-			pa = __ecall_ebi_mem_alloc(allocated, &sug);
-		} while (pa == -1UL);
+	map_pa_start = ROUNDDOWN(pa, page_size);
+	map_pa_end = ROUNDUP(pa + size, page_size);
+	usize map_size = map_pa_end - map_pa_start;
+	usize nr_page = map_size / page_size;
 
-		for (int i = 0; i < allocated; i++) {
-			show(va + i * PARTITION_SIZE);
-			show(pa + i * PARTITION_SIZE);
-			map_page(
-				va + i * PARTITION_SIZE, 
-				pa + i * PARTITION_SIZE,
-				PTE_R | PTE_W | PTE_X | PTE_U,
-				SV39_LEVEL_MEGA
-			);
-		}
+	map_va_start = ROUNDUP(cur_va, page_size);
+	void *ret = (void *)map_va_start;
 
-		left -= allocated;
-		va += allocated * PARTITION_SIZE;
-		current_va += allocated * PARTITION_SIZE;
+	for (int i = 0; i < nr_page; i++) {
+		show(map_va_start + i * page_size);
+		show(map_pa_start + i * page_size);
+		map_page(
+			map_va_start + i * page_size,
+			map_pa_start + i * page_size,
+			PTE_R | PTE_W | PTE_X | PTE_U,
+			level
+		);
 	}
 
+	cur_va += map_size + PARTITION_SIZE;
+	*smode_va = (vaddr_t)smode_addr;
+
 	return ret;
-}
-
-static void *memalign(usize align, usize size)
-{
-	usize alloc_size = ROUNDUP(size, align);
-
-	static usize total = 0;
-	total += alloc_size;
-	//DEBUG("total size: 0x%lx\n", total);
-
-	return alloc_from_mmode(alloc_size);
 }
 
 #define mmap_free(_)
@@ -117,7 +103,8 @@ void *mmap(
 		tmp = tmp->next;
 	}
 
-	void *mem = memalign(PAGE_SIZE, len);
+	vaddr_t new_smode_va;
+	void *mem = map_memalign(len, PAGE_SIZE, &new_smode_va);
 	if (!mem) {
 		errno = ENOMEM;
 		return (void *) -1;
@@ -141,6 +128,7 @@ void *mmap(
 	new->begin = mem;
 	new->end = mem + len;
 	new->next = NULL;
+	new->smode_va = new_smode_va;
 
 	if (!mmap_addr)
 		mmap_addr = new;
@@ -184,9 +172,11 @@ int munmap(void* addr, size_t len)
 			else
 				prev->next = tmp->next;
 
-			free(tmp);
+			void *smode_addr = (void *)tmp->smode_va;
 
-			mmap_free(addr);
+			free(tmp);
+			free(smode_addr);
+			// mmap_free(addr);
 
 			//DEBUG("actually freed\n");
 
