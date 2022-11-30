@@ -8,6 +8,10 @@
 #define ROUNDUP(a, b) ((((a)-1) / (b) + 1) * (b))
 #endif
 
+#ifndef ROUNDDOWN
+#define ROUNDDOWN(a, b) ((a) / (b) * (b))
+#endif
+
 #ifndef __RISCV_ASM_H__
 #define PAGE_SHIFT 12
 #define PAGE_SIZE (1UL << PAGE_SHIFT)
