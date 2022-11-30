@@ -6,11 +6,103 @@
 #include <memory/page_table.h>
 #include <memory/memory.h>
 
-uint offset = 8;
 static uint overhead = sizeof(footer_t) + sizeof(node_t);
 
 static heap_t heap;
 static bin_t bins[BIN_COUNT];
+
+// check whether the allocated memory is zeroed
+__unused static int empty_check(void *p, size_t size)
+{
+    int ret = 0;
+    char *ptr = (char *)p;
+    info("empty check for allocated memory %p, size: 0x%lx\n", p, size);
+    for (size_t i = 0; i < size; i++) {
+        if (ptr[i]) {
+            printf(KRED "%p (offset: 0x%lx): 0x%x\n" RESET,
+                &ptr[i], i, ptr[i]);
+            ret = 1;
+        }
+    }
+    info("end of empty check\n");
+    return ret;
+}
+
+__unused void display_chunk(node_t *head)
+{
+    printf(
+KBLU
+"struct head @ %p\n"
+"\thole: (uint) %u\n"
+"\tsize: (size_t) 0x%lx\n"
+"\tnext: (node_t *) %p%s\n"
+"\tprev: (node_t *) %p%s\n"
+RESET,
+    head,
+    head->hole, head->size,
+    head->next, head->hole ? "" : " (meaningless)",
+    head->prev, head->hole ? "" : " (meaningless)");
+
+    footer_t *foot = get_foot(head);
+    printf(
+KBLU
+"struct footer @ %p\n"
+"\theader: (node_t *) %p\n"
+RESET,
+    foot,
+    foot->header
+    );
+}
+
+size_t get_index_by_bin(bin_t *bin)
+{
+    size_t offset = (usize)bin - (usize)&bins[0];
+    return offset / sizeof(bin_t);
+}
+
+static void add_node_to_bin(node_t *node)
+{
+    if (!node || !node->hole || !node->size)
+        panic("error adding node\n");
+
+    add_node(heap.bins[get_bin_index(node->size)], node);
+}
+
+__unused void dump_bin(bin_t *bin)
+{
+    if (bin->head == NULL)
+        return;
+
+    size_t index = get_index_by_bin(bin);
+    debug("bin %lu (~0x%lx):\n", index, 4UL << index);
+
+    node_t *temp = bin->head;
+    while (temp != NULL) {
+        display_chunk(temp);
+        temp = temp->next;
+    }
+}
+
+__unused void dump_heap(bin_t *first_bin)
+{
+    printf(KRED "----- start heap dump\n" RESET);
+    for (int i = 0; i < BIN_COUNT; i++) {
+        dump_bin(&first_bin[i]);
+    }
+    printf(KRED "----- end heap dump\n" RESET);
+}
+
+static void *memset(void *s, int c, usize count)
+{
+	char *temp = s;
+
+	while (count > 0) {
+		count--;
+		*temp++ = c;
+	}
+
+    return s;
+}
 
 void init_heap() {
     usize left = HEAP_INIT_PARTITION_NUM;
@@ -23,21 +115,9 @@ void init_heap() {
 
         do {
             allocated = sug;
-            show(allocated);
-            show(sug);
             pa = __ecall_ebi_mem_alloc(allocated, &sug);
-            show(allocated);
-            show(sug);
         } while (pa == -1UL);
-
-        show(pa);
-        show(allocated);
-
         for (int i = 0; i < allocated; i++) {
-            show(i);
-            show(allocated);
-            show(va + i * PARTITION_SIZE);
-            show(pa + i * PARTITION_SIZE);
     	    map_page(
     	    	va + i * PARTITION_SIZE,
     	        pa + i * PARTITION_SIZE,
@@ -52,26 +132,25 @@ void init_heap() {
 
     for (int i = 0; i < BIN_COUNT; i++) {
         heap.bins[i] = &bins[i];
+        debug("bin %d @ %p\n", i, &bins[i]);
     }
 
     // create header
-    node_t *init_region = (node_t *) start_va;
+    node_t *init_region = (node_t *)start_va;
     init_region->hole = 1;
-    init_region->size = (HEAP_INIT_SIZE) - sizeof(node_t) - sizeof(footer_t);
+    init_region->size = (HEAP_INIT_SIZE) - overhead;
 
     // create footer    
     create_foot(init_region);
 
-    add_node(heap.bins[get_bin_index(init_region->size)], init_region);
+    add_node_to_bin(init_region);
 
     heap.start = start_va;
     heap.end   = (start_va + HEAP_INIT_SIZE);
 
-    node_t *wild = get_wilderness();
-    show(wild);
-    show(wild->size);
-
-    show(0);
+    show(heap.start);
+    show(heap.end);
+    show(get_wilderness());
 }
 
 static node_t *search_fit_node(size_t size, uint *index_ptr)
@@ -83,7 +162,9 @@ static node_t *search_fit_node(size_t size, uint *index_ptr)
 
     while (found == NULL) {
         if (index + 1 >= BIN_COUNT) {
-            debug("not found\n");
+            info("fit node not found "
+                "(size: 0x%lx, index = %u)\n",
+                size, index);
             *index_ptr = -1;
             return NULL;
         }
@@ -92,8 +173,6 @@ static node_t *search_fit_node(size_t size, uint *index_ptr)
         found = get_best_fit(temp, size);
     }
 
-    show(found);
-    show(index);
     *index_ptr = index;
     return found;
 }
@@ -101,39 +180,36 @@ static node_t *search_fit_node(size_t size, uint *index_ptr)
 static size_t get_wild_size()
 {
     node_t *wild = get_wilderness();
-    show(wild);
     if (!wild) {
-        show(heap.start);
-        show(heap.end);
         panic("NULL wild!\n");
     }
     return wild->size;
 }
 
 void *heap_alloc(size_t size) {
+    debug("allocating size 0x%lx\n", size);
+
     uint index = 0;
+    // search for a chunk of proper size
     node_t *found = search_fit_node(size, &index);
     if (!found) {
-        debug("not found, increase the wild\n");
+        info("not found, increase the wild\n");
         size_t increment = size + 0x10000
             - get_wild_size();
-        show(increment);
         expand(increment);
         found = search_fit_node(size, &index);
         if (!found)
             panic("cannot alloc\n");
     }
-
-    show(found);
+    // if the remaining size of the chunk is large enough,
+    // split the chunk and add the remaining part to the
+    // free bins
     if ((found->size - size) > (overhead + MIN_ALLOC_SZ)) {
         node_t *split = (node_t *) (((char *) found
             + sizeof(node_t) + sizeof(footer_t)) + size);
-        split->size = found->size - size - sizeof(node_t) - sizeof(footer_t);
+        split->size = found->size - size - overhead;
         split->hole = 1;
 
-        show(split);
-        show(split->size);
-   
         create_foot(split);
 
         uint new_idx = get_bin_index(split->size);
@@ -151,6 +227,7 @@ void *heap_alloc(size_t size) {
     if (!wild)
         panic("wild == NULL\n");
     if (wild->size < MIN_WILDERNESS) {
+        info("wild too small (0x%lx), try to expand\n", wild->size);
         uint success = expand(MIN_WILDERNESS - wild->size);
         if (success == 0) {
             panic("expand failed\n");
@@ -164,53 +241,115 @@ void *heap_alloc(size_t size) {
     found->prev = NULL;
     found->next = NULL;
 
-    show(wild);
-    show(wild->size);
-    show(&found->next);
-    return &found->next; 
+    debug("alloc return chunk: \n");
+    display_chunk(found);
+    dump_heap(&bins[0]);
+
+    void *ret = (void *)((u64)found + sizeof(node_t));
+
+    if (empty_check(ret, size)) {
+        panic("not empty\n");
+    }
+
+    return ret; 
 }
 
-static void *memset(void *s, int c, usize count)
+// todo: return the new region near the top boundary of the found node
+void *heap_memalign(size_t sz, size_t align)
 {
-	char *temp = s;
+    debug("memalign size: 0x%lx, align: 0x%lx\n",
+        sz, align);
 
-	while (count > 0) {
-		count--;
-		*temp++ = c;
-	}
+    size_t size = ROUNDUP(sz + overhead, align) + align;
 
-    return s;
+    uint index = 0;
+    node_t *found = search_fit_node(size, &index);
+    if (!found) {
+        info("not found, increase the wild\n");
+        size_t increment = size + 0x10000
+            - get_wild_size();
+        expand(increment);
+        found = search_fit_node(size, &index);
+        if (!found)
+            panic("cannot alloc\n");
+    }
+
+    // remove found node
+    remove_node(heap.bins[index], found);
+
+    // setup the aligned node (the returned one)
+    void *p = (void *)ROUNDUP((u64)found + sizeof(node_t), align);
+    node_t *node = (node_t *)(p - sizeof(node_t));
+    node->hole = 0;
+    node->size = sz;
+    create_foot(node);
+
+    size_t dist = (u64)node - (u64)found;
+    size_t prev_sz = dist - overhead;
+    size_t remain_sz = found->size - prev_sz - sz - 2 * overhead;
+
+    __unused int prev_new = 0, remain_new = 0;
+
+    if (prev_sz > MIN_ALLOC_SZ) {
+        found->hole = 1;
+        found->size = prev_sz;
+        create_foot(found);
+        add_node_to_bin(found);
+
+        prev_new = 1;
+    }
+
+    node_t *remain;
+    if (remain_sz > MIN_ALLOC_SZ) {
+        remain = (node_t *)((void *)node + sz + overhead);
+        remain->hole = 1;
+        remain->size = remain_sz;
+        create_foot(remain);
+        add_node_to_bin(remain);
+
+        remain_new = 1;
+    }
+
+    node_t *wild = get_wilderness();
+    if (!wild)
+        panic("wild == NULL\n");
+    if (wild->size < MIN_WILDERNESS) {
+        info("wild too small (0x%lx), try to expand\n", wild->size); 
+        uint success = expand(MIN_WILDERNESS - wild->size);
+        if (success == 0) {
+            panic("expand failed\n");
+            return NULL;
+        }
+    }
+    else if (wild->size > MAX_WILDERNESS) {
+        contract(MAX_WILDERNESS - wild->size);
+    }
+
+    if (prev_new) {
+        debug("previous new chunk:\n");
+        display_chunk(found);
+    } else {
+        debug("previous chunk is too small\n");
+    }
+
+    debug("memalign return chunk:\n");
+    display_chunk(node);
+
+    if (remain_new) {
+        debug("remain chunk:\n");
+        display_chunk(remain);
+    } else {
+        debug("remaining chunk is too small\n");
+    }
+
+    dump_heap(&bins[0]);
+
+    if (empty_check(p, sz)) {
+        panic("not empty\n");
+    }
+
+    return p;
 }
-
-// static void *memset(void* dst, int byte, size_t len)
-// {
-//     size_t offset = 0;
-//     uint64_t fill = byte;
-//     fill |= fill << 8;
-//     fill |= fill << 16;
-//     fill |= fill << 32;
-//     while (len > 0) {
-//         if (len > 8) {
-//             *((uint64_t*)(dst + offset)) = fill;
-//             offset += 8;
-//             len -= 8;
-//         } else if (len > 4) {
-//             *((uint32_t*)(dst + offset)) = fill & 0xFFFFFFFF;
-//             offset += 4;
-//             len -= 4;
-//         } else if (len > 2) {
-//             *((uint16_t*)(dst + offset)) = fill & 0xFFFF;
-//             offset += 2;
-//             len -= 2;
-//         } else {
-//             *((uint8_t*)(dst + offset)) = byte;
-//             ++offset;
-//             --len;
-//         }
-//     }
-
-// 	return dst;
-// }
 
 void *heap_calloc(size_t number, size_t size)
 {
@@ -223,27 +362,26 @@ void heap_free(void *p) {
     bin_t *list;
     footer_t *new_foot, *old_foot;
 
-    debug("Check Point 1\n");
+    node_t *head = (node_t *) ((char *) p - sizeof(node_t));
+    debug("free chunk: \n");
+    display_chunk(head);
 
-    node_t *head = (node_t *) ((char *) p - offset);
-    if (head == (node_t *) (uintptr_t) heap.start) {
-        debug("free heap start node\n");
+    if (head == (node_t *)heap.start) {
         head->hole = 1; 
-        add_node(heap.bins[get_bin_index(head->size)], head);
+        add_node_to_bin(head);
         return;
     }
 
     node_t *next = (node_t *) ((char *) get_foot(head) + sizeof(footer_t));
     footer_t *f = (footer_t *) ((char *) head - sizeof(footer_t));
     node_t *prev = f->header;
-    
-    show(next);
-    show(f);
-    show(prev);
+
+    debug("prev chunk:\n");
+    display_chunk(prev);
+    debug("next chunk:\n");
+    display_chunk(next);
 
     if (prev->hole) {
-        debug("prev is free\n");
-
         list = heap.bins[get_bin_index(prev->size)];
         remove_node(list, prev);
 
@@ -252,11 +390,12 @@ void heap_free(void *p) {
         new_foot->header = prev;
 
         head = prev;
+
+        info("prev is free, merged chunk:\n");
+        display_chunk(head);
     }
 
     if (next->hole) {
-        debug("next is free\n");
-
         list = heap.bins[get_bin_index(next->size)];
         remove_node(list, next);
 
@@ -269,25 +408,22 @@ void heap_free(void *p) {
         
         new_foot = get_foot(head);
         new_foot->header = head;
+
+        info("next is free, merged chunk:\n");
+        display_chunk(head);
     }
 
     head->hole = 1;
     add_node(heap.bins[get_bin_index(head->size)], head);
-    debug("Check Point 3\n");
+
+    dump_heap(&bins[0]);
 }
 
-uint expand(size_t sz) {
-
+uint expand(size_t sz)
+{
 	usize nr_part = (PARTITION_UP(heap.end + sz) - PARTITION_UP(heap.end))
 			>> PARTITION_SHIFT;
     usize left = nr_part;
-
-    show(sz);
-    show(nr_part);
-    show(heap.end);
-
-    show(PARTITION_UP(heap.end + sz));
-    show(PARTITION_UP(heap.end));
 
 	vaddr_t va = PARTITION_UP(heap.end);
 	while (left > 0) {
@@ -299,13 +435,6 @@ uint expand(size_t sz) {
             allocated = sug;
             pa = __ecall_ebi_mem_alloc(allocated, &sug);
         } while (pa == -1UL);
-
-        show(pa);
-        show(va);
-        show(nr_part);
-
-        show(allocated);
-        show(sug);
 
 		for (int i = 0; i < allocated; i++) {
             show(va + i * PARTITION_SIZE);
@@ -320,27 +449,25 @@ uint expand(size_t sz) {
 
         left -= allocated;
         va += allocated * PARTITION_SIZE;
-
-        show(left);
-        show(va);
 	}
 
     node_t *wild = get_wilderness();
+    footer_t *wild_foot = get_foot(wild);
+    memset((void *)wild_foot, 0, sizeof(footer_t));
+
     remove_node(heap.bins[get_bin_index(wild->size)], wild);
-    show(wild);
-    show(wild->size);
-
     wild->size += sz;
+	heap.end += sz;
 
-    debug("new wild size:\n");
-    show(wild->size);
     create_foot(wild);
     add_node(heap.bins[get_bin_index(wild->size)], wild);
 
-	heap.end += sz;
+    info("expand heap by 0x%lx\n", sz);
+    show(heap.start);
+    show(heap.end);
 
-    show(wild);
-    show(wild->size);
+    debug("wild chunk after expansion:\n");
+    display_chunk(wild);
 
     return 1;
 }
@@ -350,17 +477,11 @@ void contract(size_t sz) {
 }
 
 uint get_bin_index(size_t sz) {
-    show(sz);
-
     uint index = 0;
     sz = sz < 4 ? 4 : sz;
 
     while (sz >>= 1) index++; 
     index -= 2;
-    
-    show(index);
-    show(index > BIN_MAX_IDX);
-
     if (index > BIN_MAX_IDX) index = BIN_MAX_IDX; 
     return index;
 }

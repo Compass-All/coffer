@@ -1,13 +1,10 @@
 #include "llist.h"
+#include "heap.h"
 #include "dependency.h"
 
 void add_node(bin_t *bin, node_t* node) {
     node->next = NULL;
     node->prev = NULL;
-
-	show(bin);
-	show(node);
-
     if (bin->head == NULL) {
         bin->head = node;
         return;
@@ -22,8 +19,6 @@ void add_node(bin_t *bin, node_t* node) {
         previous = current;
         current = current->next;
     }
-
-	show(current);
 
     if (current == NULL) { // we reached the end of the list
         previous->next = node;
@@ -70,19 +65,29 @@ void remove_node(bin_t * bin, node_t *node) {
 }
 
 node_t *get_best_fit(bin_t *bin, size_t size) {
+    size_t index = get_index_by_bin(bin);
+
     if (bin->head == NULL) {
+        debug("bin %lu (~ 0x%lx) is empty, searching for size 0x%lx\n",
+            index, 4UL << index, size);
 		return NULL; // empty list!
 	}
  
     node_t *temp = bin->head;
 
+    debug("bin %lu (~ 0x%lx) not empty, walking through it searching for size 0x%lx\n",
+        index, 4UL << index, size);
     while (temp != NULL) {
+        debug("node @ %p has size: 0x%lx\n", temp, temp->size);
         if (temp->size >= size) {
-			debug("hit\n");
+            debug("found proper node: %p\n", temp);
+            display_chunk(temp);
             return temp; // found a fit!
         }
         temp = temp->next;
     }
+    debug("no proper node found in bin %lu (~ 0x%lx) for size 0x%lx\n",
+        index, 4UL << index, size);
     return NULL; // no fit!
 }
 

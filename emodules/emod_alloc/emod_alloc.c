@@ -39,6 +39,7 @@ vaddr_t alloc_init(vaddr_t emod_manager_getter)
 	emod_alloc_api.kmalloc 	= heap_alloc;
 	emod_alloc_api.malloc 	= heap_alloc;
 	emod_alloc_api.calloc 	= heap_calloc;
+	emod_alloc_api.memalign = heap_memalign;
 	emod_alloc_api.free		= heap_free;
 
 	// init emodule
