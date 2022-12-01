@@ -116,6 +116,19 @@ void map_page(vaddr_t vaddr, paddr_t paddr, u8 flags, u8 level)
 	);
 }
 
+void unmap_page(vaddr_t vaddr, u8 level)
+{
+	pte_t *pte = get_leaf_pte(vaddr, level, GET_PTE_NO_ALLOC);
+	*(u64 *)pte = 0;
+
+	// flush_tlb of the page
+	asm volatile(
+		"sfence.vma	%0, zero	\n\t" // 'zero' cannot be omitted
+		:
+		: "r"(vaddr)
+	);
+}
+
 void setup_linear_map()
 {
 #define GIGA_PAGE_SIZE	0x40000000UL

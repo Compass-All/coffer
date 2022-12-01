@@ -143,6 +143,7 @@ void emod_manager_init()
 	emod_manager_api.test 				= api_test;
 	emod_manager_api.acquire_emodule 	= acquire_emodule;
 	emod_manager_api.map_page			= map_page;
+	emod_manager_api.unmap_page			= unmap_page;
 	emod_manager_api.panic				= panic;
 	emod_manager_api.get_pa				= get_pa;
 

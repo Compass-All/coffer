@@ -23,6 +23,7 @@ typedef struct {
 
 	// memory management
 	void 		(*map_page)(vaddr_t vaddr, paddr_t paddr, u8 flags, u8 level);
+	void 		(*unmap_page)(vaddr_t vaddr, u8 level);
 
 	// panic
 	void 		(*panic)(const char *panic_message);
