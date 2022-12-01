@@ -189,7 +189,7 @@ paddr_t get_pa(vaddr_t va)
 {
 	struct walk_page_table_result result = walk_page_table(va);
 	if (result.level == (u8)-1) {
-		printf("VA 0x%lx not valid\n", va);
+		printf(KRED "VA 0x%lx not valid\n" RESET, va);
 		return 0UL;
 	}
 	u8 level = result.level;
