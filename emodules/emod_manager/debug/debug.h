@@ -2,6 +2,7 @@
 
 #include "../printf/printf.h"
 #include <types.h>
+#include <util/console.h>
 
 #ifdef __DEBUG__
 #define EMODULES_DEBUG
@@ -10,8 +11,11 @@
 #ifdef EMODULES_DEBUG
 #define debug(fmt, ...) \
 	printf("\033[37m[%s] " fmt "\033[0m", __func__, ##__VA_ARGS__)
+#define info(fmt, ...) \
+	printf(KMAG "[%s] " fmt RESET, __func__, ##__VA_ARGS__)
 #else
 #define debug(fmt, ...)
+#define info(fmt, ...)
 #endif
 
 #define show(v) debug(#v "\t=\t0x%lx\n", (v));
