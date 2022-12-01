@@ -8,6 +8,7 @@
 #include "../vfs/stat.h"
 #include "enclave/enclave_ops.h"
 #include "../dependency.h"
+#include "util/console.h"
 
 struct mmap_addr {
 	void *begin;
@@ -24,16 +25,12 @@ static void *map_umode(void *smode_va, usize size)
 {
 	static vaddr_t mmap_va_ptr = MMAP_START_VA;
 
-	vaddr_t va = mmap_va_ptr;
-	paddr_t pa = get_pa((vaddr_t)smode_va);
-
-	info("MMAP umode page: 0x%lx\n", va);
-	info("mapping page: 0x%lx -> 0x%lx, size = 0x%lx\n",
-		va, pa, size);
 	for (int i = 0; i < size / PAGE_SIZE; i++) {
+		vaddr_t va = mmap_va_ptr + i * PAGE_SIZE;
+		paddr_t pa = get_pa((vaddr_t)smode_va + i * PAGE_SIZE);
    	    map_page(
-   	    	va + i * PAGE_SIZE,
-   	        pa + i * PAGE_SIZE,
+   	    	va,
+   	        pa,
    	    	PTE_R | PTE_W | PTE_U,
    	    	SV39_LEVEL_PAGE
    	    );
