@@ -25,9 +25,9 @@ static struct mmap_addr *mmap_addr;
 static void *map_umode(void *smode_va, usize size, u8 level)
 {
 	static vaddr_t mmap_va_ptr = MMAP_START_VA;
-	void *ret = (void *)mmap_va_ptr;
 	usize align_size = level == SV39_LEVEL_MEGA ? PARTITION_SIZE : PAGE_SIZE;
-
+	mmap_va_ptr = ROUNDUP(mmap_va_ptr, align_size);
+	void *ret = (void *)mmap_va_ptr;
 
 	for (int i = 0; i < ROUNDUP(size, align_size) / align_size; i++) {
 		vaddr_t va = mmap_va_ptr + i * align_size;
@@ -38,7 +38,8 @@ static void *map_umode(void *smode_va, usize size, u8 level)
    	    map_page(va, pa, PTE_R | PTE_W | PTE_U, level);
 	}
 
-	mmap_va_ptr = PARTITION_UP(mmap_va_ptr + size + PARTITION_SIZE);
+	// mmap_va_ptr = PARTITION_UP(mmap_va_ptr + size + PARTITION_SIZE);
+	mmap_va_ptr += size;
 
 	return ret;
 }
