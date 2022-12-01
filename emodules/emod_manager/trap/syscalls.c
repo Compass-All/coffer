@@ -190,28 +190,28 @@ static void syscall_handler_clock_gettime(
 	return;
 }
 
-static void syscall_handler_get_file_from_host(
-	const char *path,
-	u32 filename_len,
-	vaddr_t dst_addr,
-	usize len
-)
-{
-	show(filename_len);
-	__ecall_ebi_suspend(GET_FILE | filename_len);
+// static void syscall_handler_get_file_from_host(
+// 	const char *path,
+// 	u32 filename_len,
+// 	vaddr_t dst_addr,
+// 	usize len
+// )
+// {
+// 	show(filename_len);
+// 	__ecall_ebi_suspend(GET_FILE | filename_len);
 
-	debug("sending filename: %s\n", path);
-	__ecall_ebi_send_message(0UL, (vaddr_t)path, (usize)filename_len);
+// 	debug("sending filename: %s\n", path);
+// 	__ecall_ebi_send_message(0UL, (vaddr_t)path, (usize)filename_len);
 
-	debug("listen to file\n");
-	__ecall_ebi_listen_message(0UL, dst_addr, len);
-	__ecall_ebi_suspend(GET_FILE | filename_len);
+// 	debug("listen to file\n");
+// 	__ecall_ebi_listen_message(0UL, dst_addr, len);
+// 	__ecall_ebi_suspend(GET_FILE | filename_len);
 
-	debug("got file\n");
+// 	debug("got file\n");
 
-	hexdump(dst_addr, 0x20);
-	hexdump(dst_addr + len - 0x20, 0x20);
-}
+// 	hexdump(dst_addr, 0x20);
+// 	hexdump(dst_addr + len - 0x20, 0x20);
+// }
 
 // other syscall handlers
 
@@ -371,6 +371,7 @@ void syscall_handler(
 
 	show(regs);
 	show(sepc);
+	show(read_csr(sscratch));
 
 	debug("syscall %ld begins\n", syscall_num);
 	show(syscall_num);
@@ -688,16 +689,6 @@ void syscall_handler(
 		ret = 0;
 		break;
 
-	case SYS_get_file_from_host:
-		syscall_handler_get_file_from_host(
-			(const char *)	regs[CTX_INDEX_a0],
-			(u32)			regs[CTX_INDEX_a1],
-			(vaddr_t)		regs[CTX_INDEX_a2],
-			(usize)			regs[CTX_INDEX_a3]
-		);
-		ret = 0;
-		break;
-	
 	default:
 		error("syscall %d\n", syscall_num);
 		show(regs[CTX_INDEX_a0]);

@@ -5,6 +5,7 @@
 #include "file.h"
 #include "fcntl.h"
 #include "fd.h"
+#include "util/console.h"
 #include "vnode.h"
 #include "errno.h"
 #include <string.h>
@@ -14,6 +15,10 @@
 #include "fs.h"
 #include "errptr.h"
 #include "../dependency.h"
+#include <message/short_message.h>
+#include <message/message.h>
+#include <enclave/enclave_ops.h>
+#include "prex.h"
 
 struct __dirstream
 {
@@ -21,6 +26,122 @@ struct __dirstream
 };
 
 struct task *main_task; /* we only have a single process */
+
+static size_t get_host_file_size(const char *pathname)
+{
+	u32 pathname_len = strlen(pathname);
+
+	printd(KYEL "Getting host file size: file: %s, filename length: %u\n" RESET,
+		pathname, pathname_len);
+	__ecall_ebi_suspend(GET_FILE_SIZE | pathname_len);
+
+	printd(KYEL "Send pathname to host: %s\n" RESET, pathname);
+	__ecall_ebi_send_message(0UL, (vaddr_t)pathname, (usize)pathname_len);
+
+	usize ret;
+	__ecall_ebi_listen_message(0UL, (vaddr_t)&ret, sizeof(usize));
+	__ecall_ebi_suspend(0UL);
+
+	printd(KYEL "Get file size: 0x%lx\n" RESET, ret);
+
+	return ret;
+}
+
+static void mkdir_dir_for_fetch(const char *pathname)
+{
+	char buf[PATH_MAX];
+	char dir_buf[PATH_MAX];
+	char *file, *dir, *p;
+	char root[] = "/";
+	/*
+	 * Get the path for directory.
+	 */
+	strlcpy(buf, pathname, sizeof(buf));
+	file = strrchr(buf, '/');
+	if (file == NULL)
+		return;
+	if (file == buf) {
+		dir = root;
+	} else {
+		*file = '\0';
+		dir = buf;
+	}
+	info("file directory: %s\n", dir);
+
+	p = dir;
+	size_t len;
+	while ((file = strchr(p, '/')) != NULL) {
+		len = (size_t)(file - dir);
+		dir_buf[0] = '/';
+		memcpy(dir_buf + 1, dir, len);
+		dir_buf[len + 1] = '\0';
+
+		info("mkdir: %s\n", dir_buf);
+		sys_mkdir(dir_buf, S_IRWXU | S_IRWXG | S_IRWXO);
+
+		p += len + 1;
+		debug("left: %s\n", p);
+	}
+	len = strlen(dir);
+	dir_buf[0] = '/';
+	memcpy(dir_buf + 1, dir, len);
+	dir_buf[len + 1] = '\0';
+	info("mkdir: %s\n", dir_buf);
+	sys_mkdir(dir_buf, S_IRWXU | S_IRWXG | S_IRWXO);
+
+	info("mkdir done\n");
+}
+
+// pathname: path in cwd of the host
+static int fetch_from_host(const char *pathname)
+{
+	info("Fetching file: %s\n", pathname);
+	u32 pathname_len = strlen(pathname);
+
+	usize filesize = get_host_file_size(pathname);
+	int error = 0;
+
+	if (filesize == -1) {
+		printd(KRED "file does not exist\n" RESET);
+		return -ENOENT;
+	}
+	
+	// mkdir
+	info("mkdir\n");
+	mkdir_dir_for_fetch(pathname);
+
+	// create file
+	info("creating file: %s\n", pathname);
+	int fd;
+	if ((fd = syscall_handler_open(pathname, 
+				O_WRONLY | O_CREAT, S_IRWXU | S_IRWXG | S_IRWXO)) < 0) {
+		panic("error creating file\n");
+	}
+	info("file created: %s\n", pathname);
+
+	// allocate a buffer and receive file
+	info("receiving file\n");
+	char *buffer = (char *)kmalloc(filesize);
+	__ecall_ebi_suspend(GET_FILE | pathname_len);
+	__ecall_ebi_send_message(0UL, (vaddr_t)pathname, (usize)pathname_len);
+	__ecall_ebi_listen_message(0UL, (vaddr_t)buffer, filesize);
+	__ecall_ebi_suspend(0UL);
+
+	// write file
+	info("writing to file\n");
+	error = syscall_handler_write(fd, buffer, filesize);
+
+	// close file
+	info("closing file\n");
+	error = syscall_handler_close(fd);
+
+	if (error)
+		panic("error\n");
+
+	info("file fetching done\n");
+
+	return 0;
+}
 
 int	syscall_handler_open(const char *pathname, int flags, mode_t mode)
 {
@@ -46,11 +167,16 @@ int	syscall_handler_open(const char *pathname, int flags, mode_t mode)
 		break;
 	}
 
+	// convert pathname in cwd to full *path*
 	error = task_conv(t, pathname, acc, path);
 	if (error)
 		goto out_error;
 
 	error = sys_open(path, flags, mode, &fp);
+	if (error) {
+		fetch_from_host(pathname);
+		error = sys_open(path, flags, mode, &fp);
+	}
 	if (error)
 		goto out_error;
 
