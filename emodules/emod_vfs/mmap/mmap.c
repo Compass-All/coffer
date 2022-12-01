@@ -24,6 +24,7 @@ static struct mmap_addr *mmap_addr;
 static void *map_umode(void *smode_va, usize size)
 {
 	static vaddr_t mmap_va_ptr = MMAP_START_VA;
+	void *ret = (void *)mmap_va_ptr;
 
 	for (int i = 0; i < size / PAGE_SIZE; i++) {
 		vaddr_t va = mmap_va_ptr + i * PAGE_SIZE;
@@ -38,7 +39,7 @@ static void *map_umode(void *smode_va, usize size)
 
 	mmap_va_ptr = PARTITION_UP(mmap_va_ptr + PARTITION_SIZE);
 
-	return (void *)va;
+	return ret;
 }
 
 void *mmap(
