@@ -85,11 +85,11 @@ __unused void dump_bin(bin_t *bin)
 
 __unused void dump_heap(bin_t *first_bin)
 {
-    printf(KRED "----- start heap dump\n" RESET);
+    printd(KRED "----- start heap dump\n" RESET);
     for (int i = 0; i < BIN_COUNT; i++) {
         dump_bin(&first_bin[i]);
     }
-    printf(KRED "----- end heap dump\n" RESET);
+    printd(KRED "----- end heap dump\n" RESET);
 }
 
 static void *memset(void *s, int c, usize count)
