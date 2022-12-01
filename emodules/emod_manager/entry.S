@@ -101,10 +101,10 @@ temp_stvec:
 .global trap_handler
 trap_handler:
 	csrrw	sp, sscratch, sp // swap sp and sscratch
-	// if sp is zero, this is a kernel trap, jump to 1f
-	bnez    sp, 1f
+	// if sp is zero, this is a kernel trap
+	bnez    sp, 1f // jump for user trap
 	// sscratch is not zero, user trap
-    csrr    sp, sscratch
+    csrrw   sp, sscratch, sp
 1:
 	SAVE_CONTEXT
 	csrrw	t1, sscratch, x0	// t1 = user sp, sscratch = 0
@@ -122,6 +122,9 @@ trap_handler:
 	RESTORE_CONTEXT
 
 	csrrw	sp, sscratch, sp
+    bnez    sp, 2f
+	csrrw	sp, sscratch, sp
+2:
 	sret
 
 dump_reg:
