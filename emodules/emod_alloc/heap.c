@@ -19,7 +19,7 @@ __unused static int empty_check(void *p, size_t size)
     info("empty check for allocated memory %p, size: 0x%lx\n", p, size);
     for (size_t i = 0; i < size; i++) {
         if (ptr[i]) {
-            printf(KRED "%p (offset: 0x%lx): 0x%x\n" RESET,
+            printd(KRED "%p (offset: 0x%lx): 0x%x\n" RESET,
                 &ptr[i], i, ptr[i]);
             ret = 1;
         }
@@ -30,21 +30,21 @@ __unused static int empty_check(void *p, size_t size)
 
 __unused void display_chunk(node_t *head)
 {
-    printf(
+    printd(
 KBLU
-"struct head @ %p\n"
+"struct head @ %p (ptr: %p)\n"
 "\thole: (uint) %u\n"
 "\tsize: (size_t) 0x%lx\n"
 "\tnext: (node_t *) %p%s\n"
 "\tprev: (node_t *) %p%s\n"
 RESET,
-    head,
+    head, (void *)head + sizeof(node_t),
     head->hole, head->size,
     head->next, head->hole ? "" : " (meaningless)",
     head->prev, head->hole ? "" : " (meaningless)");
 
     footer_t *foot = get_foot(head);
-    printf(
+    printd(
 KBLU
 "struct footer @ %p\n"
 "\theader: (node_t *) %p\n"
@@ -247,10 +247,6 @@ void *heap_alloc(size_t size) {
 
     void *ret = (void *)((u64)found + sizeof(node_t));
 
-    if (empty_check(ret, size)) {
-        panic("not empty\n");
-    }
-
     return ret; 
 }
 
@@ -259,6 +255,8 @@ void *heap_memalign(size_t sz, size_t align)
 {
     debug("memalign size: 0x%lx, align: 0x%lx\n",
         sz, align);
+
+    sz = ROUNDUP(sz, align);
 
     size_t size = ROUNDUP(sz + overhead, align) + align;
 
@@ -343,10 +341,6 @@ void *heap_memalign(size_t sz, size_t align)
     }
 
     dump_heap(&bins[0]);
-
-    if (empty_check(p, sz)) {
-        panic("not empty\n");
-    }
 
     return p;
 }
