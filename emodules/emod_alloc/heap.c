@@ -243,7 +243,7 @@ void *heap_alloc(size_t size) {
 
     debug("alloc return chunk: \n");
     display_chunk(found);
-    dump_heap(&bins[0]);
+    // dump_heap(&bins[0]);
 
     void *ret = (void *)((u64)found + sizeof(node_t));
 
@@ -258,7 +258,7 @@ void *heap_memalign(size_t sz, size_t align)
 
     sz = ROUNDUP(sz, align);
 
-    size_t size = ROUNDUP(sz + overhead, align) + align;
+    size_t size = ROUNDUP(sz + overhead, align);
 
     uint index = 0;
     node_t *found = search_fit_node(size, &index);
@@ -340,7 +340,7 @@ void *heap_memalign(size_t sz, size_t align)
         debug("remaining chunk is too small\n");
     }
 
-    dump_heap(&bins[0]);
+    // dump_heap(&bins[0]);
 
     return p;
 }
@@ -410,7 +410,7 @@ void heap_free(void *p) {
     head->hole = 1;
     add_node(heap.bins[get_bin_index(head->size)], head);
 
-    dump_heap(&bins[0]);
+    // dump_heap(&bins[0]);
 }
 
 uint expand(size_t sz)
