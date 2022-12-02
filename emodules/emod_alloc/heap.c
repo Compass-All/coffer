@@ -283,18 +283,24 @@ void *heap_memalign(size_t sz, size_t align)
     create_foot(node);
 
     size_t dist = (u64)node - (u64)found;
-    size_t prev_sz = dist - overhead;
+    size_t prev_sz = dist > overhead ? (dist - overhead) : 0;
     size_t remain_sz = found->size - prev_sz - sz - 2 * overhead;
+    show(dist); show(prev_sz); show(remain_sz);
 
     __unused int prev_new = 0, remain_new = 0;
 
     if (prev_sz > MIN_ALLOC_SZ) {
         found->hole = 1;
         found->size = prev_sz;
+        debug("previous new chunk:\n");
+        display_chunk(found);
+
         create_foot(found);
         add_node_to_bin(found);
 
         prev_new = 1;
+    } else {
+        debug("previous chunk is too small\n");
     }
 
     node_t *remain;
@@ -302,10 +308,15 @@ void *heap_memalign(size_t sz, size_t align)
         remain = (node_t *)((void *)node + sz + overhead);
         remain->hole = 1;
         remain->size = remain_sz;
+        debug("remain chunk:\n");
+        display_chunk(remain);
+
         create_foot(remain);
         add_node_to_bin(remain);
 
         remain_new = 1;
+    } else {
+        debug("remaining chunk is too small\n");
     }
 
     node_t *wild = get_wilderness();
@@ -323,24 +334,10 @@ void *heap_memalign(size_t sz, size_t align)
         contract(MAX_WILDERNESS - wild->size);
     }
 
-    if (prev_new) {
-        debug("previous new chunk:\n");
-        display_chunk(found);
-    } else {
-        debug("previous chunk is too small\n");
-    }
-
     debug("memalign return chunk:\n");
     display_chunk(node);
 
-    if (remain_new) {
-        debug("remain chunk:\n");
-        display_chunk(remain);
-    } else {
-        debug("remaining chunk is too small\n");
-    }
-
-    // dump_heap(&bins[0]);
+    dump_heap(&bins[0]);
 
     return p;
 }
