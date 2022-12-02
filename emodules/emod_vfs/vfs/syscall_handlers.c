@@ -135,6 +135,9 @@ static int fetch_from_host(const char *pathname)
 	info("closing file\n");
 	error = syscall_handler_close(fd);
 
+	// free buffer
+	free(buffer);
+
 	if (error)
 		panic("error\n");
 
