@@ -32,13 +32,14 @@ __unused void display_chunk(node_t *head)
 {
     printd(
 KBLU
-"struct head @ %p (ptr: %p)\n"
+"struct head @ %p(PA: 0x%lx) (ptr: %p)\n"
 "\thole: (uint) %u\n"
 "\tsize: (size_t) 0x%lx\n"
 "\tnext: (node_t *) %p%s\n"
 "\tprev: (node_t *) %p%s\n"
 RESET,
-    head, (void *)head + sizeof(node_t),
+    head, get_pa((vaddr_t)head),
+    (void *)head + sizeof(node_t),
     head->hole, head->size,
     head->next, head->hole ? "" : " (meaningless)",
     head->prev, head->hole ? "" : " (meaningless)");
@@ -189,6 +190,9 @@ static size_t get_wild_size()
 void *heap_alloc(size_t size) {
     debug("allocating size 0x%lx\n", size);
 
+    info("wild before allocation\n");
+    display_chunk(get_wilderness());
+
     uint index = 0;
     // search for a chunk of proper size
     node_t *found = search_fit_node(size, &index);
@@ -243,7 +247,10 @@ void *heap_alloc(size_t size) {
 
     debug("alloc return chunk: \n");
     display_chunk(found);
-    // dump_heap(&bins[0]);
+    dump_heap(&bins[0]);
+
+    info("wild after allocation:\n");
+    display_chunk(wild);
 
     void *ret = (void *)((u64)found + sizeof(node_t));
 
