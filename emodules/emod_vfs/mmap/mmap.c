@@ -13,33 +13,147 @@
 struct mmap_addr {
 	void *begin;
 	void *end;
-	void *smode_va;
-	u8	 level;
 	struct mmap_addr *next;
 };
 
+struct free_mega_page {
+	struct free_mega_page *next;
+	vaddr_t va;
+};
+
+struct free_page_block {
+	struct free_page_block *next;
+
+	vaddr_t va;
+	usize count;
+};
+
 static struct mmap_addr *mmap_addr;
+static struct free_page_block *free_page = NULL;
+static struct free_mega_page *free_mega = NULL;
 
-// map the pages allocated with memalign with umode access
-// smode_va and size is expected to be page aliged
-static void *map_umode(void *smode_va, usize size, u8 level)
+static vaddr_t mmap_top = 0x1000000000UL;
+
+static void *alloc_small_page(usize num)
 {
-	static vaddr_t mmap_va_ptr = MMAP_START_VA;
-	usize align_size = level == SV39_LEVEL_MEGA ? PARTITION_SIZE : PAGE_SIZE;
-	mmap_va_ptr = ROUNDUP(mmap_va_ptr, align_size);
-	void *ret = (void *)mmap_va_ptr;
-
-	for (int i = 0; i < ROUNDUP(size, align_size) / align_size; i++) {
-		vaddr_t va = mmap_va_ptr + i * align_size;
-		paddr_t pa = get_pa((vaddr_t)smode_va + i * align_size);
-		show(va);
-		show(pa);
-		show(align_size);
-   	    map_page(va, pa, PTE_R | PTE_W | PTE_U, level);
+	if (num > PARTITION_SIZE / PAGE_SIZE) {
+		printf(KRED "More pages than expected\n" RESET);
+		panic("");
 	}
 
-	// mmap_va_ptr = PARTITION_UP(mmap_va_ptr + size + PARTITION_SIZE);
-	mmap_va_ptr += size;
+	info("allocate %lu small pages\n", num);
+	info("expected return value: 0x%lx\n", mmap_top);
+	void *ret = (void *)mmap_top;
+
+	while (num) {
+		debug("%lu pages remained to be allocated\n", num);
+		if (!free_page) {
+			info("no free pages in list, allocating from m mode\n");
+			paddr_t pa = __ecall_ebi_mem_alloc(1, NULL);
+			usize left = PARTITION_SIZE / PAGE_SIZE - num;
+
+			info("%lu more pages\n", left);
+
+			for (int i = 0; i < PARTITION_SIZE / PAGE_SIZE; i++) {
+				debug("mapping page: va = 0x%lx, pa = 0x%lx, size = 0x%lx\n",
+						mmap_top, pa, 0x1000);
+				map_page(mmap_top, pa, PTE_R | PTE_W | PTE_U, SV39_LEVEL_PAGE);
+				mmap_top += PAGE_SIZE;
+				pa += PAGE_SIZE;
+			}
+
+			if (left) {
+				struct free_page_block *new =
+					(void *)kmalloc(sizeof(struct free_page_block));
+				new->count = left;
+				new->va = (vaddr_t)(ret + num * PAGE_SIZE);
+				new->next = NULL;
+				free_page = new;
+
+				info("adding left pages to list, count = %lu, va = 0x%lx\n",
+					new->count, new->va);
+
+				return ret;
+			}
+		}
+		debug("using free_page @ %p, va = 0x%lx, count = %lu\n",
+			free_page, free_page->va, free_page->count);
+		usize n = (num >= free_page->count) ? free_page->count : num;
+		paddr_t pa = get_pa(free_page->va);
+		debug("free_page pa = 0x%lx\n", pa);
+		for (int i = 0; i < n; i++) {
+			debug("mapping page: va = 0x%lx, pa = 0x%lx, size = 0x%lx\n",
+						mmap_top, pa, 0x1000);
+			map_page(mmap_top, pa, PTE_R | PTE_W | PTE_U, SV39_LEVEL_PAGE);
+			memset((void *)mmap_top, 0, PAGE_SIZE);
+			mmap_top += PAGE_SIZE;
+			pa += PAGE_SIZE;
+		}
+		if (num >= free_page->count) {
+			info("free_page @ %p used up\n", free_page);
+			struct free_page_block *used = free_page;
+			free_page = free_page->next;
+			free(used);
+		} else {
+			free_page->count -= num;
+			free_page->va += n * PAGE_SIZE;
+			debug("updating free_page: new va: 0x%lx, new count = %lu\n",
+				free_page->va, free_page->count);
+			return ret;
+		}
+		
+		num -= n;
+	}
+
+	return ret;
+}
+
+static void *alloc_mega_page(usize num)
+{
+	mmap_top = PARTITION_UP(mmap_top);
+
+	info("allocate %lu mega pages\n", num);
+	info("expected return value: 0x%lx\n", mmap_top);
+	void *ret = (void *)mmap_top;
+	while (num) {
+		debug("%lu mega pages remained to be allocated\n", num);
+		paddr_t pa;
+		if (!free_mega) {
+			debug("no free mega pages left, allocating from mmode\n");
+			usize left = num;
+			while (left) {
+				usize sug = left, allocated;
+				do {
+					allocated = sug;
+					pa = __ecall_ebi_mem_alloc(allocated, &sug);
+				} while (pa == -1UL);
+				debug("allocated: 0x%lx, sug = 0x%lx\n", 
+					allocated, sug);
+				for (int i = 0; i < allocated; i++) {
+					debug("mapping page: va = 0x%lx, pa = 0x%lx, size = 0x%lx\n",
+						mmap_top, pa, 0x200000);
+					map_page(mmap_top, pa, PTE_R | PTE_W | PTE_U, SV39_LEVEL_MEGA);
+					mmap_top += PARTITION_SIZE;
+					pa += PARTITION_SIZE;
+				}
+				left -=allocated;
+			}
+			return ret;
+		}
+
+		debug("using free_mega_page @ %p\n", free_mega);
+		pa = get_pa(free_mega->va);
+		debug("mega page pa = 0x%lx\n", pa);
+		debug("mapping page: va = 0x%lx, pa = 0x%lx, size = 0x%lx\n",
+						mmap_top, pa, 0x200000);
+		map_page(mmap_top, pa, 0, SV39_LEVEL_MEGA);
+		memset((void *)mmap_top, 0, PARTITION_SIZE);
+		mmap_top += PARTITION_SIZE;
+		struct free_mega_page *used = free_mega;
+		free_mega = free_mega->next;
+		free(used);
+		num--;
+	}
 
 	return ret;
 }
@@ -88,23 +202,13 @@ void *mmap(
 		tmp = tmp->next;
 	}
 
-	u8 level;
-	usize align_size;
+	void *mem;
+
 	if (len >= PARTITION_SIZE) {
-		level = SV39_LEVEL_MEGA;
-		align_size = PARTITION_SIZE;
+		mem = alloc_mega_page(PARTITION_UP(len) / PARTITION_SIZE);
 	} else {
-		level = SV39_LEVEL_PAGE;
-		align_size = PAGE_SIZE;
+		mem = alloc_small_page(PAGE_UP(len) / PAGE_SIZE);
 	}
-	void *mem = memalign(len, align_size);
-	if (!mem) {
-		errno = ENOMEM;
-		return (void *) -1;
-	}
-	show(mem);
-	/* The caller expects the memory to be zeroed */
-	memset(mem, 0, ROUNDUP(len, align_size));
 
 	new = kmalloc(sizeof(struct mmap_addr));
 	if (!new) {
@@ -114,25 +218,23 @@ void *mmap(
 	}
 	show(new);
 
-	void *umode_va = map_umode(mem, ROUNDUP(len, align_size), level);
-
-	new->begin = umode_va;
-	new->end = umode_va + len;
+	new->begin = mem;
+	new->end = mem + len;
 	new->next = NULL;
-	new->smode_va = mem;
-	new->level = level;
 
 	if (!mmap_addr)
 		mmap_addr = new;
 	else
 		last->next = new;
 
-	return umode_va;
+	return mem;
 }
 
 int munmap(void* addr, size_t len)
 {
 	struct mmap_addr *tmp = mmap_addr, *prev = NULL;
+
+	printf("####### 2 0x%lx 0x%0x\n", addr, len);
 
 	show(addr);
 	show(len);
@@ -162,12 +264,19 @@ int munmap(void* addr, size_t len)
 			else
 				prev->next = tmp->next;
 
-			u8 level = tmp->level;
-			usize align_size = level == SV39_LEVEL_MEGA ? PARTITION_SIZE : PAGE_SIZE;
-			// unmap umode page here
-			for (int i = 0; i < len / align_size; i++)
-				unmap_page((vaddr_t)(addr + i * align_size), level);
-			free(tmp->smode_va);
+			if (len >= PARTITION_SIZE) {
+				struct free_mega_page *new = (void *)kmalloc(sizeof(struct free_mega_page));
+				new->next = free_mega;
+				new->va = (vaddr_t)addr;
+				free_mega = new;
+			} else {
+				usize num = len / PAGE_SIZE;
+				struct free_page_block *new = (void *)kmalloc(sizeof(struct free_page_block));
+				new->count = num;
+				new->va = (vaddr_t)addr;
+				new->next = free_page;
+				free_page = new;
+			}
 			free(tmp);
 
 			//DEBUG("actually freed\n");
