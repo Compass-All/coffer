@@ -80,9 +80,8 @@ static void *alloc_small_page(usize num)
 		debug("using free_page @ %p, va = 0x%lx, count = %lu\n",
 			free_page, free_page->va, free_page->count);
 		usize n = (num >= free_page->count) ? free_page->count : num;
-		paddr_t pa = get_pa(free_page->va);
-		debug("free_page pa = 0x%lx\n", pa);
 		for (int i = 0; i < n; i++) {
+			paddr_t pa = get_pa(free_page->va + i * PAGE_SIZE);
 			debug("mapping page: va = 0x%lx, pa = 0x%lx, size = 0x%lx\n",
 						mmap_top, pa, 0x1000);
 			map_page(mmap_top, pa, PTE_R | PTE_W | PTE_U, SV39_LEVEL_PAGE);
