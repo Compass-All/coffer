@@ -51,6 +51,7 @@ static void *alloc_small_page(usize num)
 			info("no free pages in list, allocating from m mode\n");
 			paddr_t pa = __ecall_ebi_mem_alloc(1, NULL);
 			usize left = PARTITION_SIZE / PAGE_SIZE - num;
+			vaddr_t va = mmap_top;
 
 			info("%lu more pages\n", left);
 
@@ -66,7 +67,7 @@ static void *alloc_small_page(usize num)
 				struct free_page_block *new =
 					(void *)kmalloc(sizeof(struct free_page_block));
 				new->count = left;
-				new->va = (vaddr_t)(ret + num * PAGE_SIZE);
+				new->va = (vaddr_t)(va + num * PAGE_SIZE);
 				new->next = NULL;
 				free_page = new;
 
