@@ -234,8 +234,6 @@ int munmap(void* addr, size_t len)
 {
 	struct mmap_addr *tmp = mmap_addr, *prev = NULL;
 
-	printf("####### 2 0x%lx 0x%0x\n", addr, len);
-
 	show(addr);
 	show(len);
 
