@@ -35,8 +35,9 @@ void exception_handler(
 
 	u64 sie = read_csr(sie);
 	u64 sip = read_csr(sip);
+	u64 sscratch = read_csr(sscratch);
 	dump(sepc); dump(scause); dump(stval);	
-	dump(sie); dump(sip);
+	dump(sscratch); dump(sie); dump(sip);
 	printf("\n");
 
 	printf("Register Dump:\n");
@@ -51,6 +52,7 @@ void exception_handler(
 	dump_emodule_table();
 
 	paddr_t page_fault_pa;
+	paddr_t access_fault_pa;
 
 	switch (scause)
 	{
@@ -70,7 +72,7 @@ void exception_handler(
 		error("Load address misaligned\n");
 		break;
 	case 0x5:
-		paddr_t access_fault_pa = get_pa(stval);
+		access_fault_pa = get_pa(stval);
 		error("Load access fault: pa = 0x%lx\n", access_fault_pa);
 		break;
 	case 0x6:
