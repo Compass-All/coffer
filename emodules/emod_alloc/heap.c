@@ -247,7 +247,7 @@ void *heap_alloc(size_t size) {
 
     debug("alloc return chunk: \n");
     display_chunk(found);
-    dump_heap(&bins[0]);
+    // dump_heap(&bins[0]);
 
     info("wild after allocation:\n");
     display_chunk(wild);
@@ -344,7 +344,7 @@ void *heap_memalign(size_t sz, size_t align)
     debug("memalign return chunk:\n");
     display_chunk(node);
 
-    dump_heap(&bins[0]);
+    // dump_heap(&bins[0]);
 
     return p;
 }
