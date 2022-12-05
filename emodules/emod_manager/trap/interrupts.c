@@ -5,12 +5,19 @@
 #include <util/register.h>
 #include <util/csr.h>
 #include <util/gnu_attribute.h>
+#include <util/console.h>
 #include <enclave/enclave_ops.h>
 #include <message/short_message.h>
 
 #define INTER_S_TIMER 5
 
 #define SBI_EXT_0_1_SET_TIMER			0x0
+
+static void routine(u64 *regs, u64 sepc)
+{
+	// printf(KMAG "[interrupt rountine] spec: 0x%lx\n" RESET, sepc);
+	return;
+}
 
 static void timer_interrupt_handler()
 {
@@ -52,6 +59,7 @@ void interrupt_handler(
 	{
 	case INTER_S_TIMER:
 		timer_interrupt_handler();
+		routine(regs, sepc);
 		break;
 	
 	default:
