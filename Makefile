@@ -32,7 +32,7 @@ DOCKER_BUSYBOX_PATH = /root/busybox
 DOCKER_LINUX_PATH = /root/linux
 DOCKER_PROG_PATH = /root/prog
 
-ROOTFS = $(BUILD_DIR)/rootfs.img
+ROOTFS ?= $(BUILD_DIR)/rootfs.img
 MOUNT_POINT = $(BUILD_DIR)/mnt
 
 EMODULE_DIRS = $(subst emodules/,,$(sort $(dir $(wildcard emodules/*/))))
