@@ -98,7 +98,7 @@ endif
 rootfs: emodules docker prog
 ifeq (, $(wildcard $(ROOTFS))) # ROOTFS not found
 # Make ext2 FS
-	sudo dd if=/dev/zero of=$(ROOTFS) bs=1M count=512
+	sudo dd if=/dev/zero of=$(ROOTFS) bs=1M count=1024
 	sudo mkfs.ext2 -F $(ROOTFS)
 # Mount
 	sudo mkdir -p $(MOUNT_POINT)
