@@ -3,17 +3,16 @@ dmesg -n 1
 
 mount proc /proc -t proc
 mount sys /sys -t sysfs
-mount -t debugfs none debug
 
-/prog/host/test_eapp /prog/enclave/eapp_write
+/prog/host/reset_system
 
-command="/prog/enclave/sqlite-bench/sqlite-bench \
-	--num=500 \
-	--reads=500 \
-	--histogram=1"
+# command="/prog/enclave/sqlite-bench/sqlite-bench \
+# 	--num=500 \
+# 	--reads=500 \
+# 	--histogram=1"
 
-bench="--benchmarks=overwrite"
-/prog/host/test_eapp $command $bench
+# bench="--benchmarks=overwrite"
+# /prog/host/test_eapp $command $bench
 
 # /prog/host/dump_enc_status
 # /prog/host/dump_enc_memory

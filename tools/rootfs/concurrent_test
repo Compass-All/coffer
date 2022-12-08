@@ -4,15 +4,31 @@ dmesg -n 1
 mount proc /proc -t proc
 mount sys /sys -t sysfs
 
+# echo 1 > /proc/sys/kernel/lock_stat
 
 taskset 0xe /prog/host/test_eapp /prog/enclave/eapp_write
-# echo 1 > /proc/sys/kernel/lock_stat
+
+taskset 0xe /prog/host/reset_system
 
 echo 0 > /proc/sys/kernel/hung_task_panic
 echo 0 > /proc/sys/kernel/softlockup_panic
 echo 0 > /proc/sys/kernel/watchdog
 dmesg -n 1
 taskset 0x1 /bin/sh
+
+
+#----
+repeat=42
+task=rv8_qsort
+for i in `seq 1 $repeat`
+do
+	taskset 0xe /prog/host/create_enclave &
+done
+for i in `seq 1 $repeat`
+do
+	taskset 0xe /prog/host/enter_enclave $i /prog/enclave/rv8/$task &
+done
+#----
 
 repeat=42
 for i in `seq 1 $repeat`
@@ -32,7 +48,8 @@ watch -n 4 /prog/host/dump_all
 taskset 0xe strace -c /prog/enclave/rv8/rv8_qsort &
 
 
-repeat=819
+# repeat=819
+repeat=1024
 for i in `seq 1 $repeat`
 do
 	taskset 0xe /prog/host/test_eapp /prog/enclave/rv8/rv8_primes &
@@ -56,7 +73,8 @@ do
 	taskset 0xe /prog/host/test_eapp /prog/enclave/rv8/rv8_sha512 &
 done
 
-repeat=273
+# repeat=273
+repeat=256
 for i in `seq 1 $repeat`
 do
 	taskset 0xe /prog/host/test_eapp /prog/enclave/rv8/rv8_miniz &
