@@ -3,7 +3,7 @@
 #define SBI_EXT_EBI 0x19260817
 
 /* SBI function IDs for EBI extension*/
-#define SBI_EXT_EBI_START 						398
+#define SBI_EXT_EBI_RESET 						398
 #define SBI_EXT_EBI_CREATE 						399
 #define SBI_EXT_EBI_ENTER 						400
 #define SBI_EXT_EBI_EXIT 						401
