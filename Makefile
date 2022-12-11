@@ -12,8 +12,9 @@ ITB_PATH ?= $(BUILD_DIR)/itb
 SIGN_PATH ?= tools/sign
 
 # BOARD_ROOTFS_PARTITION ?= /dev/mmcblk0p4
-BOARD_ROOTFS_PARTITION ?= /dev/sdc4
-BOARD_ROOTFS_PATH ?= /run/media/mingde/root
+BOARD_ROOTFS_PARTITION ?= /dev/sdb4
+BOARD_ROOTFS_PATH ?= /run/media/root
+BOARD_DEST ?= /dev/sdb2
 
 DOCKER = sudo docker # Linux only
 DOCKER_WORKDIR = /root/coffer
@@ -43,9 +44,6 @@ EMODULE_TARGETS_ABS = $(join $(EMODULE_PATH), $(EMODULE_TARGETS))
 
 KERNEL_IMAGE_PATH = tools/linux/build
 KERNEL_IMAGE = $(KERNEL_IMAGE_PATH)/Image
-
-# BOARD_DEST ?= /dev/mmcblk0p2
-BOARD_DEST ?= /dev/sdc2
 
 QEMU = qemu-system-riscv64
 QEMU_CORES ?= 4
