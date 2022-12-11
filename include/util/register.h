@@ -67,5 +67,7 @@
 #define CTX_INDEX_t6 31
 #define CTX_INDEX_MAX 32
 
+#define FPR_INDEX_MAX 32
+
 #define EAPP_CTX_REG_OFFSET(reg) (__SIZEOF_POINTER__ * (CTX_INDEX_##reg))
 #define EAPP_CTX_SIZE EAPP_CTX_REG_OFFSET(MAX)
