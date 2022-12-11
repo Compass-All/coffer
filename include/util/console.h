@@ -8,4 +8,5 @@
 #define KMAG  "\x1B[35m"
 #define KCYN  "\x1B[36m"
 #define KWHT  "\x1B[37m"
+#define BYEL  "\033[1;[33m"
 #define RESET "\033[0m"
