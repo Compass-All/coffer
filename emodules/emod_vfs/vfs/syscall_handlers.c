@@ -98,6 +98,22 @@ static int fetch_from_host(const char *pathname)
 	info("Fetching file: %s\n", pathname);
 	u32 pathname_len = strlen(pathname);
 
+#define NO_COPY_DIR_NUM 3
+	const char *no_copy_dir[NO_COPY_DIR_NUM] = {
+		"/dev",
+		"/proc",
+		"sys"
+	};
+	for (int i = 0; i < NO_COPY_DIR_NUM; i++) {
+		const char *dir = no_copy_dir[i];
+		size_t dir_len = strlen(dir);
+		size_t cmp_len = dir_len > pathname_len ? pathname_len : dir_len;
+		if (strncmp(dir, pathname, cmp_len) == 0) {
+			info("cannot fetch files from %s\n", dir);
+			return -ENOENT;
+		}
+	}
+
 	usize filesize = get_host_file_size(pathname);
 	int error = 0;
 
