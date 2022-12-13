@@ -7,14 +7,12 @@ int fdrop(struct vfscore_file *fp)
 {
 	int prev;
 
-	// UK_ASSERT(fp);
-	// UK_ASSERT(fp->f_count > 0);
+	info("droping fp (%p), count %d to %d\n",
+		fp, fp->f_count, fp->f_count - 1);
 
-	// prev = ukarch_dec(&fp->f_count);
-	prev = fp->f_count--;
-
-	if (prev == 0)
-		debug("Unbalanced fhold/fdrop");
+	if (prev == 0) {
+		panic("Unbalanced fhold/fdrop\n");
+	}
 
 	if (prev == 1) {
 		/*
@@ -34,13 +32,7 @@ int fdrop(struct vfscore_file *fp)
 
 void fhold(struct vfscore_file *fp)
 {
-	// ukarch_inc(&fp->f_count);
-	// show(fp);
-	// debug("before\n");
-	// show(fp->f_count);
-
+	info("holding fp (%p), count %d to %d\n",
+		fp, fp->f_count, fp->f_count + 1);
 	fp->f_count++;
-	
-	// debug("after\n");
-	// show(fp->f_count);
 }
