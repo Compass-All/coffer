@@ -9,6 +9,7 @@ int fdrop(struct vfscore_file *fp)
 
 	info("droping fp (%p), count %d to %d\n",
 		fp, fp->f_count, fp->f_count - 1);
+	prev = fp->f_count--;
 
 	if (prev == 0) {
 		panic("Unbalanced fhold/fdrop\n");
