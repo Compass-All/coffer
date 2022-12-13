@@ -86,7 +86,7 @@ static void inline __ecall_dump_region()
 	);
 }
 
-static int inline __ecall_reset()
+static int inline __ecall_reset_tee()
 {
 	return __ecall(
 		SBI_EXT_EBI,
