@@ -8,7 +8,7 @@ mount sys /sys -t sysfs
 
 taskset 0xe /prog/host/test_eapp /prog/enclave/eapp_write
 
-taskset 0xe /prog/host/reset_system
+taskset 0xe /prog/host/reset_tee
 
 echo 0 > /proc/sys/kernel/hung_task_panic
 echo 0 > /proc/sys/kernel/softlockup_panic
@@ -18,7 +18,8 @@ taskset 0x1 /bin/sh
 
 
 #----
-repeat=42
+# repeat=42
+repeat=32
 task=rv8_qsort
 for i in `seq 1 $repeat`
 do
