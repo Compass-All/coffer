@@ -12,8 +12,8 @@ typedef struct {
 #define DEF_TIMER(name) eval_timer_t timer_##name
 #define EXT_TIMER(name) extern eval_timer_t timer_##name
 
-#define START_TIMER(name) timer_##name.last = read_csr(time);
-#define STOP_TIMER(name) timer_##name.time += (read_csr(time) - timer_##name.last);
+#define START_TIMER(name) timer_##name.last = read_csr(cycle);
+#define STOP_TIMER(name) timer_##name.time += (read_csr(cycle) - timer_##name.last);
 
 #define GET_TIMER_VALUE(name) timer_##name.time
 
