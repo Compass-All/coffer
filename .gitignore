@@ -70,8 +70,10 @@ build/
 # tmp
 tmp/
 
+# local script
+scripts/
+
 # Scripts
-*.sh
 *.py
 
 # macos auxiliary files
