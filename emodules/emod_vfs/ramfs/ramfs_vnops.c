@@ -477,13 +477,17 @@ static int ramfs_write(
 			show(end_pos);
 			show(np->rn_bufsize);
 
-			// to do: this could use a page level allocator
 			size_t new_size;
+			// to do: this could use a page level allocator
 			if (np->rn_bufsize) {
+				info("Enlarging file with 100 extra partitions\n");
 				new_size = PARTITION_UP(end_pos) + 100 * PARTITION_SIZE;
 			} else {
-				new_size = PARTITION_UP(end_pos);
+				// PARTITION_UP causes OOM for yolov3 bench
+				new_size = PAGE_UP(end_pos);
 			}
+
+			// new_size = PARTITION_UP(end_pos) + 100 * PARTITION_SIZE;
 
 			// call_timer();
 			void *new_buf = calloc(1, new_size);
