@@ -70,11 +70,5 @@ build/
 # tmp
 tmp/
 
-# local script
-scripts/
-
-# Scripts
-*.py
-
 # macos auxiliary files
 .DS_STORE

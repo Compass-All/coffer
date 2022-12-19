@@ -32,7 +32,10 @@ UBOOT_SPL_IMAGE = $(UBOOT_IMAGE_DIR)/u-boot-spl.bin
 UBOOT_IMAGE = $(UBOOT_IMAGE_DIR)/u-boot.itb
 UBOOT_SRC = /root/u-boot
 
-all: $(UBOOT_SPL_IMAGE)
+all: sd_part1 sd_part2 prog emodules $(LINUX_IMAGE)
+
+sd_part1: $(UBOOT_SPL_IMAGE)
+sd_part2: $(UBOOT_IMAGE)
 
 prog:
 	@printf "\n[.] Building Payloads...\n"
@@ -60,7 +63,7 @@ $(LINUX_IMAGE):
 	@printf "\n[.] Building Kernel Image...\n"
 	mkdir -p $(LINUX_IMAGE_DIR)
 	ARCH=riscv \
-	CROSS_COMPILE=riscv64-unknown-elf- \
+	CROSS_COMPILE=riscv64-unknown-linux-gnu- \
 	make -C $(LINUX_SRC) -j$$(($$(nproc)-4)) Image
 	cp $(LINUX_SRC)/arch/riscv/boot/Image $@
 	@printf "[*] Building Kernel Image Done...\n\n"
@@ -76,7 +79,7 @@ $(EMOD_MANAGER_BIN):
 $(FW_DYNAMIC_BIN): $(EMOD_MANAGER_BIN)
 	@printf "\n[.] Building Security Monitor (dynamic)...\n"
 	mkdir -p $(FW_DIR)
-	CROSS_COMPILE=riscv64-unknown-elf- \
+	CROSS_COMPILE=riscv64-unknown-linux-gnu- \
 	PLATFORM=generic \
 	TARGET_PLATFORM=$(TARGET_PLATFORM) \
 	DEBUG=$(DEBUG) \
@@ -87,7 +90,7 @@ $(FW_DYNAMIC_BIN): $(EMOD_MANAGER_BIN)
 $(FW_JUMP_BIN): $(EMOD_MANAGER_BIN)
 	@printf "\n[.] Building Security Monitor (jump)...\n"
 	mkdir -p $(FW_DIR)
-	CROSS_COMPILE=riscv64-unknown-elf- \
+	CROSS_COMPILE=riscv64-unknown-linux-gnu- \
 	PLATFORM=generic \
 	TARGET_PLATFORM=$(TARGET_PLATFORM) \
 	DEBUG=$(DEBUG) \
@@ -95,17 +98,19 @@ $(FW_JUMP_BIN): $(EMOD_MANAGER_BIN)
 	cp $(OPENSBI_SRC)/build/platform/generic/firmware/fw_jump.bin $@
 	@printf "[*] Building Security Monitor Done (jump)...\n\n"
 
-$(UBOOT_IMAGE): $(FW_DYNAMIC_BIN)
+$(UBOOT_IMAGE): $(FW_DYNAMIC_BIN) $(DTB_DIR)/hifive-unmatched-a00.dtb
 	@printf "\n[.] Building U-Boot Image...\n"
 	mkdir -p $(UBOOT_IMAGE_DIR)
+	CROSS_COMPILE=riscv64-unknown-linux-gnu- \
 	OPENSBI=$(FW_DYNAMIC_BIN) \
 	make -C $(UBOOT_SRC) -j$(nproc)
 	cp $(UBOOT_SRC)/u-boot.itb $@
 	@printf "[*] Building U-Boot Image Done...\n\n"
 
-$(UBOOT_SPL_IMAGE): $(FW_DYNAMIC_BIN)
+$(UBOOT_SPL_IMAGE): $(FW_DYNAMIC_BIN) $(DTB_DIR)/hifive-unmatched-a00.dtb
 	@printf "\n[.] Building U-Boot SPL Image...\n"
 	mkdir -p $(UBOOT_IMAGE_DIR)
+	CROSS_COMPILE=riscv64-unknown-linux-gnu- \
 	OPENSBI=$(FW_DYNAMIC_BIN) \
 	make -C $(UBOOT_SRC) -j$(nproc)
 	cp $(UBOOT_SRC)/spl/u-boot-spl.bin $@

@@ -25,18 +25,18 @@ RUN mkdir -p /root/musl-cross-make/patches/musl-1.2.3 \
     && cp /root/musl_patch/0001-memset_main_tls.diff /root/musl-cross-make/patches/musl-1.2.3/0001-memset_main_tls.diff \
     && cp /root/musl_patch/0002-assert.diff /root/musl-cross-make/patches/musl-1.2.3/0002-assert.diff
 
-# WORKDIR /root/musl-cross-make
-# RUN make TARGET=riscv64-linux-musl install -j$(nproc) 
+WORKDIR /root/musl-cross-make
+RUN make TARGET=riscv64-linux-musl install -j$(nproc) 
 ENV RISCV_MUSL "/root/musl-cross-make/output"
 ENV PATH "$RISCV_MUSL/bin:$PATH"
-# WORKDIR /
+WORKDIR /
 
 # QEMU
-# WORKDIR /root/qemu-${QEMU_VERSION}
-# RUN ./configure --target-list=riscv64-linux-user,riscv64-softmmu \
-    # && make -j$(nproc) \
-    # && make install
-# WORKDIR /
+WORKDIR /root/qemu-${QEMU_VERSION}
+RUN ./configure --target-list=riscv64-linux-user,riscv64-softmmu \
+    && make -j$(nproc) \
+    && make install
+WORKDIR /
 
 # Linux
 ADD tools/linux/patch /root/linux_patch
@@ -56,8 +56,8 @@ ADD tools/busybox/config /root/busybox_config
 
 WORKDIR /root/busybox
 RUN git checkout 1_32_1 \
-    && cp /root/busybox_config/.config .
-    # && CROSS_COMPILE=riscv64-unknown-linux-gnu- make -j4
+    && cp /root/busybox_config/.config . \
+    && CROSS_COMPILE=riscv64-unknown-linux-gnu- make -j
 WORKDIR /
 
 # u-boot
@@ -67,5 +67,6 @@ ADD tools/u-boot/config /root/u-boot_config
 WORKDIR /root/u-boot
 RUN git checkout d637294e264adfeb29f390dfc393106fd4d41b17 \
     && git apply /root/u-boot_patch/unmatched.patch \
-    && cp /root/u-boot_config/coffer_defconfig ./.config
+    && cp /root/u-boot_config/coffer_defconfig /root/u-boot/configs \
+    && CROSS_COMPILE=riscv64-unknown-linux-gnu- make coffer_defconfig
 WORKDIR /
