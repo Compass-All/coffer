@@ -58,8 +58,7 @@ CFLAGS		+=	-fno-pie -no-pie
 ifeq (, $(EMODULES_DEBUG))
 CFLAGS		+= -O2
 else
-# CFLAGS		+= -O0
-CFLAGS		+= -O2
+CFLAGS		+= -O0
 endif
 
 CPPFLAGS	+=	$(GENFLAGS)
@@ -84,31 +83,24 @@ target-objs-y = $(foreach obj,$(emodule-objs-y),$(target_dir)/lib/$(obj))
 
 target_subdirs = $(foreach d,$(filter-out ./,$(dir $(emodule-objs-y))),$(target_dir)/lib/$(d))
 
-all: $(target)
+all: $(target_dir) $(target)
 
-.PHONY: lds
-
-lds: $(target_dir)/$(MODULE).ld
-
-$(target): $(target_dir)/$(MODULE).elf
+$(target): $(target_dir)/$(MODULE).elf 
 	$(OBJCOPY) -O binary --set-section-flags .bss=alloc,load,contents $< $@
 
-$(target_dir)/$(MODULE).elf: $(target-objs-y) $(target_dir)/$(MODULE).ld dirs
+$(target_dir)/$(MODULE).elf: $(target-objs-y) $(target_dir)/$(MODULE).ld | $(target_dir)
 	$(CC) $(CFLAGS) $(target-objs-y) -T $(target_dir)/$(MODULE).ld -o $@
 
-$(target_dir)/$(MODULE).ld: $(src_dir)/$(MODULE).lds
+$(target_dir)/$(MODULE).ld: $(src_dir)/$(MODULE).lds | $(target_dir)
 	$(CPP) $(CPPFLAGS) -x c $< | grep -v "\#" > $@
 
-$(target_dir)/lib/%.o: $(src_dir)/%.c dirs
+$(target_dir)/lib/%.o: $(src_dir)/%.c | $(target_dir)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(target_dir)/lib/%.o: $(src_dir)/%.S dirs
+$(target_dir)/lib/%.o: $(src_dir)/%.S | $(target_dir)
 	$(AS) $(ASFLAGS) -c $< -o $@
 
-.PHONY: dirs
-.SILENT: dirs
-
-dirs:
+$(target_dir):
 	mkdir -p $(target_dir)
 	mkdir -p $(target_dir)/lib
 ifneq (, $(target_subdirs))
@@ -117,5 +109,5 @@ endif
 
 .PHONY: clean
 
-clean: dirs
+clean:
 	rm -rf $(target_dir)

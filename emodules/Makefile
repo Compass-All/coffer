@@ -6,7 +6,7 @@ else
  build_dir=$(CURDIR)/../build
 endif
 
-SIGN_UTIL_PATH = $(build_dir)/tools/sign
+SIGN_UTIL_PATH = ../tools/sign/build/sign
 
 .PHONY: all $(subdirs) clean
 
@@ -19,13 +19,13 @@ $(subdirs):
 	make -C $@ \
 		CROSS_COMPILE=$(CROSS_COMPILE) \
 		TARGET_PLATFORM=$(TARGET_PLATFORM) \
-		DEBUG=$(DEBUG) \
-	&& $(SIGN_UTIL_PATH) $(build_dir)/emodules/$@/$@.bin \
-		> $(build_dir)/emodules/$@/$@.sign \
-	&& echo "signature: " \
-	&& cat $(build_dir)/emodules/$@/$@.sign \
-	&& cp $(build_dir)/emodules/$@/$@.bin $(build_dir)/emodules/$@/$@.bin.signed \
-	&& cat $(build_dir)/emodules/$@/$@.sign | \
+		DEBUG=$(DEBUG) -j$(nproc)
+	$(SIGN_UTIL_PATH) $(build_dir)/emodules/$@/$@.bin \
+		> $(build_dir)/emodules/$@/$@.sign
+	@echo "signature: "
+	cat $(build_dir)/emodules/$@/$@.sign
+	cp $(build_dir)/emodules/$@/$@.bin $(build_dir)/emodules/$@/$@.bin.signed
+	cat $(build_dir)/emodules/$@/$@.sign | \
 		xxd -r -p >> $(build_dir)/emodules/$@/$@.bin.signed
 
 clean:

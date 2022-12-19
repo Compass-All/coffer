@@ -1,4 +1,4 @@
-BUILD_DIR = ../../build/tools
+BUILD_DIR = build
 
 all: dirs key_gen sign
 

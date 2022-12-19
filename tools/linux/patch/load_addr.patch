@@ -1,0 +1,15 @@
+diff --git a/arch/riscv/kernel/head.S b/arch/riscv/kernel/head.S
+index fce5184b22c3..38a7775e97e4 100644
+--- a/arch/riscv/kernel/head.S
++++ b/arch/riscv/kernel/head.S
+@@ -53,7 +53,9 @@ ENTRY(_start)
+ #else
+ #if __riscv_xlen == 64
+ 	/* Image load offset(2MB) from start of RAM */
+-	.dword 0x200000
++	/* Check this out !!!!!*/
++	# .dword 0x200000
++	.dword 0x400000
+ #else
+ 	/* Image load offset(4MB) from start of RAM */
+ 	.dword 0x400000
