@@ -3,6 +3,7 @@ screenlog.0
 __pycache__
 Image
 root.bin
+*.img
 *.gdb
 *.log
 *.itb
