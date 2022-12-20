@@ -5,14 +5,24 @@ mount proc /proc -t proc
 mount sys /sys -t sysfs
 
 
-taskset 0xe /prog/host/test_eapp /prog/enclave/eapp_write
 # echo 1 > /proc/sys/kernel/lock_stat
 
+# console
+mkdir -p /run/sshd
+/usr/sbin/sshd -t
+taskset 0x1 /usr/sbin/sshd -D &
+
+# ssh
 echo 0 > /proc/sys/kernel/hung_task_panic
 echo 0 > /proc/sys/kernel/softlockup_panic
 echo 0 > /proc/sys/kernel/watchdog
 dmesg -n 1
-taskset 0x1 /bin/sh
+taskset 0x1 /bin/bash
+
+taskset 0xe /prog/host/test_eapp /prog/enclave/eapp_write
+/prog/host/reset_coffer
+
+
 
 repeat=42
 for i in `seq 1 $repeat`

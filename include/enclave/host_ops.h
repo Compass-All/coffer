@@ -112,3 +112,21 @@ static u64 inline __ecall_get_eid_count()
 		0UL, 0UL, 0UL
 	);
 }
+
+static u64 inline __ecall_get_alive_count()
+{
+	return __ecall(
+		SBI_EXT_EBI,
+		SBI_EXT_EBI_GET_ALIVE_COUNT,
+		0UL, 0UL, 0UL
+	);
+}
+
+static u64 inline __ecall_get_enclave_status(u64 eid)
+{
+	return __ecall(
+		SBI_EXT_EBI,
+		SBI_EXT_EBI_GET_STATUS,
+		eid, 0UL, 0UL
+	);
+}
