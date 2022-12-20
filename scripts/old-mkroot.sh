@@ -46,7 +46,8 @@ cd $CWD
 
 echo "[*] Copying emodules and payloads"
 cp -r $PROG $MNT
-cp $EMOD/*/*.bin.signed $MNT
+mkdir -p $MNT/emodules
+cp $EMOD/*/*.bin.signed $MNT/emodules
 if [ $? -ne 0 ]; then echo "Error cp!"; umount $MNT; exit 1; fi
 
 echo "[*] umount"
