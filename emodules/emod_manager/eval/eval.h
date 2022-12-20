@@ -17,7 +17,7 @@ typedef struct {
 
 #define GET_TIMER_VALUE(name) timer_##name.time
 
-__unused void dump_timer();
+__unused void set_s_timer();
 
 EXT_TIMER(interrupt);
 EXT_TIMER(syscall);

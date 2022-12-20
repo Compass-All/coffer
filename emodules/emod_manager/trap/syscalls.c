@@ -609,7 +609,7 @@ void syscall_handler(
 		show(get_umode_page_pool_avail_size());
 		// dump_emodule_table();	
 		// dump_page_table();
-		dump_timer();
+		set_s_timer();
 		__ecall_ebi_exit(regs[CTX_INDEX_a0]);
 		break;
 
