@@ -59,6 +59,12 @@ $(DTB_DIR)/%.dtb: $(DTS_DIR)/%.dts
 	dtc -I dts -O dtb -o $@ $<
 	@printf "[*] Building dtb Done...\n\n"
 
+qemu-dtb:
+	@printf "\n[.] Dump qemu dtb...\n"
+	mkdir -p $(DTB_DIR)
+	qemu-system-riscv64 -M virt,dumpdtb=$(DTB_DIR)/qemu.dtb
+	@printf "[*] qemu dtb dumped...\n\n"
+
 $(LINUX_IMAGE):
 	@printf "\n[.] Building Kernel Image...\n"
 	mkdir -p $(LINUX_IMAGE_DIR)
