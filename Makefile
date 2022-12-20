@@ -1,7 +1,7 @@
 # Note: this makefile should be run in docker
 
 # Target support: qemu, unmatched (default)
-TARGET_PLATFORM ?= unmatched
+TARGET_PLATFORM ?= qemu
 # DEBUG=y to enable debug logging
 DEBUG ?= n 
 
@@ -32,7 +32,7 @@ UBOOT_SPL_IMAGE = $(UBOOT_IMAGE_DIR)/u-boot-spl.bin
 UBOOT_IMAGE = $(UBOOT_IMAGE_DIR)/u-boot.itb
 UBOOT_SRC = /root/u-boot
 
-all: sd_part1 sd_part2 prog emodules $(LINUX_IMAGE)
+all: sd_part1 sd_part2 prog emodules $(LINUX_IMAGE) opensbi
 
 sd_part1: $(UBOOT_SPL_IMAGE)
 sd_part2: $(UBOOT_IMAGE)
@@ -76,7 +76,7 @@ $(EMOD_MANAGER_BIN):
 	make -C $(EMOD_MANAGER_SRC) -j$(nproc)
 	@printf "[*] Building EMod_Manager Done...\n\n"
 
-$(FW_DYNAMIC_BIN): $(EMOD_MANAGER_BIN)
+opensbi:
 	@printf "\n[.] Building Security Monitor (dynamic)...\n"
 	mkdir -p $(FW_DIR)
 	CROSS_COMPILE=riscv64-unknown-linux-gnu- \
@@ -84,19 +84,11 @@ $(FW_DYNAMIC_BIN): $(EMOD_MANAGER_BIN)
 	TARGET_PLATFORM=$(TARGET_PLATFORM) \
 	DEBUG=$(DEBUG) \
 	make -C $(OPENSBI_SRC) -j$(nproc)
-	cp $(OPENSBI_SRC)/build/platform/generic/firmware/fw_dynamic.bin $@
+	cp $(OPENSBI_SRC)/build/platform/generic/firmware/fw_dynamic.bin $(FW_DYNAMIC_BIN)
 	@printf "[*] Building Security Monitor Done (dynamic)...\n\n"
 
-$(FW_JUMP_BIN): $(EMOD_MANAGER_BIN)
-	@printf "\n[.] Building Security Monitor (jump)...\n"
-	mkdir -p $(FW_DIR)
-	CROSS_COMPILE=riscv64-unknown-linux-gnu- \
-	PLATFORM=generic \
-	TARGET_PLATFORM=$(TARGET_PLATFORM) \
-	DEBUG=$(DEBUG) \
-	make -C $(OPENSBI_SRC) -j$(nproc)
-	cp $(OPENSBI_SRC)/build/platform/generic/firmware/fw_jump.bin $@
-	@printf "[*] Building Security Monitor Done (jump)...\n\n"
+$(FW_DYNAMIC_BIN): opensbi
+$(FW_JUMP_BIN): opensbi
 
 $(UBOOT_IMAGE): $(FW_DYNAMIC_BIN) $(DTB_DIR)/hifive-unmatched-a00.dtb
 	@printf "\n[.] Building U-Boot Image...\n"
@@ -124,4 +116,4 @@ clean_all: clean
 	make clean -C coffer_user_mode
 	make clean -C $(UBOOT_SRC)
 
-.PHONY: all clean clean_all prog emodules
+.PHONY: all clean clean_all prog emodules opensbi
