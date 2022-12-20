@@ -45,7 +45,8 @@ ln -s ../bin/busybox $MNT/bin/sh
 cd $CWD
 
 echo "[*] Copying emodules and payloads"
-cp -r $EMOD $PROG $MNT
+cp -r $PROG $MNT
+cp $EMOD/*/*.bin.signed $MNT
 if [ $? -ne 0 ]; then echo "Error cp!"; umount $MNT; exit 1; fi
 
 echo "[*] umount"
