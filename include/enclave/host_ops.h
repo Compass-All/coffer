@@ -85,3 +85,30 @@ static void inline __ecall_dump_region()
 		0UL, 0UL, 0UL
 	);
 }
+
+static u64 inline __ecall_get_timer(u64 eid, u64 timer)
+{
+	return __ecall(
+		SBI_EXT_EBI,
+		SBI_EXT_EVAL_GET_TIMER,
+		eid, timer, 0UL
+	);
+}
+
+static void inline __ecall_reset_coffer()
+{
+	__ecall(
+		SBI_EXT_EBI,
+		SBI_EXT_EBI_RESET,
+		0UL, 0UL, 0UL
+	);
+}
+
+static u64 inline __ecall_get_eid_count()
+{
+	return __ecall(
+		SBI_EXT_EBI,
+		SBI_EXT_GET_EID_COUND,
+		0UL, 0UL, 0UL
+	);
+}

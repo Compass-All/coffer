@@ -23,9 +23,19 @@ done
 repeat=5
 for i in `seq 1 $repeat`
 do
-	taskset 0xe /prog/host/test_eapp /prog/enclave/rv8/rv8_bigint
+	taskset 0xe /prog/host/test_eapp /prog/enclave/rv8/rv8_bigint &
 done
 
+/prog/host/dump_timer 1
+
+repeat=6
+for i in `seq 1 $repeat`
+do
+	/prog/host/dump_timer $i
+done
+
+/prog/host/get_eid_count
+/prog/host/reset_coffer
 
 watch -n 4 /prog/host/dump_all
 
