@@ -24,7 +24,7 @@ EMOD_MANAGER_BIN = $(BUILD_DIR)/emodules/emod_manager/emod_manager.bin
 OPENSBI_SRC = coffer-opensbi
 FW_DIR = $(shell pwd)/$(BUILD_DIR)/opensbi
 FW_DYNAMIC_BIN = $(FW_DIR)/fw_dynamic.bin
-FW_JUMP_BIN = $(FW_DIR)/fw_jump.bin
+FW_JUMP_ELF = $(FW_DIR)/fw_jump.elf
 
 UBOOT_DIR = tools/u-boot
 UBOOT_IMAGE_DIR = $(BUILD_DIR)/u-boot
@@ -76,8 +76,8 @@ $(EMOD_MANAGER_BIN):
 	make -C $(EMOD_MANAGER_SRC) -j$(nproc)
 	@printf "[*] Building EMod_Manager Done...\n\n"
 
-opensbi:
-	@printf "\n[.] Building Security Monitor (dynamic)...\n"
+opensbi: $(EMOD_MANAGER_BIN)
+	@printf "\n[.] Building Security Monitor...\n"
 	mkdir -p $(FW_DIR)
 	CROSS_COMPILE=riscv64-unknown-linux-gnu- \
 	PLATFORM=generic \
@@ -85,10 +85,11 @@ opensbi:
 	DEBUG=$(DEBUG) \
 	make -C $(OPENSBI_SRC) -j$(nproc)
 	cp $(OPENSBI_SRC)/build/platform/generic/firmware/fw_dynamic.bin $(FW_DYNAMIC_BIN)
-	@printf "[*] Building Security Monitor Done (dynamic)...\n\n"
+	cp $(OPENSBI_SRC)/build/platform/generic/firmware/fw_jump.elf $(FW_JUMP_ELF)
+	@printf "[*] Building Security Monitor Done...\n\n"
 
 $(FW_DYNAMIC_BIN): opensbi
-$(FW_JUMP_BIN): opensbi
+$(FW_JUMP_ELF): opensbi
 
 $(UBOOT_IMAGE): $(FW_DYNAMIC_BIN) $(DTB_DIR)/hifive-unmatched-a00.dtb
 	@printf "\n[.] Building U-Boot Image...\n"
