@@ -39,7 +39,7 @@ static void timer_interrupt_handler()
 	write_csr(sstatus, sstatus | sstatus_spie);
 
 	static u64 count = 1;
-	if (count % 100 == 0) {
+	if (count % 10 == 0) {
 		STOP_TIMER(interrupt);
 		__ecall_ebi_suspend(INTERRUPT);
 		START_TIMER(interrupt);
