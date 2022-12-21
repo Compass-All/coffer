@@ -108,16 +108,14 @@ watch -n 2 /prog/host/dump_all
 
 /prog/host/create_enclave
 
-repeat=2
+repeat=1024
 for i in `seq 1 $repeat`
 do
-	taskset 0x1 /prog/host/create_enclave &
+	taskset 0x1 /prog/host/create_enclave &> /dev/zero &
 done
-
-repeat=20
 for i in `seq 1 $repeat`
 do
-	/prog/host/enter_enclave $i /prog/enclave/rv8/rv8_qsort &
+	/prog/host/enter_enclave $i /prog/enclave/rv8/rv8_bigint &
 done
 
 /prog/host/enter_enclave 1 /prog/enclave/rv8/rv8_qsort &
