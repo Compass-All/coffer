@@ -1,6 +1,8 @@
 #include "memory.h"
+#include "memory/page_table.h"
 #include "page_table.h"
 #include "page_pool.h"
+#include "../trap/syscalls.h"
 #include "../debug/debug.h"
 #include "../panic/panic.h"
 #include <enclave/enclave_ops.h>
@@ -51,6 +53,7 @@ void set_umode_pool_pa_aligned(paddr_t pa_start)
 
 paddr_t get_umode_pool_pa_aligned()
 {
+	flush_tlb();
 	return umode_pool_pa_aligned;
 }
 
@@ -66,6 +69,8 @@ static vaddr_t get_emodule_brk()
 
 vaddr_t alloc_map_emodule(usize emodule_size)
 {
+    __ecall_ebi_acquire_compaction();
+
 	usize	alloc_size		= PAGE_UP(emodule_size);
 	usize	number_of_pages	= alloc_size >> PAGE_SHIFT;
 	paddr_t	paddr			= alloc_smode_page(number_of_pages);
@@ -79,6 +84,7 @@ vaddr_t alloc_map_emodule(usize emodule_size)
 			SV39_LEVEL_PAGE
 		);
 	}
+    __ecall_ebi_release_compaction();
 
 	increase_emodule_brk(alloc_size);
 
@@ -239,8 +245,11 @@ vaddr_t alloc_map_umode_stack()
 // invoked before simple pool out of memory
 static void map_brk_from_pool(vaddr_t aligned_old_brk, usize size)
 {
+    __ecall_ebi_acquire_compaction();
 	usize number_of_pages = size >> PAGE_SHIFT;
 	paddr_t paddr = alloc_umode_page(number_of_pages);
+	// printf(KGRN "[Enclave %lu] paddr = 0x%lx, vaddr = 0x%lx\n" RESET,
+	// 	get_eid(), paddr, aligned_old_brk);
 	for (int i = 0; i < number_of_pages; i++) {
 		map_page(
 			aligned_old_brk		+ i * PAGE_SIZE,
@@ -249,6 +258,7 @@ static void map_brk_from_pool(vaddr_t aligned_old_brk, usize size)
 			SV39_LEVEL_PAGE
 		);
 	}
+    __ecall_ebi_release_compaction();
 }
 
 // invoked after simple pool out of memory, allocating memory from the SM
@@ -267,6 +277,7 @@ static void alloc_map_brk_outside_pool(
 	usize left = number_of_partitions;
 	vaddr_t va = partition_aligned_old_brk;
 
+    __ecall_ebi_acquire_compaction();
 	while (left > 0) {
 		usize sug = left, allocated;
 		paddr_t pa;
@@ -288,6 +299,7 @@ static void alloc_map_brk_outside_pool(
 		left -= allocated;
 		va += allocated * PARTITION_SIZE;
 	}
+    __ecall_ebi_release_compaction();
 }
 
 u64 sys_brk_handler(vaddr_t new_brk)

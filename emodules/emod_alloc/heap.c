@@ -108,6 +108,7 @@ static void *memset(void *s, int c, usize count)
 void init_heap() {
     usize left = HEAP_INIT_PARTITION_NUM;
 
+    __ecall_ebi_acquire_compaction();
     vaddr_t start_va = POOL_VA_START;
     while (left > 0) {
         vaddr_t va = start_va;
@@ -130,6 +131,7 @@ void init_heap() {
 		left -= allocated;
         va += allocated * PARTITION_SIZE;
     }
+    __ecall_ebi_release_compaction();
 
     for (int i = 0; i < BIN_COUNT; i++) {
         heap.bins[i] = &bins[i];
@@ -423,6 +425,7 @@ uint expand(size_t sz)
 			>> PARTITION_SHIFT;
     usize left = nr_part;
 
+    __ecall_ebi_acquire_compaction();
 	vaddr_t va = PARTITION_UP(heap.end);
 	while (left > 0) {
         usize sug = left;
@@ -448,6 +451,7 @@ uint expand(size_t sz)
         left -= allocated;
         va += allocated * PARTITION_SIZE;
 	}
+    __ecall_ebi_release_compaction();
 
     node_t *wild = get_wilderness();
     footer_t *wild_foot = get_foot(wild);

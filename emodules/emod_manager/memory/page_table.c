@@ -1,4 +1,5 @@
 #include "page_table.h"
+#include "enclave/enclave_ops.h"
 #include "page_pool.h"
 #include "memory.h"
 #include "../panic/panic.h"
@@ -118,6 +119,7 @@ void map_page(vaddr_t vaddr, paddr_t paddr, u8 flags, u8 level)
 
 void unmap_page(vaddr_t vaddr, u8 level)
 {
+	__ecall_ebi_acquire_compaction();
 	pte_t *pte = get_leaf_pte(vaddr, level, GET_PTE_NO_ALLOC);
 	*(u64 *)pte = 0;
 
@@ -127,6 +129,7 @@ void unmap_page(vaddr_t vaddr, u8 level)
 		:
 		: "r"(vaddr)
 	);
+	__ecall_ebi_release_compaction();
 }
 
 void setup_linear_map()

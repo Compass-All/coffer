@@ -45,6 +45,7 @@ static void *alloc_small_page(usize num)
 	info("expected return value: 0x%lx\n", mmap_top);
 	void *ret = (void *)mmap_top;
 
+    __ecall_ebi_acquire_compaction();
 	while (num) {
 		debug("%lu pages remained to be allocated\n", num);
 		if (!free_page) {
@@ -74,6 +75,7 @@ static void *alloc_small_page(usize num)
 				info("adding left pages to list, count = %lu, va = 0x%lx\n",
 					new->count, new->va);
 
+    			__ecall_ebi_release_compaction();
 				return ret;
 			}
 		}
@@ -99,12 +101,13 @@ static void *alloc_small_page(usize num)
 			free_page->va += n * PAGE_SIZE;
 			debug("updating free_page: new va: 0x%lx, new count = %lu\n",
 				free_page->va, free_page->count);
+    		__ecall_ebi_release_compaction();
 			return ret;
 		}
 		
 		num -= n;
 	}
-
+    __ecall_ebi_release_compaction();
 	return ret;
 }
 
@@ -112,6 +115,7 @@ static void *alloc_mega_page(usize num)
 {
 	mmap_top = PARTITION_UP(mmap_top);
 
+    __ecall_ebi_acquire_compaction();
 	info("allocate %lu mega pages\n", num);
 	info("expected return value: 0x%lx\n", mmap_top);
 	void *ret = (void *)mmap_top;
@@ -138,6 +142,7 @@ static void *alloc_mega_page(usize num)
 				}
 				left -=allocated;
 			}
+    		__ecall_ebi_release_compaction();
 			return ret;
 		}
 
@@ -154,7 +159,7 @@ static void *alloc_mega_page(usize num)
 		free(used);
 		num--;
 	}
-
+    __ecall_ebi_release_compaction();
 	return ret;
 }
 

@@ -200,5 +200,7 @@ void emain_lower_half()
 
 	interrupt_enable();
 
+	__ecall_ebi_suspend(0UL);
+
 	debug("end of emain\n");
 }
