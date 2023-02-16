@@ -65,6 +65,24 @@ static u64 inline __ecall_ebi_suspend(u64 short_message)
 	);
 }
 
+static void inline __ecall_ebi_acquire_compaction()
+{
+	__ecall(
+		SBI_EXT_EBI,
+		SBI_EXT_EBI_ACQUIRE_COMPACTION,
+		0UL, 0UL, 0UL
+	);
+}
+
+static void inline __ecall_ebi_release_compaction()
+{
+	__ecall(
+		SBI_EXT_EBI,
+		SBI_EXT_EBI_RELEASE_COMPACTION,
+		0UL, 0UL, 0UL
+	);
+}
+
 static u64 inline __ecall_ebi_get_eid()
 {
 	return __ecall(
