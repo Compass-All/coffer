@@ -127,6 +127,11 @@ static void load_emod_uart(void)
 // #define COFFER_PID	1
 u64 coffer_pid = 0;
 
+u64 get_eid()
+{
+	return coffer_pid;
+}
+
 static u64 syscall_handler_getpid()
 {
 	return coffer_pid;
