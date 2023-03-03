@@ -13,4 +13,6 @@
 #define TIMER_EMODULE				10UL
 #define COUNT_LPMP					11UL
 #define COUNT_MEM_MIGRATION			12UL	
-#define TIMER_MAX					13UL	
+#define TIMER_COMPACTION			13UL	
+#define COUNT_COMPACTION			14UL	
+#define TIMER_MAX					15UL

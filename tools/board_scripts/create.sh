@@ -18,5 +18,5 @@ OUTPUT=log-create.txt
 echo "create enclaves: $first - $end" > $OUTPUT
 for i in `seq $first $end`
 do
-	nohup taskset 0xe /prog/host/create_enclave >> $OUTPUT &
+	nohup taskset 0xe /prog/host/create_enclave >> $OUTPUT && taskset 0xe /prog/host/enter_enclave $i /prog/enclave/rv8/rv8_qsort >> $OUTPUT &
 done

@@ -20,5 +20,5 @@ OUTPUT=log-enter.txt
 echo "enter enclaves: $PAYLOAD, $first - $end" > $OUTPUT
 for i in `seq $first $end`
 do
-	nohup taskset 0xe /prog/host/enter_enclave $i $PAYLOAD >> $OUTPUT &
+	nohup taskset 0xe /prog/host/test_concurrent $i 0 >> $OUTPUT &
 done

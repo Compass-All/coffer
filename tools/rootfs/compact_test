@@ -1,15 +1,19 @@
-/bin/busybox --install -s
+echo 0 > /proc/sys/kernel/hung_task_panic
+echo 0 > /proc/sys/kernel/softlockup_panic
+echo 0 > /proc/sys/kernel/watchdog
 dmesg -n 1
+taskset 0x1 /bin/bash
 
-mount proc /proc -t proc
-mount sys /sys -t sysfs
 
-/prog/host/test_eapp /prog/enclave/eapp_fix_malloc 0x200000
-/prog/host/test_eapp /prog/enclave/eapp_fix_malloc 0x200000
-/prog/host/test_eapp /prog/enclave/eapp_fix_malloc 0x200000
-
-repeat=19
-for i in `seq 1 $repeat`
+repeat=42
+start=2
+for i in `seq $start $(($repeat + $start - 1))`
 do
-	/prog/host/resume_eapp 1;
+	taskset 0xe /prog/host/create_enclave && taskset 0xe /prog/host/enter_enclave $i /prog/enclave/rv8/rv8_qsort
+done
+
+
+for i in `seq $start $(($repeat + $start - 1))`
+do
+	taskset 0xe /prog/host/test_concurrent $i 0 &
 done

@@ -173,3 +173,15 @@ for i in `seq $start $(($repeat + $start - 1))`
 do
 	taskset 0xe /prog/host/enter_enclave $i /prog/enclave/rv8/rv8_aes &
 done
+
+
+repeat=42
+start=2
+for i in `seq 1 $repeat`
+do
+	taskset 0xe /prog/host/create_enclave &
+done
+for i in `seq $start $(($repeat + $start - 1))`
+do
+	taskset 0xe /prog/host/enter_enclave $i /prog/enclave/rv8/rv8_qsort &
+done
