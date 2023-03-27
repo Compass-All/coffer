@@ -30,5 +30,7 @@ char *syscall_handler_getcwd(char* path, size_t size);
 int syscall_handler_fsync(int fd);
 int syscall_handler_unlinkat(int dirfd, const char *pathname);
 int syscall_handler_ftruncate(int fd, off_t length);
+int syscall_handler_access(const char * pathname, int mode);
+int syscall_handler_faccessat(int dirfd, const char* pathname, int mode, int flags);
 
 void vfscore_init(void);

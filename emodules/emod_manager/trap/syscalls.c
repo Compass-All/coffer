@@ -19,6 +19,7 @@
 #include <message/short_message.h>
 #include "../memory/page_table.h"
 #include "../util/string.h"
+#include "../util/sysinfo.h"
 
 #include <sys/stat.h>
 #include <time.h>
@@ -57,16 +58,22 @@
 #define SYS_exit 			93	// 0x5d
 #define SYS_exit_group 		94
 #define SYS_clock_gettime	113
+#define SYS_sched_setaffinity 122
+#define SYS_sched_getaffinity 122
 #define SYS_kill 			129
 #define SYS_rt_sigaction 	134
 #define SYS_times 			153
 #define SYS_uname 			160
+#define SYS_getrusage 		165
+#define SYS_getcpu	 		168
 #define SYS_gettimeofday 	169 // 0xa9
 #define SYS_getpid 			172
+#define SYS_getppid 		173
 #define SYS_getuid 			174
 #define SYS_geteuid 		175
 #define SYS_getgid 			176
 #define SYS_getegid 		177
+#define SYS_sysinfo 		179
 #define SYS_brk 			214
 #define SYS_munmap 			215
 #define SYS_mremap 			216
@@ -101,6 +108,8 @@ static void load_emod_vfs()
 
 		loaded = 1;
 	}
+
+	info("CP1\n");
 }
 
 static void load_emod_uart(void)
@@ -139,6 +148,43 @@ static u64 syscall_handler_getpid()
 
 static int syscall_handler_geteuid()
 {
+	return 0;
+}
+
+static int syscall_handler_getrusage(int who, struct rusage *usage)
+{
+	memset((void *)usage, 0, sizeof(struct rusage));
+
+	return 0;
+}
+
+static int syscall_handler_getcpu(unsigned int *cpu, unsigned int *node)
+{
+	if (cpu)
+		*cpu = 0;
+	if (node)
+		*node = 0;
+
+	return 0;
+}
+
+static int syscall_handler_sysinfo(struct sysinfo *info)
+{
+	info->uptime = 0;
+	info->loads[0] = 0;
+	info->loads[1] = 0;
+	info->loads[2] = 0;
+	info->totalram = 1024 * 1024 * 1024;
+	info->freeram = 1024 * 1024 * 1024;
+	info->sharedram = 0;
+	info->bufferram = 0;
+	info->totalswap = 0;
+	info->freeswap = 0;
+	info->procs = 0;
+	info->totalhigh = 0;
+	info->freehigh = 0;
+	info->mem_unit = 0;
+
 	return 0;
 }
 
@@ -195,29 +241,6 @@ static void syscall_handler_clock_gettime(
 	return;
 }
 
-// static void syscall_handler_get_file_from_host(
-// 	const char *path,
-// 	u32 filename_len,
-// 	vaddr_t dst_addr,
-// 	usize len
-// )
-// {
-// 	show(filename_len);
-// 	__ecall_ebi_suspend(GET_FILE | filename_len);
-
-// 	debug("sending filename: %s\n", path);
-// 	__ecall_ebi_send_message(0UL, (vaddr_t)path, (usize)filename_len);
-
-// 	debug("listen to file\n");
-// 	__ecall_ebi_listen_message(0UL, dst_addr, len);
-// 	__ecall_ebi_suspend(GET_FILE | filename_len);
-
-// 	debug("got file\n");
-
-// 	hexdump(dst_addr, 0x20);
-// 	hexdump(dst_addr + len - 0x20, 0x20);
-// }
-
 // other syscall handlers
 
 #define DEFINE_FS_SYSCALL_HANDLER_1(type, syscall_name, type1, var1)		\
@@ -254,6 +277,7 @@ static type syscall_handler_##syscall_name(type1 var1, type2 var2, type3 var3, t
 static type syscall_handler_##syscall_name(type1 var1, type2 var2, type3 var3, type4 var4, type5 var5, type6 var6)						\
 {																																		\
 	load_emod_vfs();																													\
+	info("syscall handler at 0x%lx\n", &emod_vfs.emod_vfs_api.syscall_handler_##syscall_name); \
 	return emod_vfs.emod_vfs_api.syscall_handler_##syscall_name(var1, var2, var3, var4, var5, var6);									\
 }
 
@@ -314,6 +338,8 @@ DEFINE_FS_SYSCALL_HANDLER_1(int, fsync, int, fd)
 DEFINE_FS_SYSCALL_HANDLER_2(int, unlinkat, int, dirfd, const char *, pathname)
 
 DEFINE_FS_SYSCALL_HANDLER_2(int, ftruncate, int, fd, off_t, length)
+
+DEFINE_FS_SYSCALL_HANDLER_4(int, faccessat, int, dirfd, const char *, pathname, int, mode, int, flags)
 
 DEFINE_FS_SYSCALL_HANDLER_6(void *, mmap, void *, addr, size_t, len, int, prot,
 	int, flags, int, fildes, off_t, off)
@@ -409,6 +435,17 @@ void syscall_handler(
 			(const char *)	regs[CTX_INDEX_a1]
 		);
 		debug("end of syscall unlinkat\n");
+		break;
+
+	case SYS_faccessat:
+		debug("syscall faccessat\n");
+		ret = (u64)syscall_handler_faccessat(
+			(int)			regs[CTX_INDEX_a0],
+			(const char *)	regs[CTX_INDEX_a1],
+			(int) 			regs[CTX_INDEX_a2],
+			(int) 			regs[CTX_INDEX_a3]
+		);
+		debug("end of syscall faccessat\n");
 		break;
 
 	case SYS_open:
@@ -596,6 +633,7 @@ void syscall_handler(
 		debug("end of syscall ftruncate\n");
 		break;
 
+	case SYS_getppid:
 	case SYS_getpid:
 		debug("syscall getpid\n");
 		ret = (u64)syscall_handler_getpid();
@@ -603,6 +641,7 @@ void syscall_handler(
 		break;
 
 	case SYS_geteuid:
+	case SYS_getuid:
 		debug("syscall geteuid\n");
 		ret = (u64)syscall_handler_geteuid();
 		debug("end of syscall geteuid\n");
@@ -664,10 +703,38 @@ void syscall_handler(
 		debug("end of syscall gettimeofday\n");
 		break;
 
+	case SYS_getrusage:
+		debug("syscall getrusage\n");
+		ret = (u64)syscall_handler_getrusage(
+			(int)				regs[CTX_INDEX_a0],
+			(struct rusage *)	regs[CTX_INDEX_a1]
+		);
+		debug("end of syscall getrusage\n");
+		break;
+	
+	case SYS_getcpu:
+		debug("syscall getcpu\n");
+		ret = (u64)syscall_handler_getcpu(
+			(unsigned int *)	regs[CTX_INDEX_a0],
+			(unsigned int *)	regs[CTX_INDEX_a1]
+		);
+		debug("end of syscall getcpu\n");
+		break;
+
+	case SYS_sysinfo:
+		debug("syscall sysinfo\n");
+		ret = (u64)syscall_handler_sysinfo(
+			(struct sysinfo *)	regs[CTX_INDEX_a0]
+		);
+		debug("end of syscall sysinfo\n");
+		break;
+
 // omitted syscalls
 	case 29: // ioctl
 	case 96: // set_tid_address
 	case 55: // fchown
+	case 122: // setaffinity
+	case 123: // getaffinity
 		break;
 	
 // Custom syscalls
