@@ -4,6 +4,9 @@
 #include "../panic/panic.h"
 #include "../debug/debug.h"
 #include "../util/string.h"
+#include "memory/memory.h"
+#include "memory/page_table.h"
+#include <enclave/enclave_ops.h>
 
 // TODO: how to utilize the rest of the partition which
 // the elf is located?
@@ -91,25 +94,80 @@ static int map_elf(paddr_t elf_paddr)
 				SV39_LEVEL_PAGE
 			);
 		}
+		info("va: 0x%lx ~ 0x%lx -> pa: 0x%lx ~ 0x%lx\n",
+			start_vaddr, start_vaddr + (number_of_pages - 1) * PAGE_SIZE,
+			start_paddr, start_paddr + (number_of_pages - 1) * PAGE_SIZE
+		);
 
 		if (file_size < mem_size) { // need to allocate pages
 			debug("Allocating more pages\n");
-			// TODO: what if number_of_pages is larger than pool size?
 
-			number_of_pages = 
-				(PAGE_UP(mem_size) - PAGE_UP(file_size)) >> PAGE_SHIFT;
-			paddr_t extra_page_paddr = alloc_umode_page(number_of_pages);
+			usize size_diff = PAGE_UP(mem_size) - PAGE_UP(file_size);
+			show(size_diff);
 
-			show(number_of_pages);
-			show(extra_page_paddr);
+			if (size_diff < PARTITION_SIZE) {
+				number_of_pages = size_diff >> PAGE_SHIFT;
+				show(number_of_pages);
+				paddr_t extra_page_paddr = alloc_umode_page(number_of_pages);
+				show(extra_page_paddr);
 
-			for (int j = 0; j < number_of_pages; j++) {
-				map_page(
-					end_vaddr 			+ j * PAGE_SIZE,
-					extra_page_paddr 	+ j * PAGE_SIZE,
-					pte_flag_from_Elf64_word(phdr[i].p_flags),
-					SV39_LEVEL_PAGE
+				for (int j = 0; j < number_of_pages; j++) {
+					map_page(
+						end_vaddr 			+ j * PAGE_SIZE,
+						extra_page_paddr 	+ j * PAGE_SIZE,
+						pte_flag_from_Elf64_word(phdr[i].p_flags),
+						SV39_LEVEL_PAGE
+					);
+				}
+				info("va: 0x%lx ~ 0x%lx -> pa: 0x%lx ~ 0x%lx\n",
+					end_vaddr, end_vaddr + (number_of_pages - 1) * PAGE_SIZE,
+					extra_page_paddr, extra_page_paddr + (number_of_pages - 1) * PAGE_SIZE
 				);
+			} else {
+				// to fix: end_vaddr might not be partition aligned
+
+				info("large data section, allocating from M mode\n");
+				vaddr_t va_part_align = PARTITION_UP(end_vaddr);
+				usize gap = va_part_align - end_vaddr;
+
+				if (gap) {
+					usize offset = end_vaddr % PARTITION_SIZE;
+					paddr_t gap_partition_pa = __ecall_ebi_mem_alloc(1, NULL);
+					for (int k = 0; k < gap / PAGE_SIZE; k++) {
+						map_page(
+							end_vaddr + k * PAGE_SIZE,
+							gap_partition_pa + offset + k * PAGE_SIZE,
+							pte_flag_from_Elf64_word(phdr[i].p_flags),
+							SV39_LEVEL_PAGE
+						);
+					}
+				}
+
+				usize number_of_partitions = PARTITION_UP(size_diff) >> PARTITION_SHIFT;
+				usize left = number_of_partitions;
+				vaddr_t va = va_part_align;
+
+				while (left > 0) {
+					usize sug = left, allocated;
+					paddr_t pa;
+
+					do {
+						allocated = sug;
+						pa = __ecall_ebi_mem_alloc(sug, &sug);
+					} while (pa == -1UL);
+
+					for (int k = 0; k < number_of_partitions; k++) {
+						map_page(
+							va + k * PARTITION_SIZE,
+							pa + k * PARTITION_SIZE,
+							pte_flag_from_Elf64_word(phdr[i].p_flags),
+							SV39_LEVEL_MEGA
+						);
+					}
+
+					left -= allocated;
+					va += allocated * PARTITION_SIZE;
+				}
 			}
 
 			debug("zero mem-only portion\n");
