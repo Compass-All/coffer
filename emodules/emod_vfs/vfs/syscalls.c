@@ -515,3 +515,27 @@ int sys_ftruncate(struct vfscore_file *fp, off_t length)
 
 	return error;
 }
+
+int sys_access(char *path, int mode)
+{
+	struct dentry *dp;
+	int error, flags;
+
+	/* If F_OK is set, we return here if file is not found. */
+	error = namei(path, &dp);
+	if (error)
+		return error;
+
+	flags = 0;
+	if (mode & R_OK)
+		flags |= VREAD;
+	if (mode & W_OK)
+		flags |= VWRITE;
+	if (mode & X_OK)
+		flags |= VEXEC;
+
+	error = vn_access(dp->d_vnode, flags);
+
+	drele(dp);
+	return error;
+}

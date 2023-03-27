@@ -21,3 +21,4 @@ int sys_readdir(struct vfscore_file *fp, struct dirent *dir);
 int sys_fsync(struct vfscore_file *fp);
 int sys_unlink(char *path);
 int sys_ftruncate(struct vfscore_file *fp, off_t length);
+int sys_access(char *path, int mode);

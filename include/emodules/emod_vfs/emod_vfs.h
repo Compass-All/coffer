@@ -50,6 +50,10 @@ typedef struct {
 
 	int (*syscall_handler_ftruncate)(int fd, off_t length);
 
+	int (*syscall_handler_access)(const char * pathname, int mode);
+
+	int (*syscall_handler_faccessat)(int dirfd, const char* pathname, int mode, int flags);
+
 	void *(*syscall_handler_mmap)(void *addr, size_t len, int prot, int flags,
 		int fildes, off_t off);
 

@@ -965,6 +965,62 @@ out_error:
 	return -error;
 }
 
+int syscall_handler_access(const char * pathname, int mode)
+{
+	struct task *t = main_task;
+	char path[PATH_MAX];
+	int acc, error = 0;
+
+	acc = 0;
+	if (mode & R_OK)
+		acc |= VREAD;
+	if (mode & W_OK)
+		acc |= VWRITE;
+
+	if ((error = task_conv(t, pathname, acc, path)) != 0)
+		goto out_error;
+
+	error = sys_access(path, mode);
+	if (error)
+		goto out_error;
+	return 0;
+
+out_error:
+	return -error;
+}
+
+int syscall_handler_faccessat(int dirfd, const char* pathname, int mode, int flags)
+{
+	if (flags & AT_SYMLINK_NOFOLLOW) {
+		panic("UNIMPLEMENTED: faccessat() with AT_SYMLINK_NOFOLLOW");
+	}
+
+	if (pathname[0] == '/' || dirfd == AT_FDCWD) {
+		return syscall_handler_access(pathname, mode);
+	}
+
+	struct vfscore_file *fp;
+	int error = fget(dirfd, &fp);
+	if (error) {
+		goto out_error;
+	}
+
+	char p[PATH_MAX];
+
+	/* build absolute path */
+	strlcpy(p, fp->f_dentry->d_mount->m_path, PATH_MAX);
+	strlcat(p, fp->f_dentry->d_path, PATH_MAX);
+	strlcat(p, "/", PATH_MAX);
+	strlcat(p, pathname, PATH_MAX);
+
+	error = syscall_handler_access(p, mode);
+
+	fdrop(fp);
+
+out_error:
+	return error;
+}
+
 static struct task _main_task_impl;
 
 void vfscore_init(void)
