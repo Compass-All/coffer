@@ -693,6 +693,14 @@ void syscall_handler(
 		debug("end of syscall uname\n");
 		break;
 
+	case SYS_uname:
+		debug("syscall uname\n");
+		syscall_handler_uname(
+			(struct utsname *)regs[CTX_INDEX_a0]
+		);
+		debug("end of syscall uname\n");
+		break;
+
 	case SYS_brk:
 		debug("syscall brk\n");
 		ret = sys_brk_handler(regs[CTX_INDEX_a0]);
