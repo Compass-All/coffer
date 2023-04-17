@@ -2,6 +2,15 @@
 
 #include <time.h>
 
+struct utsname {
+	char *sysname;
+	char *nodename;
+	char *release;
+	char *version;
+	char *machine;
+	char *domainname;
+};
+
 struct sysinfo {
 	long uptime;             /* Seconds since boot */
 	unsigned long loads[3];  /* 1, 5, and 15 minute load averages */
@@ -36,3 +45,12 @@ struct rusage {
 	long   ru_nvcsw;         /* voluntary context switches */
 	long   ru_nivcsw;        /* involuntary context switches */
 };
+
+typedef unsigned int rlim_t;
+
+struct rlimit {
+	rlim_t rlim_cur;  /* Soft limit */
+	rlim_t rlim_max;  /* Hard limit (ceiling for rlim_cur) */
+};
+
+#define RLIM_INFINITY 0xffffffff

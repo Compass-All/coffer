@@ -57,14 +57,17 @@
 #define SYS_fsync			82
 #define SYS_exit 			93	// 0x5d
 #define SYS_exit_group 		94
+#define SYS_nanosleep		101
 #define SYS_clock_gettime	113
 #define SYS_sched_setaffinity 122
 #define SYS_sched_getaffinity 122
 #define SYS_kill 			129
+#define SYS_signalstack		132
 #define SYS_rt_sigaction 	134
 #define SYS_times 			153
 #define SYS_uname 			160
 #define SYS_getrusage 		165
+#define SYS_prctl			167
 #define SYS_getcpu	 		168
 #define SYS_gettimeofday 	169 // 0xa9
 #define SYS_getpid 			172
@@ -78,6 +81,7 @@
 #define SYS_munmap 			215
 #define SYS_mremap 			216
 #define SYS_mmap 			222
+#define SYS_prlimit64 		261
 #define SYS_open 			1024
 #define SYS_link 			1025
 #define SYS_unlink 			1026
@@ -164,6 +168,29 @@ static int syscall_handler_getcpu(unsigned int *cpu, unsigned int *node)
 		*cpu = 0;
 	if (node)
 		*node = 0;
+
+	return 0;
+}
+
+static int syscall_handler_uname(struct utsname *buf)
+{
+	memcpy(buf->sysname, "Coffer", 6);
+	memcpy(buf->nodename, "Coffer", 6);
+	memcpy(buf->release, "0.1", 3);
+	memcpy(buf->version, "0.1", 3);
+	memcpy(buf->machine, "riscv64", 7);
+	memcpy(buf->domainname, "Coffer", 6);
+
+	return 0;
+}
+
+static int syscall_handler_prlimit64(pid_t pid, int resource,
+		const struct rlimit *new_limit, struct rlimit *old_limit)
+{
+	if (old_limit) {
+		old_limit->rlim_cur = RLIM_INFINITY;
+		old_limit->rlim_max = RLIM_INFINITY;
+	}
 
 	return 0;
 }
@@ -657,6 +684,14 @@ void syscall_handler(
 		__ecall_ebi_exit(regs[CTX_INDEX_a0]);
 		break;
 
+	case SYS_uname:
+		debug("syscall uname\n");
+		syscall_handler_uname(
+			(struct utsname *)regs[CTX_INDEX_a0]
+		);
+		debug("end of syscall uname\n");
+		break;
+
 	case SYS_brk:
 		debug("syscall brk\n");
 		ret = sys_brk_handler(regs[CTX_INDEX_a0]);
@@ -729,12 +764,32 @@ void syscall_handler(
 		debug("end of syscall sysinfo\n");
 		break;
 
+	case SYS_prlimit64:
+		debug("syscall prlimit64\n");
+		ret = (u64)syscall_handler_prlimit64(
+			(pid_t) 				regs[CTX_INDEX_a0],
+			(int)					regs[CTX_INDEX_a1],
+			(const struct rlimit *) regs[CTX_INDEX_a2],
+			(struct rlimit *)		regs[CTX_INDEX_a3]
+		);
+		debug("end of syscall prlimit64\n");
+		break;
+
 // omitted syscalls
 	case 29: // ioctl
 	case 96: // set_tid_address
 	case 55: // fchown
+	case 101: // nanosleep
+	case 103: // setitimer
 	case 122: // setaffinity
 	case 123: // getaffinity
+	case 132: // signalstack
+	case 134: // sigaction
+	case 135: // sigprocmask
+	case 166: // umask
+	case 167: // prctl
+	case 226: // mprotect
+	case 233: // madvise
 		break;
 	
 // Custom syscalls
@@ -763,12 +818,12 @@ void syscall_handler(
 
 	default:
 		error("syscall %d\n", syscall_num);
-		show(regs[CTX_INDEX_a0]);
-		show(regs[CTX_INDEX_a1]);
-		show(regs[CTX_INDEX_a2]);
-		show(regs[CTX_INDEX_a3]);
-		show(regs[CTX_INDEX_a4]);
-		show(regs[CTX_INDEX_a5]);
+		LOG(regs[CTX_INDEX_a0]);
+		LOG(regs[CTX_INDEX_a1]);
+		LOG(regs[CTX_INDEX_a2]);
+		LOG(regs[CTX_INDEX_a3]);
+		LOG(regs[CTX_INDEX_a4]);
+		LOG(regs[CTX_INDEX_a5]);
 
 		panic("Unimplemented syscall\n");
 		break;
