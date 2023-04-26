@@ -41,7 +41,7 @@ static void timer_interrupt_handler()
 	static u64 count = 1;
 	if (count % 10 == 0) {
 		STOP_TIMER(interrupt);
-		// __ecall_ebi_suspend(INTERRUPT);
+		__ecall_ebi_suspend(INTERRUPT);
 		START_TIMER(interrupt);
 	}	
 	count++;
