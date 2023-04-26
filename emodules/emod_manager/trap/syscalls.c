@@ -678,10 +678,11 @@ void syscall_handler(
 	case SYS_exit_group:
 	 	debug("syscall exit\n");
 		show(get_umode_page_pool_avail_size());
+		show(regs[CTX_INDEX_a0]);
 		// dump_emodule_table();	
 		// dump_page_table();
 		set_s_timer();
-		__ecall_ebi_exit(regs[CTX_INDEX_a0]);
+		__ecall_ebi_exit(EXIT_ENCLAVE);
 		break;
 
 	case SYS_uname:
