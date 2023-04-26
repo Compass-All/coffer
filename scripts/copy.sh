@@ -41,12 +41,14 @@ fi
 
 MNT=/run/media/root
 printf "[*] Mounting ...\n"
-sudo mkdir -p $MNT
+sudo mkdir -p $MNT 
 if [ $? -ne 0 ]; then echo "Error mkdir!"; exit 1; fi
 sudo mount $TARGET $MNT
 if [ $? -ne 0 ]; then echo "Error mount!"; exit 1; fi
 printf "[*] Copying ...\n"
-sudo cp -r $EMOD $PROG $MNT
+sudo mkdir -p $MNT/emodules
+sudo cp -r $PROG $MNT
+sudo cp $EMOD/*/*.bin.signed $MNT/emodules
 if [ $? -ne 0 ]; then echo "Error cp!"; sudo umount $MNT; exit 1; fi
 printf "[*] Unmounting ...\n"
 sudo umount $MNT
