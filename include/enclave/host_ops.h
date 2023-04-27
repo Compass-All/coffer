@@ -86,6 +86,15 @@ static void inline __ecall_dump_region()
 	);
 }
 
+static void inline __ecall_unmatched_acc_fault(u64 addr)
+{
+	__ecall(
+		SBI_EXT_EBI,
+		SBI_EXT_EBI_DEBUG_UNMATCHED_ACC_FAULT,
+		addr, 0UL, 0UL
+	);
+}
+
 static u64 inline __ecall_get_timer(u64 eid, u64 timer)
 {
 	return __ecall(
