@@ -1,4 +1,5 @@
 #include "exceptions.h"
+#include "enclave/host_ops.h"
 #include "syscalls.h"
 #include "interrupts.h"
 #include <util/csr.h>
@@ -11,6 +12,7 @@
 #include <enclave/enclave_ops.h>
 #include "../memory/page_table.h"
 #include "../emod_table/emod_table.h"
+#include "util/console.h"
 
 #define SCAUSE_INTER	(1UL << 63)
 #define SCAUSE_ECALL	0x8UL
@@ -54,6 +56,8 @@ void exception_handler(
 	paddr_t page_fault_pa;
 	paddr_t access_fault_pa;
 
+	static u64 acc_fault_count = 0;
+
 	switch (scause)
 	{
 	case 0x0:
@@ -73,8 +77,11 @@ void exception_handler(
 		break;
 	case 0x5:
 		access_fault_pa = get_pa(stval);
-		error("Load access fault: pa = 0x%lx\n", access_fault_pa);
-		break;
+		acc_fault_count++;
+		printf(KMAG "Load access fault, stval = 0x%lx, pa = 0x%lx, count = %lu\n" RESET,
+			stval, access_fault_pa, acc_fault_count);
+		__ecall_unmatched_acc_fault(stval);
+		return;
 	case 0x6:
 		error("Store/AMO address misaligned\n");
 		break;
