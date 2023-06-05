@@ -2,6 +2,7 @@
 
 #include <types.h>
 
+// deprecated
 #define EMODULE_MANAGER_SIZE	0x0UL
 #define EMODULE_DEBUG_SIZE		0x3000
 #define EMODULE_ALLOC_SIZE		0x6000

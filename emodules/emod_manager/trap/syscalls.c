@@ -11,8 +11,6 @@
 #include <emodules/ecall.h>
 #include <enclave/enclave_ops.h>
 #include <enclave/syscall.h>
-#include <emodules/emod_uart/emod_uart.h>
-#include <emodules/emod_vfs/emod_vfs.h>
 #include <emodules/emod_manager/emod_manager.h>
 #include <emodules/emodule_id.h>
 #include <message/message.h>
@@ -20,6 +18,10 @@
 #include "../memory/page_table.h"
 #include "../util/string.h"
 #include "../util/sysinfo.h"
+
+#include <emodules/emod_uart/emod_uart.h>
+#include <emodules/emod_vfs/emod_vfs.h>
+#include <emodules/emod_net/emod_net.h>
 
 #include <sys/stat.h>
 #include <time.h>
@@ -94,6 +96,7 @@
 
 static emod_vfs_t emod_vfs;
 static emod_uart_t emod_uart;
+static emod_net_t emod_net;
 
 static void load_emod_vfs()
 {
@@ -127,6 +130,25 @@ static void load_emod_uart(void)
 
 		emod_uart_getter = acquire_emodule(EMODULE_ID_UART);
 		emod_uart = ((emod_uart_t (*)(void))emod_uart_getter)();
+
+		START_TIMER(syscall);
+		STOP_TIMER(module);
+
+		loaded = 1;
+	}
+}
+
+static void load_emod_net(void)
+{
+	static u8 loaded = 0;
+	vaddr_t emod_net_getter;
+
+	if (!loaded) {
+		START_TIMER(module);
+		STOP_TIMER(syscall);
+
+		emod_net_getter = acquire_emodule(EMODULE_ID_NET);
+		emod_net = ((emod_net_t (*)(void))emod_net_getter)();
 
 		START_TIMER(syscall);
 		STOP_TIMER(module);
@@ -790,15 +812,10 @@ void syscall_handler(
 	
 // Custom syscalls
 	case SYS_test:
-	    paddr_t get_pa(vaddr_t va);
-		volatile u8* ptr = (u8*) 0xADD00000;
-		__unused paddr_t pa = get_pa((vaddr_t)ptr);
-		debug("pa: %lx\n", pa);
-	    for (ulong i = 0; i < 500000000ul; i++) {
-			ptr[1] = '\xFF';
-			asm volatile("fence w,o" ::: "memory");
-			flush_tlb();
-		}
+		debug("syscall test\n");
+		load_emod_net();
+		emod_net.emod_net_api.test(123);
+		debug("end of syscall test\n");
 		break;
 
 	case SYS_uart_getc:
