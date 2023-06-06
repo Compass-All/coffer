@@ -37,7 +37,7 @@ void emod_net_timestamp_get(emod_net_timestamp *ts)
 s64 emod_net_timestamp_diff(emod_net_timestamp *ts1,
         emod_net_timestamp *ts2)
 {
-    return *ts1 - *ts2;
+    return *ts2 - *ts1;
 }
 
 void sleep(u32 ms)
@@ -46,7 +46,7 @@ void sleep(u32 ms)
     emod_net_timestamp_get(&ts1);
     while (1) {
         emod_net_timestamp_get(&ts2);
-        if (emod_net_timestamp_diff(&ts2, &ts1) >= ms * 1000)
+        if (emod_net_timestamp_diff(&ts1, &ts2) >= ms * 1000)
             break;
     }
 }
