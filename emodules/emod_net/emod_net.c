@@ -1,6 +1,6 @@
 #include <emodules/emod_net/emod_net.h>
-#include "tmp_printf.h"
 #include "dependency.h"
+#include "port/lwip_main.h"
 
 // ---------------
 // emodule net descriptor
@@ -54,6 +54,9 @@ vaddr_t net_init(vaddr_t emod_manager_getter)
 	emod_manager = get_emod_manager();
 
 	emod_manager.emod_manager_api.test();
+
+	// invoke lwip_main() and never returns
+	lwip_main();
 
 	return (vaddr_t)get_emod_net;
 }
