@@ -3,6 +3,7 @@
 #pragma once
 
 #define NO_SYS                      1
+#define NO_SYS_NO_TIMERS            1
 #define MEM_LIBC_MALLOC             1
 #define MEMP_MEM_MALLOC             1
 #define MEM_ALIGNMENT               4

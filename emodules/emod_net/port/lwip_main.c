@@ -14,6 +14,7 @@
 #include "lwip/priv/tcp_priv.h"
 #include "netif/etharp.h"
 #include "virtio_net.h"
+#include <util/gnu_attribute.h>
 
 #define EMOD_NET_IPADDR_BASE    "192.168.0.2"
 #define EMOD_NET_IPADDR_GW      "192.168.0.1"
@@ -113,21 +114,25 @@ void emod_net_poll(void)
     // Call network interface to process incoming packets and do housekeeping
     virtio_net_poll(&virtio_netif);
 
-    sys_check_timeouts();
-    // // Process lwip network-related timers.
-    // emod_net_timestamp_get(&now);
-    // if (emod_net_timestamp_diff(&ts_etharp, &now) >= EMOD_NET_ARP_TIMER_INTERVAL) {
-    //     etharp_tmr();
-    //     ts_etharp = now;
-    // }
-    // if (emod_net_timestamp_diff(&ts_tcp, &now) >= EMOD_NET_TCP_TIMER_INTERVAL) {
-    //     tcp_tmr();
-    //     ts_tcp = now;
-    // }
-    // if (emod_net_timestamp_diff(&ts_ipreass, &now) >= EMOD_NET_IPREASS_TIMER_INTERVAL) {
-    //     ip_reass_tmr();
-    //     ts_ipreass = now;
-    // }
+    emod_net_timestamp_get(&now);
+
+    // sys_check_timeouts();
+    // Process lwip network-related timers.
+    if (emod_net_timestamp_diff(&ts_etharp, &now) >= EMOD_NET_ARP_TIMER_INTERVAL) {
+        debug("etharp timeout\n");
+        etharp_tmr();
+        ts_etharp = now;
+    }
+    if (emod_net_timestamp_diff(&ts_tcp, &now) >= EMOD_NET_TCP_TIMER_INTERVAL) {
+        debug("tcp timeout\n");
+        tcp_tmr();
+        ts_tcp = now;
+    }
+    if (emod_net_timestamp_diff(&ts_ipreass, &now) >= EMOD_NET_IPREASS_TIMER_INTERVAL) {
+        debug("ip_reass timeout\n");
+        ip_reass_tmr();
+        ts_ipreass = now;
+    }
 }
 
 //
