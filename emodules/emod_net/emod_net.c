@@ -29,6 +29,23 @@ static emod_net_t get_emod_net()
 	return emod_net;
 }
 
+static void init_dependency()
+{
+	vaddr_t emod_debug_getter = emod_manager.emod_manager_api
+		.acquire_emodule(EMODULE_ID_DEBUG);
+	emod_debug_t (*get_emod_debug)(void) =
+		(void *)emod_debug_getter;
+	emod_debug = get_emod_debug();
+
+	vaddr_t emod_alloc_getter = emod_manager.emod_manager_api
+		.acquire_emodule(EMODULE_ID_ALLOC);
+	emod_alloc_t (*get_emod_alloc)(void) =
+		(void *)emod_alloc_getter;
+	emod_alloc = get_emod_alloc();
+
+	debug("Hello from init_dependency in emod_vfs\n");
+}
+
 __attribute__((section(".text.init")))
 vaddr_t net_init(vaddr_t emod_manager_getter)
 {
@@ -55,6 +72,8 @@ vaddr_t net_init(vaddr_t emod_manager_getter)
 
 	emod_manager.emod_manager_api.test();
 
+	// init dependency
+	init_dependency();
 	// invoke lwip_main() and never returns
 	lwip_main();
 
