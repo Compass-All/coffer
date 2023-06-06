@@ -85,6 +85,7 @@ vaddr_t debug_init(vaddr_t emod_manager_getter)
 	emod_debug_api.printd = dummy_printd;
 #endif
 	emod_debug_api.printf 	= printf_;
+	emod_debug_api.snprintf = snprintf_;
 	emod_debug_api.hexdump 	= hexdump;
 	emod_debug_api.assert 	= assert;
 
