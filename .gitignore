@@ -1,6 +1,11 @@
 screenlog.0
 
 __pycache__
+
+# clangd
+.cache/
+compile_commands.json
+
 Image
 root.bin
 *.img

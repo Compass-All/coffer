@@ -1,0 +1,18 @@
+CompileFlags:
+    # CompilationDatabase: "."
+
+    # Compiler: clang
+    Add: [
+        --target=riscv64,
+        -I/opt/riscv/riscv64-unknown-elf/include/,
+        -I/opt/riscv/riscv64-unknown-linux-gnu-gcc/include/
+    ]
+
+    Compiler: riscv64-unknown-elf-gcc
+    # Compiler: riscv64-unknown-linux-gnu-gcc
+
+    # Remove: [-D__QEMU__]
+    # Add: [-D__UNMATCHED__]
+
+# Diagnostics:
+#     Suppress: 'pp_including_mainfile_in_preamble'
