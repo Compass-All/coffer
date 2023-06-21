@@ -100,5 +100,7 @@ int pci_generic_config_read(__u8 bus, __u8 devfn,
 int pci_generic_config_write(__u8 bus, __u8 devfn,
 			     int where, int size, __u32 val);
 
+void coffer_pf_driver_register();
+
 extern struct pf_driver gen_pci_driver;
 #endif

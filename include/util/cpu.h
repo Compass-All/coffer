@@ -1,6 +1,8 @@
 #pragma once
 
-#define FENCE() __asm__ __volatile__ ("fence " "rw" "," "rw" : : : "memory")
+#include <memory/riscv_barrier.h>
+
+#define FENCE() RISCV_FENCE(rw, rw)
 
 
 #ifndef __ASSEMBLY__
@@ -13,19 +15,8 @@
 #endif
 
 #ifndef barrier
-// #define barrier() __asm__ __volatile__("" : : : "memory")
 #define barrier() FENCE()
 #endif
 
-#ifndef mb
-#define mb()      barrier()
-#endif
 
-#ifndef rmb
-#define rmb()     barrier()
-#endif
-
-#ifndef wmb
-#define wmb()     barrier()
-#endif
 #endif /* !__ASSEMBLY__ */

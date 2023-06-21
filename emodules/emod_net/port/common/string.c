@@ -62,7 +62,7 @@
 #include "errno.h"
 #include <stdio.h>
 #include <types.h>
-#include "../dependency.h"
+#include "../../dependency.h"
 
 void *memcpy(void *dst, const void *src, size_t len)
 {
@@ -391,7 +391,7 @@ char *strndup(const char *str, size_t len)
 
 	__len = strnlen(str, len);
 
-	__res = kmalloc(__len + 1);
+	__res = malloc(__len + 1);
 	if (__res) {
 		memcpy(__res, str, __len);
 		__res[__len] = '\0';

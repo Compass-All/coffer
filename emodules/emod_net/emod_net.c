@@ -1,5 +1,7 @@
 #include <emodules/emod_net/emod_net.h>
 #include "dependency.h"
+#include "pci_ecam.h"
+#include "platform_bus.h"
 #include "port/lwip_main.h"
 
 #include "bus.h"
@@ -87,8 +89,12 @@ vaddr_t net_init(vaddr_t emod_manager_getter)
 	debug("Check Point uk_bus_lib_init done\n");
 	coffer_pci_bus_register();
 	debug("Check Point coffer_pci_bus_register done\n");
+	coffer_pf_bus_register();
+	debug("Check Point coffer_pf_bus_register done\n");
 	coffer_virtio_bus_register();
 	debug("Check Point coffer_virtio_bus_register done\n");
+	coffer_pf_driver_register();
+	debug("Check Point coffer_pf_driver_register done\n");
 	coffer_pci_driver_register();
 	debug("Check Point coffer_pci_driver_register done\n");
 	coffer_virtio_bus_driver_register();

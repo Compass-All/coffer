@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stddef.h>
+#include <util/atomic.h>
 
 #define UK_LIST_HEAD_INIT(name) { &(name), &(name) }
 
@@ -14,20 +15,6 @@ struct uk_list_head {
 	struct uk_list_head *next;
 	struct uk_list_head *prev;
 };
-
-#define	UK_ACCESS_ONCE(x)			(*(volatile __typeof(x) *)&(x))
-
-#define UK_WRITE_ONCE(x, v) do {		\
-	UK_ACCESS_ONCE(x) = (v);			\
-} while (0)
-
-#define UK_READ_ONCE(x) ({				\
-	__typeof(x) __var = ({				\
-		UK_ACCESS_ONCE(x);				\
-	});									\
-	__var;								\
-})
-
 
 static inline void
 UK_INIT_LIST_HEAD(struct uk_list_head *list)

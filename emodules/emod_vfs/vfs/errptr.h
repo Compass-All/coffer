@@ -2,8 +2,6 @@
 
 #include <types.h>
 
-typedef u64 __sptr;
-
 /**
  * Converts an invalid pointer (see PTRISERR) to an error number
  * @param ptr Pointer

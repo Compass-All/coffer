@@ -38,7 +38,9 @@
 #include <util/cpu.h>
 #include "errno.h"
 
+#ifndef UINT16_MAX
 #define UINT16_MAX 0xffff
+#endif
 
 #ifdef __cplusplus
 extern "C" {

@@ -12,6 +12,7 @@ extern emod_debug_t 	emod_debug;
 
 #define map_page	emod_manager.emod_manager_api.map_page
 #define get_pa 		emod_manager.emod_manager_api.get_pa
+#define panic 		emod_manager.emod_manager_api.panic
 
 #define printf		emod_debug.emod_debug_api.printf
 #define snprintf	emod_debug.emod_debug_api.snprintf

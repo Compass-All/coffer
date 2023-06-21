@@ -35,6 +35,8 @@
 
 #include <types.h>
 #include <util/cpu.h>
+#include <memory/riscv_io.h>
+#include "../../dependency.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -116,6 +118,15 @@ static inline void _virtio_cread_bytes(const void *addr, const __u8 offset,
 #define __iormb()		rmb()
 #define __iowmb()		wmb()
 
+#define ioreg_write8(a, v)	writeb(v, a)
+#define ioreg_write16(a, v)	writew(v, a)
+#define ioreg_write32(a, v)	writel(v, a)
+#define ioreg_write64(a, v)	writeq(v, a)
+#define ioreg_read8(a)		readb(a)
+#define ioreg_read16(a)		readw(a)
+#define ioreg_read32(a)		readl(a)
+#define ioreg_read64(a)		readq(a)
+
 static inline void _virtio_cwrite_bytes(const void *addr, const __u8 offset,
 					const void *buf, int len, int type_len)
 {
@@ -138,7 +149,7 @@ static inline void _virtio_cwrite_bytes(const void *addr, const __u8 offset,
 			ioreg_write32(io_addr, ((__u32 *)buf)[i * type_len]);
 			break;
 		default:
-			UK_CRASH("Unsupported virtio write operation\n");
+			panic("Unsupported virtio write operation\n");
 		}
 	}
 }
@@ -164,7 +175,7 @@ static inline void _virtio_cread_bytes(const void *addr, const __u8 offset,
 			((__u32 *)buf)[i * type_len] = ioreg_read32(io_addr);
 			break;
 		default:
-			UK_CRASH("Unsupported virtio read operation\n");
+			panic("Unsupported virtio read operation\n");
 		}
 		__iormb();
 	}

@@ -33,7 +33,7 @@ ip4_addr_t emod_net_ip_addr;
 static struct netif virtio_netif;
 
 // Poll for received frames
-extern void virtio_net_poll(struct netif *);
+// extern void virtio_net_poll(struct netif *);
 
 int emod_net_aton(char * str_addr, ip4_addr_t * net_addr);
 
@@ -50,7 +50,7 @@ void emod_net_poll(void)
     emod_net_timestamp now;
 
     // Call network interface to process incoming packets and do housekeeping
-    virtio_net_poll(&virtio_netif);
+    // virtio_net_poll(&virtio_netif);
 
     emod_net_timestamp_get(&now);
 

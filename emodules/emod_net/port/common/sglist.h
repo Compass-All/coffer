@@ -56,6 +56,7 @@ extern "C" {
 #ifdef CONFIG_LIBUKNETDEV
 #include <uk/netbuf.h>
 #endif /* CONFIG_LIBUKNETDEV */
+#include "netbuf.h"
 
 struct uk_sglist_seg {
 	__paddr_t  ss_paddr; /* Physical address */
@@ -179,7 +180,7 @@ int uk_sglist_join(struct uk_sglist *first, struct uk_sglist *second);
  *	- NULL:  Allocation failed.
  *	- (struct uk_sglist *): reference to scatter/gather list.
  */
-struct uk_sglist *uk_sglist_alloc(struct uk_alloc *a, int nsegs);
+struct uk_sglist *uk_sglist_alloc(int nsegs);
 
 /**
  * Free the scatter/gather list.
@@ -188,7 +189,7 @@ struct uk_sglist *uk_sglist_alloc(struct uk_alloc *a, int nsegs);
  * @param a
  *	The allocator to allocate memory for the scatter gather list.
  */
-void uk_sglist_free(struct uk_sglist *sg, struct uk_alloc *a);
+void uk_sglist_free(struct uk_sglist *sg);
 
 /**
  * Allocate and populate a scatter/gather list to describe a single kernel
@@ -203,8 +204,7 @@ void uk_sglist_free(struct uk_sglist *sg, struct uk_alloc *a);
  *	- NULL: Failed to create the sg list.
  *	- (struct uk_sglist *) reference to scatter/gather list.
  */
-struct uk_sglist *uk_sglist_build(struct uk_alloc *a, void *buf,
-					size_t len);
+struct uk_sglist *uk_sglist_build(void *buf, size_t len);
 
 /**
  * Clone a new copy of a scatter/gather list.
@@ -216,8 +216,7 @@ struct uk_sglist *uk_sglist_build(struct uk_alloc *a, void *buf,
  *	NULL: Failed to clone the list.
  *	(struct uk_sglist *): reference to the sg list.
  */
-struct uk_sglist *uk_sglist_clone(struct uk_sglist *sg,
-				struct uk_alloc *a);
+struct uk_sglist *uk_sglist_clone(struct uk_sglist *sg);
 
 /**
  * Split a scatter/gather list into two lists.  The scatter/gather
@@ -241,7 +240,7 @@ struct uk_sglist *uk_sglist_clone(struct uk_sglist *sg,
  *	0: Successful split of the list.
  */
 int uk_sglist_split(struct uk_sglist *original, struct uk_sglist **head,
-				struct uk_alloc *a, size_t length);
+				size_t length);
 
 /**
  * Generate a new scatter/gather list from a range of an existing
@@ -267,7 +266,7 @@ int uk_sglist_split(struct uk_sglist *original, struct uk_sglist **head,
  *	0: Successful in splicing the list.
  */
 int uk_sglist_slice(struct uk_sglist *original, struct uk_sglist **slice,
-			struct uk_alloc *a, size_t offset, size_t length);
+			size_t offset, size_t length);
 
 /**
  * The function create a scatter gather list from the netbuf

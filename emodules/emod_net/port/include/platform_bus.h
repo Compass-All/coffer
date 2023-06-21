@@ -111,4 +111,6 @@ UK_TAILQ_HEAD(pf_device_list, struct pf_device);
 /* Do not use this function directly: */
 void _pf_register_driver(struct pf_driver *drv);
 
+void coffer_pf_bus_register();
+
 #endif /* __UKPLAT_COMMON_PF_BUS_H__ */

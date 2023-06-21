@@ -297,18 +297,17 @@ int uk_sglist_join(struct uk_sglist *first, struct uk_sglist *second)
 	return 0;
 }
 
-#ifdef CONFIG_LIBUKALLOC
-struct uk_sglist *uk_sglist_alloc(struct uk_alloc *a, int nsegs)
+struct uk_sglist *uk_sglist_alloc(int nsegs)
 {
 	struct uk_sglist *sg;
 
 	ASSERT(a);
 
 	/* Allocate the scatter/gather list */
-	sg = uk_malloc(a, sizeof(struct uk_sglist) +
+	sg = malloc(sizeof(struct uk_sglist) +
 			(nsegs * sizeof(struct uk_sglist_seg)));
 	if (!sg) {
-		uk_pr_err("Error in allocating sg list\n");
+		error("Error in allocating sg list\n");
 		return NULL;
 	}
 
@@ -317,15 +316,15 @@ struct uk_sglist *uk_sglist_alloc(struct uk_alloc *a, int nsegs)
 	return sg;
 }
 
-void uk_sglist_free(struct uk_sglist *sg, struct uk_alloc *a)
+void uk_sglist_free(struct uk_sglist *sg)
 {
 	ASSERT(sg && a);
 
 	if (uk_refcount_release(&sg->sg_refs))
-		uk_free(a, sg);
+		free(sg);
 }
 
-struct uk_sglist *uk_sglist_build(struct uk_alloc *a, void *buf,
+struct uk_sglist *uk_sglist_build(void *buf,
 				size_t len)
 {
 	struct uk_sglist *sg;
@@ -339,21 +338,20 @@ struct uk_sglist *uk_sglist_build(struct uk_alloc *a, void *buf,
 	nsegs = uk_sglist_count(buf, len);
 	ASSERT(nsegs > 0);
 
-	sg = uk_sglist_alloc(a, nsegs);
+	sg = uk_sglist_alloc(nsegs);
 	if (sg == NULL) {
-		uk_pr_err("Error in allocating the sg list\n");
+		error("Error in allocating the sg list\n");
 		return NULL;
 	}
 	if (uk_sglist_append(sg, buf, len) != 0) {
-		uk_pr_err("Error in adding segments to sg list\n");
-		uk_sglist_free(sg, a);
+		error("Error in adding segments to sg list\n");
+		uk_sglist_free(sg);
 		return NULL;
 	}
 	return sg;
 }
 
-struct uk_sglist *uk_sglist_clone(struct uk_sglist *sg,
-				struct uk_alloc *a)
+struct uk_sglist *uk_sglist_clone(struct uk_sglist *sg)
 {
 	struct uk_sglist *new;
 
@@ -362,9 +360,9 @@ struct uk_sglist *uk_sglist_clone(struct uk_sglist *sg,
 	if (!sg)
 		return NULL;
 
-	new = uk_sglist_alloc(a, sg->sg_maxseg);
+	new = uk_sglist_alloc(sg->sg_maxseg);
 	if (!new) {
-		uk_pr_err("Allocation for the new list failed\n");
+		error("Allocation for the new list failed\n");
 		return NULL;
 	}
 
@@ -375,7 +373,7 @@ struct uk_sglist *uk_sglist_clone(struct uk_sglist *sg,
 }
 
 int uk_sglist_split(struct uk_sglist *original, struct uk_sglist **head,
-			struct uk_alloc *a, size_t length)
+			size_t length)
 {
 	struct uk_sglist *sg;
 	size_t space, split;
@@ -408,7 +406,7 @@ int uk_sglist_split(struct uk_sglist *original, struct uk_sglist **head,
 		return 0;
 
 	if (*head == NULL) {
-		sg = uk_sglist_alloc(a, count);
+		sg = uk_sglist_alloc(count);
 		if (sg == NULL)
 			return -ENOMEM;
 		*head = sg;
@@ -447,7 +445,7 @@ int uk_sglist_split(struct uk_sglist *original, struct uk_sglist **head,
 }
 
 int uk_sglist_slice(struct uk_sglist *original, struct uk_sglist **slice,
-			struct uk_alloc *a, size_t offset, size_t length)
+			size_t offset, size_t length)
 {
 	struct uk_sglist *sg;
 	size_t space, end, foffs, loffs;
@@ -475,7 +473,7 @@ int uk_sglist_slice(struct uk_sglist *original, struct uk_sglist **slice,
 				fseg = i;
 				foffs = offset - (space -
 				    original->sg_segs[i].ss_len);
-				uk_pr_debug("sglist_slice: foffs = %08lx",
+				debug("sglist_slice: foffs = %08lx",
 						foffs);
 			}
 			count++;
@@ -487,7 +485,7 @@ int uk_sglist_slice(struct uk_sglist *original, struct uk_sglist **slice,
 			 */
 			if (space >= end) {
 				loffs = space - end;
-				uk_pr_debug("sglist_slice: loffs = %08lx",
+				debug("sglist_slice: loffs = %08lx",
 						loffs);
 				break;
 			}
@@ -499,7 +497,7 @@ int uk_sglist_slice(struct uk_sglist *original, struct uk_sglist **slice,
 		return -EINVAL;
 
 	if (*slice == NULL) {
-		sg = uk_sglist_alloc(a, count);
+		sg = uk_sglist_alloc(count);
 		if (sg == NULL)
 			return -ENOMEM;
 		*slice = sg;
@@ -523,19 +521,17 @@ int uk_sglist_slice(struct uk_sglist *original, struct uk_sglist **slice,
 	if (foffs != 0) {
 		sg->sg_segs[0].ss_paddr += foffs;
 		sg->sg_segs[0].ss_len -= foffs;
-		uk_pr_debug("sglist_slice seg[0]: %16lx:%16lx",
+		debug("sglist_slice seg[0]: %16lx:%16lx",
 		    (long)sg->sg_segs[0].ss_paddr, sg->sg_segs[0].ss_len);
 	}
 	if (loffs != 0) {
 		sg->sg_segs[count - 1].ss_len -= loffs;
-		uk_pr_debug("sglist_slice seg[%d]: len %08x",
+		debug("sglist_slice seg[%d]: len %08x",
 			count - 1, (uint32_t)sg->sg_segs[count - 1].ss_len);
 	}
 	return 0;
 }
-#endif /* CONFIG_LIBUKALLOC */
 
-#ifdef CONFIG_LIBUKNETDEV
 int uk_sglist_append_netbuf(struct uk_sglist *sg, struct uk_netbuf *netbuf)
 {
 	struct sgsave save;
@@ -558,4 +554,3 @@ int uk_sglist_append_netbuf(struct uk_sglist *sg, struct uk_netbuf *netbuf)
 	}
 	return 0;
 }
-#endif /* CONFIG_LIBUKNETDEV */

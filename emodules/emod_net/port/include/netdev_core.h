@@ -10,6 +10,7 @@
 #include "compat_list.h"
 // #include <uk/config.h>
 #include "../common/netbuf.h"
+#include <util/gnu_attribute.h>
 // #include <uk/list.h>
 // #include <uk/alloc.h>
 // #include <uk/essentials.h>

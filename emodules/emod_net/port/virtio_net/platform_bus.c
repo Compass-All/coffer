@@ -1,8 +1,8 @@
-/* TODO: SPDX Header */
+/* SPDX-License-Identifier: BSD-3-Clause */
 /*
- * Authors: Simon Kuenzer <simon.kuenzer@neclab.eu>
+ * Authors: Jia He <justin.he@arm.com>
  *
- * Copyright (c) 2018, NEC Europe Ltd., NEC Corporation. All rights reserved.
+ * Copyright (c) 2020, Arm Ltd. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,171 +29,202 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-/* Some code was derived from Solo5: */
-/*
- * Copyright (c) 2015-2017 Contributors as noted in the AUTHORS file
- *
- * This file is part of Solo5, a unikernel base layer.
- *
- * Permission to use, copy, modify, and/or distribute this software
- * for any purpose with or without fee is hereby granted, provided
- * that the above copyright notice and this permission notice appear
- * in all copies.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
- * WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
- * AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR
- * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
- * OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
- * NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
- * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- */
 
-// #include <string.h>
-// #include <uk/print.h>
-// #include <uk/plat/common/cpu.h>
-// #include <pci/pci_bus.h>
-// #include <pci/pci_ecam.h>
-// #include <libfdt_env.h>
-// #include <gic/gic-v2.h>
-#include "pci_bus.h"
-#include "../../dependency.h"
-#include <arch/sys_arch.h>
-#include <errno.h>
-#include "pci_ecam.h"
+#include <string.h>
+#include <platform_bus.h>
+#include <libfdt.h>
+#include "errno.h"
+#include "ofw_fdt.h"
 
-#define DEVFN(dev, fn)   ((dev << PCI_FN_BIT_NBR) | fn)
-#define SIZE_PER_PCI_DEV 0x20	/* legacy pci device size, no msi */
+#define fdt_start (NULL)
 
-static int arch_pci_driver_add_device(struct pci_driver *drv,
-					struct pci_address *addr,
-					struct pci_device_id *devid,
-					int irq,
-					__u64 base)
+struct pf_bus_handler {
+	struct uk_bus b;
+	struct uk_alloc *a;
+	struct pf_driver_list drv_list;  /**< List of platform drivers */
+	int drv_list_initialized;
+	struct pf_device_list dev_list;  /**< List of platform devices */
+};
+static struct pf_bus_handler pfh;
+
+static const char *pf_device_compatible_list[] = {
+	"virtio,mmio",
+	"pci-host-ecam-generic",
+	NULL
+};
+
+static inline int pf_device_id_match(const struct pf_device_id *id0,
+					const struct pf_device_id *id1)
 {
-	struct pci_device *dev;
+	int rc = 0;
+
+	if (id0->device_id == id1->device_id)
+		rc = 1;
+
+	return rc;
+}
+
+static inline struct pf_driver *pf_find_driver(const char *compatible)
+{
+	struct pf_driver *drv;
+	struct pf_device_id id;
+
+	UK_TAILQ_FOREACH(drv, &pfh.drv_list, next) {
+		if (!drv->match)
+			continue;
+
+		id.device_id = (uint16_t)drv->match(compatible);
+		if (id.device_id >= PLATFORM_DEVICE_ID_START &&
+			id.device_id < PLATFORM_DEVICE_ID_END) {
+			if (pf_device_id_match(&id, drv->device_ids)) {
+				debug("pf driver found devid(0x%x)\n", id.device_id);
+
+				return drv;
+			}
+		}
+	}
+
+	info("no pf driver found\n");
+
+	return NULL; /* no driver found */
+}
+
+static inline int pf_driver_add_device(struct pf_driver *drv,
+					struct pf_device *dev)
+{
 	int ret;
 
 	ASSERT(drv != NULL);
 	ASSERT(drv->add_dev != NULL);
-	ASSERT(addr != NULL);
-	ASSERT(devid != NULL);
-	ASSERT(pha != NULL);
+	ASSERT(dev != NULL);
 
-	dev = (struct pci_device *) calloc(1, sizeof(*dev));
-	if (!dev) {
-		error("PCI %02x:%02x.%02x: Failed to initialize: Out of memory!\n",
-			  (int) addr->bus,
-			  (int) addr->devid,
-			  (int) addr->function);
-		return -ENOMEM;
-	}
+	debug("pf_driver_add_device devid=%d\n", dev->id.device_id);
 
-	memcpy(&dev->id, devid, sizeof(dev->id));
-	memcpy(&dev->addr, addr,  sizeof(dev->addr));
-	dev->drv = drv;
+	ret = drv->add_dev(dev);
+	if (ret < 0 && ret != -ENODEV)
+		error("Platform Failed to initialize device driver, ret(%d)\n", ret);
 
-	dev->base = base;
-	dev->irq = irq;
-	info("pci dev base(0x%lx) irq(%ld)\n", dev->base, dev->irq);
+	return ret;
+}
 
-	ret = drv->add_dev(dev); //virtio pci
+static inline int pf_driver_probe_device(struct pf_driver *drv,
+					struct pf_device *dev)
+{
+	int ret;
+
+	ASSERT(drv != NULL && dev != NULL);
+	ASSERT(drv->probe != NULL);
+
+	info("pf_driver_probe_device devid=%d\n", dev->id.device_id);
+
+	ret = drv->probe(dev);
 	if (ret < 0) {
-		error("PCI %02x:%02x.%02x: Failed to initialize device driver\n",
-			  (int) addr->bus,
-			  (int) addr->devid,
-			  (int) addr->function);
-		free(dev);
+		error("Platform Failed to probe device driver\n");
+
+		return ret;
 	}
 
 	return 0;
 }
 
-int arch_pci_probe()
+static int pf_probe(void)
 {
-	struct pci_address addr;
-	struct pci_device_id devid;
-	struct pci_driver *drv;
-	uint32_t bus;
-	uint8_t dev;
-	int irq, pin = 0;
-	__u64 base;
-	int found_pci_device = 0;
-	struct fdt_phandle_args out_irq;
-	fdt32_t fdtaddr[3];
+	struct pf_driver *drv;
+	int idx = 0;
+	int ret = -ENODEV;
+	struct pf_device *dev;
+	int fdt_pf = -1;
 
-	debug("Probe PCI\n");
+	info("Probe PF\n");
 
-	for (bus = 0; bus < PCI_MAX_BUSES; ++bus) {
-		for (dev = 0; dev < PCI_MAX_DEVICES; ++dev) {
-			/* TODO: Retrieve the device identfier */
-			addr.domain   = 0x0;
-			addr.bus      = bus;
-			addr.devid    = dev;
-			 /* TODO: Retrieve the function bus, dev << PCI_DEV_BIT_NBR*/
-			addr.function = 0x0;
+	/* Search all the platform bus devices provided by fdt */
+	do {
+		fdt_pf = fdt_node_offset_idx_by_compatible_list(fdt_start,
+						fdt_pf, pf_device_compatible_list, &idx);
+		if (fdt_pf < 0) {
+			info("End of searching platform devices\n");
+			break;
+		}
 
-			pci_generic_config_read(bus, DEVFN(dev, 0), PCI_VENDOR_ID, 2, (void *)&devid.vendor_id);
-			if (devid.vendor_id == PCI_INVALID_ID) {
-				/* Device doesn't exist */
+		/* Alloc dev */
+		dev = (struct pf_device *) calloc(1, sizeof(*dev));
+		if (!dev) {
+			error("Platform : Failed to initialize: Out of memory!\n");
+			return -ENOMEM;
+		}
+
+		dev->fdt_offset = fdt_pf;
+
+		/* Find drv with compatible-id match table */
+		drv = pf_find_driver(pf_device_compatible_list[idx]);
+		if (!drv) {
+			free(dev);
+			continue;
+		}
+
+		dev->id = *(struct pf_device_id *)drv->device_ids;
+		info("driver %p\n", drv);
+
+		ret = pf_driver_probe_device(drv, dev);
+		if (ret < 0) {
+			free(dev);
+			continue;
+		}
+
+		ret = pf_driver_add_device(drv, dev);
+		if (ret < 0)
+			free(dev);
+	} while (1);
+
+	return ret;
+}
+
+
+static int pf_init()
+{
+	struct pf_driver *drv, *drv_next;
+	int ret = 0;
+
+	if (!pfh.drv_list_initialized) {
+		UK_TAILQ_INIT(&pfh.drv_list);
+		pfh.drv_list_initialized = 1;
+	}
+	UK_TAILQ_INIT(&pfh.dev_list);
+
+	UK_TAILQ_FOREACH_SAFE(drv, &pfh.drv_list, next, drv_next) {
+		if (drv->init) {
+			ret = drv->init();
+			if (ret == 0)
 				continue;
-			}
-
-			/* mark we found any pci device */
-			found_pci_device = 1;
-
-			pci_generic_config_read(bus, DEVFN(dev, 0), PCI_CLASS_REVISION, 4, (void *)&devid.class_id);
-			pci_generic_config_read(bus, DEVFN(dev, 0), PCI_VENDOR_ID, 2, (void *)&devid.vendor_id);
-			pci_generic_config_read(bus, DEVFN(dev, 0), PCI_DEV_ID, 2, (void *)&devid.device_id);
-			pci_generic_config_read(bus, DEVFN(dev, 0), PCI_SUBSYSTEM_VID, 2, (void *)&devid.subsystem_vendor_id);
-			pci_generic_config_read(bus, DEVFN(dev, 0), PCI_SUBSYSTEM_ID, 2, (void *)&devid.subsystem_device_id);
-			info("PCI %02x:%02x.%02x (%04x %04x:%04x): sb=%d,sv=%4x\n",
-				   (int) addr.bus,
-				   (int) addr.devid,
-				   (int) addr.function,
-				   (int) devid.class_id,
-				   (int) devid.vendor_id,
-				   (int) devid.device_id,
-				   (int) devid.subsystem_device_id,
-				   (int) devid.subsystem_vendor_id);
-
-			/* TODO: gracefully judge it is a pci host bridge */
-			if (bus == 0 && DEVFN(dev, 0) == 0) {
-				pci_generic_config_write(bus, 0, PCI_COMMAND, 2, PCI_COMMAND_INTX_DISABLE);
-				pci_generic_config_write(bus, 0, PCI_COMMAND, 2, PCI_COMMAND_IO);
-				continue;
-			} else {
-				base = pcw.pci_device_base + (bus << 5 | dev)*SIZE_PER_PCI_DEV;
-				pci_generic_config_write(bus, DEVFN(dev, 0), PCI_COMMAND, 2, PCI_COMMAND_INTX_DISABLE);
-				pci_generic_config_write(bus, DEVFN(dev, 0), PCI_BASE_ADDRESS_0, 4, (bus << 5 | dev)*SIZE_PER_PCI_DEV);
-				pci_generic_config_write(bus, DEVFN(dev, 0), PCI_COMMAND, 2, PCI_COMMAND_MASTER | PCI_COMMAND_IO);
-			}
-
-			drv = pci_find_driver(&devid);
-			if (!drv) {
-				info("<no driver> for dev id=%d\n", devid.device_id);
-				continue;
-			}
-
-			info("driver %p\n", drv);
-
-			/* probe the irq info*/
-			pci_generic_config_read(bus, DEVFN(dev, 0), PCI_INTERRUPT_PIN, 1, (void *)&pin);
-			out_irq.args_count = 1;
-			out_irq.args[0] = pin;
-			fdtaddr[0] = cpu_to_fdt32((bus << 16) | (DEVFN(dev, 0) << 8));
-			fdtaddr[1] = fdtaddr[2] = cpu_to_fdt32(0);
-
-			gen_pci_irq_parse(fdtaddr, &out_irq);
-			irq = gic_irq_translate(0, out_irq.args[1]);
-
-			arch_pci_driver_add_device(drv, &addr, &devid, irq, base);
+			error("Failed to initialize pf driver %p: %d\n",
+				  drv, ret);
+			UK_TAILQ_REMOVE(&pfh.drv_list, drv, next);
 		}
 	}
-
-	if (found_pci_device == 0)
-		info("No pci device found!\n");
-
 	return 0;
+}
+
+void _pf_register_driver(struct pf_driver *drv)
+{
+	ASSERT(drv != NULL);
+
+	if (!pfh.drv_list_initialized) {
+		UK_TAILQ_INIT(&pfh.drv_list);
+		pfh.drv_list_initialized = 1;
+	}
+	UK_TAILQ_INSERT_TAIL(&pfh.drv_list, drv, next);
+}
+
+
+/* Register this bus driver to libukbus:
+ */
+static struct pf_bus_handler pfh = {
+	.b.init = pf_init,
+	.b.probe = pf_probe
+};
+// UK_BUS_REGISTER_PRIORITY(&pfh.b, 1);
+
+void coffer_pf_bus_register()
+{
+    _uk_bus_register(&pfh.b);
 }
