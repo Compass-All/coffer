@@ -65,7 +65,7 @@ void remove_node(bin_t * bin, node_t *node) {
 }
 
 node_t *get_best_fit(bin_t *bin, size_t size) {
-    size_t index = get_index_by_bin(bin);
+    __unused size_t index = get_index_by_bin(bin);
 
     if (bin->head == NULL) {
         debug("bin %lu (~ 0x%lx) is empty, searching for size 0x%lx\n",

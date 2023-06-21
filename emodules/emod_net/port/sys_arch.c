@@ -6,7 +6,7 @@ u32 sys_now()
 {
 	emod_net_timestamp ts;
 	emod_net_timestamp_get(&ts);
-    return (u32)ts;
+    return (u32)(ts >> 32);
 }
 
 void free(void *ptr)

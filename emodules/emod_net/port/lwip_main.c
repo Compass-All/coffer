@@ -54,6 +54,8 @@ void emod_net_poll(void)
 
     emod_net_timestamp_get(&now);
 
+    debug("now: %lu\n", now);
+
     sys_check_timeouts();
     // Process lwip network-related timers.
     // if (emod_net_timestamp_diff(&ts_etharp, &now) >= EMOD_NET_ARP_TIMER_INTERVAL) {
@@ -89,7 +91,7 @@ int emod_net_aton(char * str_addr, ip4_addr_t * net_addr)
 void emod_net_wait_for_interrupt()
 {
     // Wait for interrupt
-    sleep(1);
+    sleep(500);
 }
 
 //
@@ -98,7 +100,6 @@ void emod_net_wait_for_interrupt()
 int lwip_main(void)
 {
     // [snip other non-lwip initializations]
-    emod_net_timestamp_init();       // Initialize timestamp generator
     while (1) {
         // [snip other non-lwip functions]
         emod_net_wait_for_interrupt();   // Awakened by network, timer or other interrupt

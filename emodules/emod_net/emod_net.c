@@ -10,6 +10,7 @@
 #include "port/virtio_net/virtio_pci.h"
 #include "port/virtio_net/virtio_net.h"
 #include "port/lwip_init.h"
+#include "port/timestamp.h"
 
 // ---------------
 // emodule net descriptor
@@ -84,23 +85,25 @@ vaddr_t net_init(vaddr_t emod_manager_getter)
 	// init dependency
 	init_dependency();
 
-	debug("Check Point: 0\n");
+	info("Check Point: 0\n");
+    emod_net_timestamp_init();       // Initialize timestamp generator
+	info("timer init done\n");
 	uk_bus_lib_init();
-	debug("Check Point uk_bus_lib_init done\n");
+	info("Check Point uk_bus_lib_init done\n");
 	coffer_pci_bus_register();
-	debug("Check Point coffer_pci_bus_register done\n");
+	info("Check Point coffer_pci_bus_register done\n");
 	coffer_pf_bus_register();
-	debug("Check Point coffer_pf_bus_register done\n");
+	info("Check Point coffer_pf_bus_register done\n");
 	coffer_virtio_bus_register();
-	debug("Check Point coffer_virtio_bus_register done\n");
+	info("Check Point coffer_virtio_bus_register done\n");
 	coffer_pf_driver_register();
-	debug("Check Point coffer_pf_driver_register done\n");
+	info("Check Point coffer_pf_driver_register done\n");
 	coffer_pci_driver_register();
-	debug("Check Point coffer_pci_driver_register done\n");
+	info("Check Point coffer_pci_driver_register done\n");
 	coffer_virtio_bus_driver_register();
-	debug("Check Point coffer_virtio_bus_driver_register done\n");
+	info("Check Point coffer_virtio_bus_driver_register done\n");
 	liblwip_init();
-	debug("Check Point liblwip_init done\n");
+	info("Check Point liblwip_init done\n");
 
 	// invoke lwip_main() and never returns
 	lwip_main();

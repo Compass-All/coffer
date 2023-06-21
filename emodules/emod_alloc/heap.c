@@ -44,7 +44,7 @@ RESET,
     head->next, head->hole ? "" : " (meaningless)",
     head->prev, head->hole ? "" : " (meaningless)");
 
-    footer_t *foot = get_foot(head);
+    __unused footer_t *foot = get_foot(head);
     printd(
 KBLU
 "struct footer @ %p\n"
@@ -74,7 +74,7 @@ __unused void dump_bin(bin_t *bin)
     if (bin->head == NULL)
         return;
 
-    size_t index = get_index_by_bin(bin);
+    __unused size_t index = get_index_by_bin(bin);
     debug("bin %lu (~0x%lx):\n", index, 4UL << index);
 
     node_t *temp = bin->head;

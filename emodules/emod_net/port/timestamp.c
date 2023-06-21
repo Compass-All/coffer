@@ -46,7 +46,7 @@ void sleep(u32 ms)
     emod_net_timestamp_get(&ts1);
     while (1) {
         emod_net_timestamp_get(&ts2);
-        if (emod_net_timestamp_diff(&ts1, &ts2) >= ms * 1000)
+        if (emod_net_timestamp_diff(&ts1, &ts2) >= ms * 1000000000)
             break;
     }
 }
