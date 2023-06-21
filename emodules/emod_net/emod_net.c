@@ -88,8 +88,6 @@ vaddr_t net_init(vaddr_t emod_manager_getter)
 	info("Check Point: 0\n");
     emod_net_timestamp_init();       // Initialize timestamp generator
 	info("timer init done\n");
-	uk_bus_lib_init();
-	info("Check Point uk_bus_lib_init done\n");
 	coffer_pci_bus_register();
 	info("Check Point coffer_pci_bus_register done\n");
 	coffer_pf_bus_register();
@@ -98,6 +96,8 @@ vaddr_t net_init(vaddr_t emod_manager_getter)
 	info("Check Point coffer_virtio_bus_register done\n");
 	coffer_pf_driver_register();
 	info("Check Point coffer_pf_driver_register done\n");
+	uk_bus_lib_init();
+	info("Check Point uk_bus_lib_init done\n");
 	coffer_pci_driver_register();
 	info("Check Point coffer_pci_driver_register done\n");
 	coffer_virtio_bus_driver_register();
