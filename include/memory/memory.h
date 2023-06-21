@@ -15,6 +15,9 @@
 #ifndef __RISCV_ASM_H__
 #define PAGE_SHIFT 12
 #define PAGE_SIZE (1UL << PAGE_SHIFT)
+#define __PAGE_SIZE PAGE_SIZE
+#define PAGE_MASK	(~(PAGE_SIZE - 1))
+#define __PAGE_MASK	PAGE_MASK
 #endif
 
 #define PAGE_UP(addr) (ROUNDUP(addr, PAGE_SIZE))

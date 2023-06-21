@@ -3,7 +3,7 @@
 #pragma once
 
 #define NO_SYS                      1
-#define NO_SYS_NO_TIMERS            1
+// #define NO_SYS_NO_TIMERS            1
 #define MEM_LIBC_MALLOC             1
 #define MEMP_MEM_MALLOC             1
 #define MEM_ALIGNMENT               4
@@ -42,7 +42,7 @@
 #define MEMP_STATS                  0
 #define LINK_STATS                  0
 #define ETHARP_TRUST_IP_MAC         0
-#define ETH_PAD_SIZE                2
+#define ETH_PAD_SIZE                0
 #define LWIP_CHKSUM_ALGORITHM       2
 #define LWIP_NO_CTYPE_H             1
 

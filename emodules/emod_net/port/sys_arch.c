@@ -1,5 +1,4 @@
 #include "arch/sys_arch.h"
-#include "include/arch/sys_arch.h"
 #include "timestamp.h"
 #include <string.h>
 
@@ -23,6 +22,11 @@ void *malloc(size_t size)
 void *calloc(size_t count, size_t size)
 {
     return emod_alloc.emod_alloc_api.calloc(count, size);
+}
+
+void *memalign(size_t alignment, size_t size)
+{
+	return emod_alloc.emod_alloc_api.memalign(alignment, size);
 }
 
 int atoi(const char *strn)
@@ -99,4 +103,9 @@ int memcmp(const void *s1, const void *s2, size_t cnt)
 		p2++;
 	}
 	return 0;
+}
+
+paddr_t ukplat_virt_to_phys(const void *vaddr)
+{
+	return get_pa((vaddr_t)vaddr);
 }

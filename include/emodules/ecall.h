@@ -1,6 +1,6 @@
 #pragma once
 #include <types.h>
-#include <util/fence.h>
+#include <util/cpu.h>
 
 #define SBI_ECALL(__extid, __funid, __arg0, __arg1, __arg2)     \
     ({                                                          \

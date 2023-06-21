@@ -6,6 +6,9 @@ mount sys /sys -t sysfs
 mount -t debugfs none debug
 
 /prog/host/test_eapp /prog/enclave/eapp_write
+/prog/host/reset_coffer
+
+/prog/host/test_eapp /prog/enclave/eapp_test_ecall 57005
 
 # command="/prog/enclave/sqlite-bench/sqlite-bench \
 # 	--num=500 \

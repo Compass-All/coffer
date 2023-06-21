@@ -2,6 +2,13 @@
 #include "dependency.h"
 #include "port/lwip_main.h"
 
+#include "bus.h"
+#include "pci_bus.h"
+#include "port/virtio_net/virtio_bus.h"
+#include "port/virtio_net/virtio_pci.h"
+#include "port/virtio_net/virtio_net.h"
+#include "port/lwip_init.h"
+
 // ---------------
 // emodule net descriptor
 
@@ -74,6 +81,21 @@ vaddr_t net_init(vaddr_t emod_manager_getter)
 
 	// init dependency
 	init_dependency();
+
+	debug("Check Point: 0\n");
+	uk_bus_lib_init();
+	debug("Check Point uk_bus_lib_init done\n");
+	coffer_pci_bus_register();
+	debug("Check Point coffer_pci_bus_register done\n");
+	coffer_virtio_bus_register();
+	debug("Check Point coffer_virtio_bus_register done\n");
+	coffer_pci_driver_register();
+	debug("Check Point coffer_pci_driver_register done\n");
+	coffer_virtio_bus_driver_register();
+	debug("Check Point coffer_virtio_bus_driver_register done\n");
+	liblwip_init();
+	debug("Check Point liblwip_init done\n");
+
 	// invoke lwip_main() and never returns
 	lwip_main();
 

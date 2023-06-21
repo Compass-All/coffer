@@ -29,6 +29,10 @@ emodule-objs-y += lwip/src/netif/ethernet.o
 
 emodule-objs-y += port/sys_arch.o
 emodule-objs-y += port/timestamp.o
-emodule-objs-y += port/virtio_net.o
+
+emodule-objs-y += port/virtio_net/virtio_net.o
+emodule-objs-y += port/virtio_net/virtio_ring.o
+
+emodule-objs-y += port/common/sglist.o
 
 emodule-objs-y += port/lwip_main.o

@@ -40,3 +40,28 @@
 #define SYS_ARCH_PROTECT(x) do { } while(0)
 #define SYS_ARCH_UNPROTECT(x) do { } while(0)
 #define SYS_ARCH_DECL_PROTECT(x) u32_t x
+
+#ifndef __offsetof
+#define __offsetof(t, field) \
+	((__sz)(__uptr)((const volatile void *)&((t *)0)->field))
+#endif
+
+#ifndef DEQUALIFY
+#define DEQUALIFY(t, a) ((t)(__uptr)(const volatile void *)(a))
+#endif
+
+#ifndef __containerof
+#define __containerof(x, s, m) \
+	DEQUALIFY(s *, (const volatile char *)(x) - __offsetof(s, m))
+#endif
+
+#ifndef DECONST
+#define DECONST(t, a) ((t)((__uptr)((const void *)(a))))
+#endif
+
+#ifndef UK_CTASSERT
+#define UK_CTASSERT(x)             _UK_CTASSERT(x, __LINE__)
+#define _UK_CTASSERT(x, y)         __UK_CTASSERT(x, y)
+#define __UK_CTASSERT(x, y)        typedef __maybe_unused \
+	char __assert_ ## y [(x) ? 1 : -1]
+#endif /* UK_CTASSERT */
