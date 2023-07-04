@@ -5,6 +5,13 @@ mount proc /proc -t proc
 mount sys /sys -t sysfs
 mount -t debugfs none debug
 
+ifconfig lo up
+ifconfig lo 127.0.0.1
+
+ifconfig eth0 up
+ifconfig eth0 10.0.2.15
+route add default gw 10.0.2.2
+
 /prog/host/test_eapp /prog/enclave/eapp_write
 /prog/host/reset_coffer
 

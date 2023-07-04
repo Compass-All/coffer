@@ -129,6 +129,49 @@ static inline int pf_driver_probe_device(struct pf_driver *drv,
 
 static int pf_probe(void)
 {
+	struct pf_device *dev;
+	struct pf_driver *drv;
+	int idx = 1; // hardcoded idx
+	int ret = -ENODEV;
+
+	drv = pf_find_driver(pf_device_compatible_list[idx]);
+	if (!drv) {
+		error("Platform : Failed to find driver for device\n");
+		return -ENODEV;
+	}
+
+	dev = (struct pf_device *)calloc(1, sizeof(*dev));
+	if (!dev) {
+		error("Platform : Failed to initialize: Out of memory!\n");
+		return -ENOMEM;
+	}
+
+	dev->id = *(struct pf_device_id *)drv->device_ids;
+	info("pf_probe devid=%d\n", dev->id.device_id);
+
+	info("pf driver probe device\n");
+	ret = pf_driver_probe_device(drv, dev);
+	if (ret < 0) {
+		free(dev);
+	}
+
+	info("pf driver add device\n");
+	ret = pf_driver_add_device(drv, dev);
+	if (ret < 0) {
+		free(dev);
+	}
+
+	return ret;
+}
+
+/**
+* 1. Walk through the fdt
+* 2. Find the driver in the compatible-id match table
+* 3. Probe the device
+* 4. Add the device to the driver
+*/
+__unused static int pf_probe_using_fdt(void)
+{
 	struct pf_driver *drv;
 	int idx = 0;
 	int ret = -ENODEV;
@@ -180,6 +223,10 @@ static int pf_probe(void)
 }
 
 
+/**
+* 1. If the driver list in the platform bus is not initialized, initialize it
+* 2. Initialize all the drivers in the driver list
+*/
 static int pf_init()
 {
 	struct pf_driver *drv, *drv_next;
@@ -226,5 +273,6 @@ static struct pf_bus_handler pfh = {
 
 void coffer_pf_bus_register()
 {
+	debug("pfh.b added to uk_bus_list\n");
     _uk_bus_register(&pfh.b);
 }

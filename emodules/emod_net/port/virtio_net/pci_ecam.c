@@ -42,6 +42,8 @@
 // #include <ofw/fdt.h>
 // #include <libfdt.h>
 #include "pci_ecam.h"
+#include "memory/memory.h"
+#include "memory/page_table.h"
 #include "virtio_config.h"
 #include "libfdt.h"
 #include "fdt.h"
@@ -229,6 +231,15 @@ static int irq_find_parent(const void *fdt, int child)
 
 int gen_pci_irq_parse(const fdt32_t *addr, struct fdt_phandle_args *out_irq)
 {
+	// out_irq and ret
+	out_irq->args_count = 1;
+	out_irq->args[0] = 0x21; // 33
+	return 0;
+}
+
+// TODO: fix interrupts
+__unused int gen_pci_irq_parse_by_fdt(const fdt32_t *addr, struct fdt_phandle_args *out_irq)
+{
 	int ipar, tnode, old = 0, newpar = 0;
 	fdt32_t initial_match_array[16];
 	const fdt32_t *match_array = initial_match_array;
@@ -401,8 +412,51 @@ fail:
 	return rc;
 }
 
-
 static int gen_pci_probe(struct pf_device *pfdev __unused)
+{
+	__u64 reg_base;
+	__u64 reg_size;
+
+	// set reg_base and reg_size
+	reg_base = 0x30000000;
+	reg_size = 0x10000000;
+
+	// set pcw and map config mega-page
+	// TODO: setup I/O virt addr range
+	pcw.config_base = reg_base;
+	pcw.config_space_size = reg_size;
+	info("pcw reg_base: 0x%llx, reg_size: 0x%llx\n", reg_base, reg_size);
+	for (__u32 i = 0; i < pcw.config_space_size / PARTITION_SIZE; i++) {
+		map_page(
+			pcw.config_base + i * PARTITION_SIZE,
+			pcw.config_base + i * PARTITION_SIZE,
+			PTE_R | PTE_W,
+			SV39_LEVEL_MEGA
+		);
+	}
+
+	// set bus range
+	pcw.br.bus_start = 0x0;
+	pcw.br.bus_end = 0xff;
+	info("pcw bus_start: 0x%x, bus_end: 0x%x\n", pcw.br.bus_start, pcw.br.bus_end);
+
+	// set io range
+	pcw.pci_device_base = 0x3000000;
+	pcw.pci_device_limit = 0x10000;
+	info("pcw pci_device_base: 0x%x, pci_device_limit: 0x%x\n", pcw.pci_device_base, pcw.pci_device_limit);
+	for (__u32 i = 0; i < pcw.pci_device_limit / PAGE_SIZE; i++) {
+		map_page(
+			pcw.pci_device_base + i * PAGE_SIZE,
+			pcw.pci_device_base + i * PAGE_SIZE,
+			PTE_R | PTE_W,
+			SV39_LEVEL_PAGE
+		);
+	}
+
+	return 0;
+}
+
+__unused static int gen_pci_probe_by_fdt(struct pf_device *pfdev __unused)
 {
 	const fdt32_t *prop;
 	int prop_len;
@@ -411,6 +465,8 @@ static int gen_pci_probe(struct pf_device *pfdev __unused)
 	struct pci_range range;
 	struct pci_range_parser parser;
 	int err;
+
+	debug("Checkpoint\n");
 
 	/* 1.Get the base and size of config space */
 	gen_pci_fdt = fdt_node_offset_by_compatible(fdt_start, -1,
@@ -488,6 +544,7 @@ static int gen_pci_drv_init()
 	// 	return -EINVAL;
 
 	// a = drv_allocator;
+	debug("CP\n");
 
 	return 0;
 }
@@ -501,10 +558,15 @@ static const struct device_match_table gen_pci_match_table[];
 
 static int gen_pci_id_match_compatible(const char *compatible)
 {
-	for (int i = 0; gen_pci_match_table[i].compatible != NULL; i++)
-		if (strcmp(gen_pci_match_table[i].compatible, compatible) == 0)
-			return gen_pci_match_table[i].id->device_id;
+	info("compatible: %s\n", compatible);
 
+	for (int i = 0; gen_pci_match_table[i].compatible != NULL; i++)
+		if (strcmp(gen_pci_match_table[i].compatible, compatible) == 0) {
+			debug("found, id = %d\n", gen_pci_match_table[i].id->device_id);
+			return gen_pci_match_table[i].id->device_id;
+		}
+
+	debug("not found\n");
 	return -1;
 }
 
@@ -530,5 +592,6 @@ static const struct device_match_table gen_pci_match_table[] = {
 
 void coffer_pf_driver_register()
 {
+	debug("gen_pci_driver added to phf.drv_list\n");
     _pf_register_driver(&gen_pci_driver);
 }

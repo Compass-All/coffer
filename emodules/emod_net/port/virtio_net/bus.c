@@ -50,7 +50,7 @@ void _uk_bus_register(struct uk_bus *b)
 	ASSERT(b != NULL);
 	ASSERT(b->probe != NULL);
 
-	debug("Register bus handler: %p\n", b);
+	debug("Register bus: %p\n", b);
 	uk_list_add_tail(&b->list, &uk_bus_list);
 	++bus_count;
 }
@@ -74,7 +74,6 @@ static int uk_bus_init(struct uk_bus *b)
 {
 	ASSERT(b != NULL);
 
-	debug("Initialize bus handler %p...\n", b);
 	if (!b->init)
 		return 0;
 	return b->init();
@@ -86,7 +85,6 @@ static int uk_bus_probe(struct uk_bus *b)
 	ASSERT(b != NULL);
 	ASSERT(b->probe != NULL);
 
-	debug("Probe bus %p...\n", b);
 	return b->probe();
 }
 
@@ -96,6 +94,8 @@ static unsigned int uk_bus_init_all()
 	struct uk_bus *b, *b_next;
 	unsigned int ret = 0;
 	int status = 0;
+
+	warn("uk_bus_count: %d\n", uk_bus_count());
 
 	if (uk_bus_count() == 0)
 		return 0;
@@ -119,11 +119,13 @@ static unsigned int uk_bus_probe_all(void)
 {
 	struct uk_bus *b;
 	unsigned int ret = 0;
+	int count = 0;
 
 	if (uk_bus_count() == 0)
 		return 0;
 
 	uk_list_for_each_entry(b, &uk_bus_list, list) {
+		info("Probe bus %d...\n", count++);
 		if (uk_bus_probe(b) >= 0)
 			++ret;
 	}

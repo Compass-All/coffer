@@ -26,4 +26,7 @@ extern emod_debug_t 	emod_debug;
 #define warn(fmt, ...) \
 	printd(KYEL "[%s] " fmt RESET, __func__, ##__VA_ARGS__)
 
+#define show(v) 	debug(#v "\t=\t0x%lx\n", (v))
+#define LOG(v)		printf("[%s]" #v "\t=\t0x%lx\n", __func__, (v))
+
 #define ASSERT(_)

@@ -136,6 +136,8 @@ int virtio_bus_register_device(struct virtio_dev *vdev)
 	struct virtio_driver *drv = NULL;
 	int rc = 0;
 
+	debug("CheckPoint\n");
+
 	ASSERT(vdev);
 	/* Check for the dev with the driver list */
 	drv = find_match_drv(vdev);
