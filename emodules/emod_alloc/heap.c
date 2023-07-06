@@ -258,6 +258,7 @@ void *heap_alloc(size_t size) {
 }
 
 // todo: return the new region near the top boundary of the found node
+// Note: The order is reversed
 void *heap_memalign(size_t sz, size_t align)
 {
     debug("memalign size: 0x%lx, align: 0x%lx\n",
@@ -279,6 +280,10 @@ void *heap_memalign(size_t sz, size_t align)
             panic("cannot alloc\n");
     }
 
+    if (((u64)found + sizeof(node_t)) % align == 0) {
+        return heap_alloc(size);
+    }
+
     // remove found node
     remove_node(heap.bins[index], found);
 
@@ -287,12 +292,13 @@ void *heap_memalign(size_t sz, size_t align)
     node_t *node = (node_t *)(p - sizeof(node_t));
     node->hole = 0;
     node->size = sz;
-    create_foot(node);
 
-    size_t dist = (u64)node - (u64)found;
-    size_t prev_sz = dist > overhead ? (dist - overhead) : 0;
-    size_t remain_sz = found->size - prev_sz - sz - 2 * overhead;
+    ssize_t dist = (u64)node - (u64)found;
+    ssize_t prev_sz = dist > overhead ? (dist - overhead) : 0;
+    ssize_t remain_sz = found->size - prev_sz - sz - 2 * overhead;
     show(dist); show(prev_sz); show(remain_sz);
+
+    create_foot(node);
 
     __unused int prev_new = 0, remain_new = 0;
 
@@ -323,7 +329,8 @@ void *heap_memalign(size_t sz, size_t align)
 
         remain_new = 1;
     } else {
-        debug("remaining chunk is too small\n");
+        debug("remaining chunk is too small: remain_sz = 0x%lx\n",
+            remain_sz);
     }
 
     node_t *wild = get_wilderness();
