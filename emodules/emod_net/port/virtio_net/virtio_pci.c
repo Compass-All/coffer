@@ -120,10 +120,12 @@ static int vpci_legacy_notify(struct virtio_dev *vdev, __u16 queue_id)
 {
 	struct virtio_pci_dev *vpdev;
 
+	debug("CP1\n");
 	ASSERT(vdev);
 	vpdev = to_virtiopcidev(vdev);
 	virtio_cwrite16((void *)(unsigned long) vpdev->pci_base_addr,
 			VIRTIO_PCI_QUEUE_NOTIFY, queue_id);
+	debug("CP2\n");
 
 	return 0;
 }
@@ -187,6 +189,10 @@ static struct virtqueue *vpci_legacy_vq_setup(struct virtio_dev *vdev,
 	flags = local_irq_save(0);
 	UK_TAILQ_INSERT_TAIL(&vpdev->vdev.vqs, vq, next);
 	local_irq_restore(flags);
+
+	info("Virtqueue %d created for virtio-pci device %p, "
+		"vq_pa = 0x%lx, vq_va = %p\n",
+		queue_id, vdev, addr, vq);
 
 err_exit:
 	return vq;

@@ -13,9 +13,13 @@
 
 /* Platform byte ops */
 #define LWIP_PLATFORM_BYTESWAP 1
-#define LWIP_PLATFORM_HTONS(x) ((u16_t)(((x) & 0xff) << 8) | (((x) >> 8) & 0xff))
-#define LWIP_PLATFORM_HTONL(x) ((u32_t)(((x) & 0xff) << 24) | (((x) >> 8) & 0xff00) | \
-    (((x) >> 24) & 0xff) | (((x) >> 24) & 0xff00))
+#define LWIP_PLATFORM_HTONS(x) 	((((x) & 0xff) << 8) | (((x) & 0xff00) >> 8))
+#define LWIP_PLATFORM_HTONL(x)	( \
+        (((x) & 0xFF) << 24) | \
+        ((((x) >> 8) & 0xFF) << 16) | \
+        ((((x) >> 16) & 0xFF) << 8) | \
+        (((x) >> 24) & 0xFF) \
+    )
 #define lwip_htons(x) LWIP_PLATFORM_HTONS(x)
 #define lwip_htonl(x) LWIP_PLATFORM_HTONL(x)
 #define lwip_itoa(x, y, z) snprintf(x, y, "%d", z)

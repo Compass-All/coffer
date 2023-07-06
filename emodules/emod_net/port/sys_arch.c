@@ -26,7 +26,7 @@ void *calloc(size_t count, size_t size)
 
 void *memalign(size_t alignment, size_t size)
 {
-	return emod_alloc.emod_alloc_api.memalign(alignment, size);
+	return emod_alloc.emod_alloc_api.memalign(size, alignment);
 }
 
 int atoi(const char *strn)

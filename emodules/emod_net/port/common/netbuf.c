@@ -52,6 +52,9 @@ void uk_netbuf_init_indir(struct uk_netbuf *m,
 	ASSERT(buf || (buf == NULL && buflen == 0));
 	ASSERT(headroom <= buflen);
 
+	debug("uk_netbuf_init_indir: m=%p buf=%p buflen=%zu headroom=%u priv=%p dtor=%p\n",
+	      m, buf, buflen, headroom, priv, dtor);
+
 	/* Reset pbuf, non-listed fields are automatically set to 0 */
 	*m = (struct uk_netbuf) {
 		.buf    = buf,

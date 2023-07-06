@@ -16,10 +16,6 @@
 #include "virtio_net/virtio_net.h"
 #include <util/gnu_attribute.h>
 
-#define EMOD_NET_IPADDR_BASE    "192.168.0.2"
-#define EMOD_NET_IPADDR_GW      "192.168.0.1"
-#define EMOD_NET_IPADDR_NETMASK "255.255.255.0"
-
 ip4_addr_t emod_net_ip_addr;
 
 #define EMOD_NET_ARP_TIMER_INTERVAL      (ARP_TMR_INTERVAL * 1000)
@@ -30,7 +26,7 @@ ip4_addr_t emod_net_ip_addr;
 // static emod_net_timestamp ts_tcp;
 // static emod_net_timestamp ts_ipreass;
 
-static struct netif virtio_netif;
+// static struct netif virtio_netif;
 
 // Poll for received frames
 // extern void virtio_net_poll(struct netif *);
@@ -54,7 +50,7 @@ void emod_net_poll(void)
 
     emod_net_timestamp_get(&now);
 
-    debug("now: %lu\n", now);
+    // debug("now: %lu\n", now);
 
     sys_check_timeouts();
     // Process lwip network-related timers.
@@ -81,7 +77,6 @@ void emod_net_poll(void)
 //
 int emod_net_aton(char * str_addr, ip4_addr_t * net_addr)
 {
-    struct in_addr a;
     int i = inet_aton(str_addr, &net_addr->addr);
     if (!i)
         return -1;

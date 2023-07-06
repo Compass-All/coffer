@@ -320,7 +320,7 @@ static inline struct virtqueue *virtio_vqueue_setup(struct virtio_dev *vdev,
 {
 	struct virtqueue *vq = ERR2PTR(-ENOTSUP);
 
-	ASSERT(vdev && a);
+	ASSERT(vdev);
 
 	if (likely(vdev->cops->vq_setup))
 		vq = vdev->cops->vq_setup(vdev, vq_id, nr_desc, callback, a);

@@ -301,8 +301,6 @@ struct uk_sglist *uk_sglist_alloc(int nsegs)
 {
 	struct uk_sglist *sg;
 
-	ASSERT(a);
-
 	/* Allocate the scatter/gather list */
 	sg = malloc(sizeof(struct uk_sglist) +
 			(nsegs * sizeof(struct uk_sglist_seg)));
@@ -318,8 +316,6 @@ struct uk_sglist *uk_sglist_alloc(int nsegs)
 
 void uk_sglist_free(struct uk_sglist *sg)
 {
-	ASSERT(sg && a);
-
 	if (uk_refcount_release(&sg->sg_refs))
 		free(sg);
 }
@@ -329,8 +325,6 @@ struct uk_sglist *uk_sglist_build(void *buf,
 {
 	struct uk_sglist *sg;
 	int nsegs;
-
-	ASSERT(a);
 
 	if (len == 0)
 		return NULL;
@@ -354,8 +348,6 @@ struct uk_sglist *uk_sglist_build(void *buf,
 struct uk_sglist *uk_sglist_clone(struct uk_sglist *sg)
 {
 	struct uk_sglist *new;
-
-	ASSERT(a);
 
 	if (!sg)
 		return NULL;

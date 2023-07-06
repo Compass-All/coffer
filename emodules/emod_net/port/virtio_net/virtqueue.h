@@ -279,6 +279,8 @@ static inline void virtqueue_host_notify(struct virtqueue *vq)
 {
 	ASSERT(vq);
 
+	info("notify host\n");
+
 	/*
 	 * Before notifying the virtio backend on the host we should make sure
 	 * that the virtqueue index update operation happened. Note that this

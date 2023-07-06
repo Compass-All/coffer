@@ -44,6 +44,7 @@
 // #include <uk/alloc.h>
 // #include <uk/print.h>
 #include <uk_netdev.h>
+#include "memory/riscv_barrier.h"
 #include "netdev.h"
 
 #include "lwip/opt.h"
@@ -555,6 +556,9 @@ err_t uknetdev_init(struct netif *nf)
 			     uk_netdev_id_get(dev)));
 		return ERR_IF;
 	}
+	debug("checkpoint 1\n");
+
+	rmb();
 
 	/* Start interface */
 	ret = uk_netdev_start(dev);
@@ -565,6 +569,8 @@ err_t uknetdev_init(struct netif *nf)
 			     uk_netdev_id_get(dev)));
 		return ERR_IF;
 	}
+
+	debug("checkpoint 2\n");
 
 	/* Driver callbacks */
 #if LWIP_IPV4

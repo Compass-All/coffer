@@ -236,6 +236,9 @@ __u64 virtqueue_feature_negotiate(__u64 feature_set)
 	 * add support to transport feature in the future.
 	 */
 	feature &= feature_set;
+
+	info("Negotiated feature set 0x%lx\n", feature);
+
 	return feature;
 }
 
@@ -398,8 +401,6 @@ struct virtqueue *virtqueue_create(__u16 queue_id, __u16 nr_descs, __u16 align,
 	int rc;
 	size_t ring_size = 0;
 
-	ASSERT(a);
-
 	vrq = malloc(sizeof(*vrq) +
 			nr_descs * sizeof(struct virtqueue_desc_info));
 	if (!vrq) {
@@ -416,6 +417,9 @@ struct virtqueue *virtqueue_create(__u16 queue_id, __u16 nr_descs, __u16 align,
 
 	ring_size = vring_size(nr_descs, align);
 	vrq->vring_mem = memalign(__PAGE_SIZE, ring_size);
+	debug("ring_size = 0x%lx, vrq->vring_mem = 0x%lx\n",
+		ring_size, vrq->vring_mem);
+
 	if (vrq->vring_mem == NULL) {
 		error("Allocation of vring failed\n");
 		rc = -ENOMEM;

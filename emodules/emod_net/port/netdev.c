@@ -41,6 +41,7 @@
 #include <util/arithmetic.h>
 #include <util/gnu_attribute.h>
 #include <util/cpu.h>
+#include "../lwipopts.h"
 
 struct uk_netdev_list uk_netdev_list =
 	UK_TAILQ_HEAD_INITIALIZER(uk_netdev_list);
@@ -50,9 +51,9 @@ static uint16_t netdev_count;
  * coexist. For example like:
  * Driver Name:IP Address:Net Mask
  */
-static char *ipv4_addr;
-static char *ipv4_subnet_mask;
-static char *ipv4_gw_addr;
+static char *ipv4_addr = EMOD_NET_IPADDR_BASE;
+static char *ipv4_subnet_mask = EMOD_NET_IPADDR_NETMASK;
+static char *ipv4_gw_addr = EMOD_NET_IPADDR_GW;
 
 // UK_LIB_PARAM_STR(ipv4_addr);
 // UK_LIB_PARAM_STR(ipv4_subnet_mask);

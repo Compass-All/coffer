@@ -67,6 +67,7 @@ static inline void uk_refcount_init(__atomic *ref, __u32 value)
  */
 static inline void uk_refcount_acquire(__atomic *ref)
 {
+#define __U32_MAX 0xFFFFFFFF
 	__refcnt_assert((ref != __NULL) && (ref->counter < __U32_MAX));
 
 	ukarch_inc(&ref->counter);

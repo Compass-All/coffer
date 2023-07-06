@@ -2,6 +2,8 @@ emodule-objs-y =
 emodule-objs-y += emod_net.o 
 emodule-objs-y += dependency.o 
 
+emodule-objs-y += lwip/src/api/err.o
+
 emodule-objs-y += lwip/src/core/mem.o
 emodule-objs-y += lwip/src/core/memp.o
 emodule-objs-y += lwip/src/core/timeouts.o
@@ -24,6 +26,7 @@ emodule-objs-y += lwip/src/core/ipv4/dhcp.o
 emodule-objs-y += lwip/src/core/ipv4/ip4_addr.o
 emodule-objs-y += lwip/src/core/ipv4/ip4_frag.o
 emodule-objs-y += lwip/src/core/ipv4/etharp.o
+emodule-objs-y += lwip/src/core/ipv4/acd.o
 
 emodule-objs-y += lwip/src/netif/ethernet.o
 

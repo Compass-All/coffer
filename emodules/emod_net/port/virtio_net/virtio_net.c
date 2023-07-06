@@ -324,8 +324,10 @@ out:
 	/**
 	 * Notify the host, when we submit new descriptor(s).
 	 */
-	if (notify && filled)
+	debug("notify %d filled %d\n", notify, filled);
+	if (notify && filled) {
 		virtqueue_host_notify(rxq->vq);
+	}
 
 	return status;
 }
@@ -709,6 +711,9 @@ static int virtio_netdev_vqueue_setup(struct virtio_net_device *vndev,
 		hwvq_id = vndev->txqs[id].hwvq_id;
 	}
 
+	debug("max_desc: %"__PRIu16" nr_desc: %"__PRIu16"\n",
+		  max_desc, nr_desc);
+
 	if (unlikely(max_desc < nr_desc)) {
 		error("Max allowed desc: %"__PRIu16" Requested desc:%"__PRIu16"\n",
 			  max_desc, nr_desc);
@@ -774,6 +779,7 @@ static struct uk_netdev_tx_queue *virtio_netdev_tx_queue_setup(
 		goto err_exit;
 	}
 	txq = &vndev->txqs[rc];
+	info("queue_id: %"__PRIu16" txq: %p\n", queue_id, txq);
 exit:
 	return txq;
 
@@ -1130,11 +1136,13 @@ static int virtio_net_start(struct uk_netdev *n)
 		virtqueue_intr_disable(d->rxqs[i].vq);
 		d->rxqs[i].intr_enabled = 0;
 	}
+	debug("RX queues: %d\n", d->rx_vqueue_cnt);
 
 	for (i = 0; i < d->tx_vqueue_cnt; i++) {
 		virtqueue_intr_disable(d->txqs[i].vq);
 		d->txqs[i].intr_enabled = 0;
 	}
+	debug("TX queues: %d\n", d->tx_vqueue_cnt);
 
 	/*
 	 * Set the DRIVER_OK status bit. At this point the device is "live".
