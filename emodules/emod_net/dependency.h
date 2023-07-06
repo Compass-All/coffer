@@ -29,4 +29,10 @@ extern emod_debug_t 	emod_debug;
 #define show(v) 	debug(#v "\t=\t0x%lx\n", (v))
 #define LOG(v)		printf("[%s]" #v "\t=\t0x%lx\n", __func__, (v))
 
-#define ASSERT(_)
+#define ASSERT(x) \
+	do { \
+		if (!(x)) { \
+            error("[%s: %u] Assertion failed: %s\n", __FILE__, __LINE__, #x); \
+			panic("Panic"); \
+		} \
+	} while (0)
