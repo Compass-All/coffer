@@ -2,6 +2,7 @@
 #include "dependency.h"
 #include "printf.h"
 #include "timer.h"
+#include "util/console.h"
 #include <util/gnu_attribute.h>
 
 // Emodule Debug Descriptor
@@ -52,7 +53,7 @@ static void hexdump(vaddr_t addr, usize len)
 	debug("##### end of hexdump\n");
 }
 
-static void assert(u8 *ptr1, u8 *ptr2, usize len)
+static void cmp_check(u8 *ptr1, u8 *ptr2, usize len)
 {
 	if (!ptr1 || !ptr2) {
 		debug("NULL Pointer during assertion\n");
@@ -87,7 +88,7 @@ vaddr_t debug_init(vaddr_t emod_manager_getter)
 	emod_debug_api.printf 	= printf_;
 	emod_debug_api.snprintf = snprintf_;
 	emod_debug_api.hexdump 	= hexdump;
-	emod_debug_api.assert 	= assert;
+	emod_debug_api.cmp_check = cmp_check;
 
 	emod_debug_api.start_timer 	= start_timer;
 	emod_debug_api.call_timer 	= call_timer;
