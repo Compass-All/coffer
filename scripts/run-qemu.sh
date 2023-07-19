@@ -15,8 +15,9 @@ qemu-system-riscv64 -M virt -m 16G -smp 1 -nographic --trace "virtio_*"\
     -device loader,file=$KERNEL,addr=0x80200000 \
     -drive file=$ROOTFS,format=raw,id=hd0 \
     -device virtio-blk-device,drive=hd0 \
-    -netdev user,id=net0 \
+    -netdev user,id=net0,hostfwd=tcp::8080-:80 \
     -device virtio-net-pci,netdev=net0,mac=52:54:00:6f:55:cc,failover=on \
+    -object filter-dump,id=f1,netdev=net0,file=net0.pcap \
     -append "root=/dev/vda rw console=ttyS0 movablecore=0x240000000"
 
 
