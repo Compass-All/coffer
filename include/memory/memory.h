@@ -29,4 +29,7 @@
 #define PARTITION_UP(addr) (ROUNDUP(addr, PARTITION_SIZE))
 #define PARTITION_DOWN(addr) ((addr) & (~((PARTITION_SIZE)-1)))
 
+#define UMODE_STACK_SIZE 0x20000
+#define UMODE_STACK_TOP_VA 0x3fff000000
+
 #endif

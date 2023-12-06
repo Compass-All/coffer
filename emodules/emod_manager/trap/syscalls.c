@@ -808,6 +808,7 @@ void syscall_handler(
 	case 167: // prctl
 	case 226: // mprotect
 	case 233: // madvise
+		info("skipping syscall\n");
 		break;
 	
 // Custom syscalls

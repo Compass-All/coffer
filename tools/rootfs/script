@@ -15,7 +15,9 @@ ifconfig lo 127.0.0.1
 /prog/host/test_eapp /prog/enclave/eapp_write
 /prog/host/reset_coffer
 
-/prog/host/test_eapp /prog/enclave/eapp_test_ecall 57005 &
+/prog/host/test_eapp /prog/enclave/musl_eapp/eapp_thread
+
+# /prog/host/test_eapp /prog/enclave/eapp_test_ecall 57005 &
 
 # command="/prog/enclave/sqlite-bench/sqlite-bench \
 # 	--num=500 \
