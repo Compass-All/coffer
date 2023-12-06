@@ -113,13 +113,13 @@ void init_prog_brk()
 	show(get_prog_brk());
 }
 
-void addr_record(u64 satp_value)
-{
-	__ecall_ebi_addr_record(
-		(paddr_t)&emod_manager_pa_start,
-		(paddr_t)&umode_pool_pa_aligned
-	);
-}
+// void addr_record(u64 satp_value)
+// {
+// 	__ecall_ebi_addr_record(
+// 		(paddr_t)&emod_manager_pa_start,
+// 		(paddr_t)&umode_pool_pa_aligned
+// 	);
+// }
 
 static void __map_section(memory_section_t mem_sec)
 {

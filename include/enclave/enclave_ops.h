@@ -33,19 +33,19 @@ static paddr_t inline __ecall_ebi_mem_alloc(
 	return paddr;
 }
 
-static void inline __ecall_ebi_addr_record(
-	paddr_t emod_manager_start_pa_ptr,
-	paddr_t umode_pool_pa_aligned_ptr
-)
-{
-	__ecall(
-		SBI_EXT_EBI,
-		SBI_EXT_EBI_ADDR_RECORD,
-		emod_manager_start_pa_ptr,
-		umode_pool_pa_aligned_ptr,
-		0UL
-	);
-}
+// static void inline __ecall_ebi_addr_record(
+// 	paddr_t emod_manager_start_pa_ptr,
+// 	paddr_t umode_pool_pa_aligned_ptr
+// )
+// {
+// 	__ecall(
+// 		SBI_EXT_EBI,
+// 		SBI_EXT_EBI_ADDR_RECORD,
+// 		emod_manager_start_pa_ptr,
+// 		umode_pool_pa_aligned_ptr,
+// 		0UL
+// 	);
+// }
 
 static void inline __ecall_ebi_exit(u64 exit_val)
 {

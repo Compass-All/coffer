@@ -10,7 +10,7 @@
 #define SBI_EXT_EBI_SUSPEND 					403
 #define SBI_EXT_EBI_RESUME 						404
 #define SBI_EXT_EBI_MEM_ALLOC 					405
-#define SBI_EXT_EBI_ADDR_RECORD 				406
+// #define SBI_EXT_EBI_ADDR_RECORD 				406
 
 #define SBI_EXT_EBI_PERI_INFORM 				420
 #define SBI_EXT_EBI_FETCH 						421

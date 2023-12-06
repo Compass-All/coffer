@@ -20,7 +20,7 @@ vaddr_t alloc_map_emodule(usize emodule_size);
 usize 	get_va_pa_offset();
 void 	map_sections();
 void 	init_prog_brk();
-void 	addr_record();
+// void 	addr_record();
 paddr_t alloc_smode_stack();
 vaddr_t alloc_map_umode_stack();
 void 	map_user_argv(paddr_t user_argv_pa, u64 argc);
