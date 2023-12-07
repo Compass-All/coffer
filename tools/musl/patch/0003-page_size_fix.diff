@@ -1,0 +1,28 @@
+diff --git a/src/env/__libc_start_main.c b/src/env/__libc_start_main.c
+index c5b277bd..36cbd99f 100644
+--- a/src/env/__libc_start_main.c
++++ b/src/env/__libc_start_main.c
+@@ -29,7 +29,8 @@ void __init_libc(char **envp, char *pn)
+ 	for (i=0; auxv[i]; i+=2) if (auxv[i]<AUX_CNT) aux[auxv[i]] = auxv[i+1];
+ 	__hwcap = aux[AT_HWCAP];
+ 	if (aux[AT_SYSINFO]) __sysinfo = aux[AT_SYSINFO];
+-	libc.page_size = aux[AT_PAGESZ];
++	// libc.page_size = aux[AT_PAGESZ];
++	libc.page_size = 0x1000;
+ 
+ 	if (!pn) pn = (void*)aux[AT_EXECFN];
+ 	if (!pn) pn = "";
+diff --git a/src/internal/libc.h b/src/internal/libc.h
+index 619bba86..98f5ff26 100644
+--- a/src/internal/libc.h
++++ b/src/internal/libc.h
+@@ -31,7 +31,8 @@ struct __libc {
+ };
+ 
+ #ifndef PAGE_SIZE
+-#define PAGE_SIZE libc.page_size
++// #define PAGE_SIZE libc.page_size
++#define PAGE_SIZE 0x1000
+ #endif
+ 
+ extern hidden struct __libc __libc;

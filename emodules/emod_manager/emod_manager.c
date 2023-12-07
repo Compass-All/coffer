@@ -84,10 +84,9 @@ static void load_emodule(u32 emodule_id)
 	show(emodule_id);
 
 	usize emodule_size = get_emodule_size(emodule_id);	
-	show(emodule_size);
 
 	vaddr_t vaddr = alloc_map_emodule(emodule_size);
-	show(vaddr);
+    info("Emod %u loaded at 0x%lx, size: 0x%lx\n", emodule_id, vaddr, emodule_size);
 
 	__ecall_ebi_listen_message(
 		0UL,
@@ -106,7 +105,7 @@ static void load_emodule(u32 emodule_id)
 	vaddr_t (*init)(vaddr_t) = (void *)vaddr;
 	vaddr_t getter_addr = init((vaddr_t)get_emod_manager);
 
-	show(getter_addr);
+    info("Emod %u initialized, getter_addr = 0x%lx\n", emodule_id, getter_addr);
 
 	register_emodule(emodule_id, getter_addr);
 }

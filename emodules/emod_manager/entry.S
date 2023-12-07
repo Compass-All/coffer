@@ -1,4 +1,5 @@
 #include <util/register.h>
+#include <util/csr.h>
 
 .align 4
 .section ".text.init"
@@ -8,7 +9,7 @@ _start:
 	jal		emain_upper_half
 
     la      s7, temp_stvec
-    add     s7, s6, s7 // s6 = va_pa_offset
+    add     s7, t0, s7 // t0 = va_pa_offset
     csrw    stvec, s7
 
     mv      sp, a1     // change sp to virt addr
@@ -96,14 +97,58 @@ temp_stvec:
     STORE t6,  EAPP_CTX_REG_OFFSET(t6)(sp)
 .endm
 
+/*
+User trap:
+sp          sscratch
+u_stack     k_stack
+k_stack     u_stack
+
+Kernel trap:
+sp          sscratch
+k_stack     0
+0           k_stack
+sstatus     k_stack
+If SPP==1:
+spp         k_stack
+0           k_stack
+k_stack     0
+
+New thread first trap:
+sp          sscratch
+u_stack     0
+0           u_stack
+sstatus     u_stack
+spp         u_stack
+If SPP==0:
+u_stack     (_)
+SAVE_CONTEXT
+u_stack     new_k_stack
+RESTORE_CONTEXT
+new_k_stack u_stack
+*/
+
 .align 4
 .section ".text"
 .global trap_handler
 trap_handler:
+	// if sscratch is zero, this is a kernel trap
 	csrrw	sp, sscratch, sp // swap sp and sscratch
-	// if sp is zero, this is a kernel trap
 	bnez    sp, 1f // jump for user trap
-	// sscratch is not zero, user trap
+// sp == 0
+    csrr    sp, sstatus
+    andi    sp, sp, SSTATUS_SPP
+    bnez    sp, 3f // jump for kernel trap
+    csrrw   sp, sscratch, sp
+    SAVE_CONTEXT
+    jal     alloc_smode_stack
+    csrw    sscratch, a0
+    RESTORE_CONTEXT
+    csrrw   sp, sscratch, sp
+    j       1f
+
+// sp != 0
+3:
+    mv      sp, zero
     csrrw   sp, sscratch, sp
 1:
 	SAVE_CONTEXT

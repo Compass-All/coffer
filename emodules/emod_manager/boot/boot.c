@@ -92,7 +92,7 @@ void emain_upper_half(
 
 	u64 satp_value = init_satp();
 	usize va_pa_offset = get_va_pa_offset();
-	vaddr_t smode_sp = alloc_smode_stack() + va_pa_offset;
+	vaddr_t smode_sp = alloc_smode_stack();
 
 	show(satp_value); show(smode_sp); show(va_pa_offset);
 
@@ -101,12 +101,12 @@ void emain_upper_half(
 	asm volatile(
 		"mv		a0, %0	\n\t"
 		"mv		a1, %1	\n\t"
-		"mv 	s6, %2	\n\t"
+		"mv 	t0, %2	\n\t"
 		:
 		:	"r"(satp_value),
 			"r"(smode_sp),
 			"r"(va_pa_offset)
-		// :	"a0", "a1", "s6" DO NOT UNCOMMENT THIS LINE!
+		:	"a0", "a1", "t0" // DO NOT UNCOMMENT THIS LINE!
 	);
 }
 

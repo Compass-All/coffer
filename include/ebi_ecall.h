@@ -10,7 +10,9 @@
 #define SBI_EXT_EBI_SUSPEND 					403
 #define SBI_EXT_EBI_RESUME 						404
 #define SBI_EXT_EBI_MEM_ALLOC 					405
-// #define SBI_EXT_EBI_ADDR_RECORD 				406
+#define SBI_EXT_EBI_BLOCK_THREAD				406
+#define SBI_EXT_EBI_UNBLOCK_THREAD				407
+#define SBI_EXT_EBI_EXIT_THREAD				    408
 
 #define SBI_EXT_EBI_PERI_INFORM 				420
 #define SBI_EXT_EBI_FETCH 						421
@@ -24,7 +26,8 @@
 #define SBI_EXT_EBI_STOP_LISTEN 				442
 
 #define SBI_EXT_EBI_GET_EID		 				450
-#define SBI_EXT_EBI_GET_HARTID	 				451
+#define SBI_EXT_EBI_GET_TID		 				451
+#define SBI_EXT_EBI_GET_HARTID	 				452
 
 #define SBI_EXT_EBI_DEBUG 						499
 

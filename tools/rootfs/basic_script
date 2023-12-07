@@ -128,4 +128,6 @@ rm dbbench_sqlite3*
 
 /prog/host/test_eapp /prog/enclave/musl_eapp/eapp_fs_test
 
+/prog/host/test_eapp /prog/enclave/musl_eapp/eapp_thread
+
 /prog/host/test_eapp /prog/enclave/eapp_test_ecall 57005

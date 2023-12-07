@@ -1,7 +1,19 @@
 #pragma once
 
 #include <stddef.h>
-#include <util/atomic.h>
+#include <memory/riscv_barrier.h>
+
+#undef offsetof
+#ifdef __compiler_offsetof
+#define offsetof(TYPE, MEMBER) __compiler_offsetof(TYPE,MEMBER)
+#else
+#define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
+#endif
+
+#undef __containerof
+#define __containerof(ptr, type, member) ({			\
+	const typeof(((type *)0)->member) * __mptr = (ptr);	\
+	(type *)((char *)__mptr - offsetof(type, member)); })
 
 #define UK_LIST_HEAD_INIT(name) { &(name), &(name) }
 

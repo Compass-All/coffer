@@ -56,6 +56,33 @@ static void inline __ecall_ebi_exit(u64 exit_val)
 	);
 }
 
+static void inline __ecall_ebi_exit_thread(u64 exit_val)
+{
+	__ecall(
+		SBI_EXT_EBI,
+		SBI_EXT_EBI_EXIT_THREAD,
+		exit_val, 0UL, 0UL
+	);
+}
+
+static u64 inline __ecall_ebi_block_thread(u64 tid)
+{
+	return __ecall(
+		SBI_EXT_EBI,
+		SBI_EXT_EBI_BLOCK_THREAD,
+		tid, 0UL, 0UL
+	);
+}
+
+static u64 inline __ecall_ebi_unblock_thread(u64 tid)
+{
+	return __ecall(
+		SBI_EXT_EBI,
+		SBI_EXT_EBI_UNBLOCK_THREAD,
+		tid, 0UL, 0UL
+	);
+}
+
 static u64 inline __ecall_ebi_suspend(u64 short_message)
 {
 	return __ecall(
@@ -70,6 +97,15 @@ static u64 inline __ecall_ebi_get_eid()
 	return __ecall(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_GET_EID,
+		0UL, 0UL, 0UL
+	);
+}
+
+static u64 inline __ecall_ebi_get_tid()
+{
+	return __ecall(
+		SBI_EXT_EBI,
+		SBI_EXT_EBI_GET_TID,
 		0UL, 0UL, 0UL
 	);
 }

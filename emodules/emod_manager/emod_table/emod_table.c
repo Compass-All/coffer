@@ -23,7 +23,7 @@
  * 
  */
 
-#define EMODULE_TABLE_SIZE	0x100
+#define EMODULE_TABLE_SIZE	0x20
 
 static vaddr_t emodule_table[EMODULE_TABLE_SIZE];
 
@@ -58,7 +58,7 @@ vaddr_t get_emodule(u32 emod_id)
 	return emodule_getter_addr;
 }
 
-void dump_emodule_table()
+int dump_emodule_table()
 {
 	printf("Dump emodule table:\n");
 	for (int i = 0; i < EMODULE_TABLE_SIZE; i++) {
@@ -68,4 +68,5 @@ void dump_emodule_table()
 		}
 	}
 	printf("End Dump\n");
+    return 0;
 }

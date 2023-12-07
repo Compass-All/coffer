@@ -6,5 +6,6 @@
 #define EMODULE_ID_VFS			3
 #define EMODULE_ID_NET          4
 #define EMODULE_ID_UART			5
-#define EMODULE_ID_DUMMY		6
-#define EMODULE_ID_MAX      	7
+#define EMODULE_ID_FUTEX		6
+#define EMODULE_ID_DUMMY		7
+#define EMODULE_ID_MAX      	8

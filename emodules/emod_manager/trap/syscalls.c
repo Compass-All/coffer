@@ -18,6 +18,7 @@
 #include "../memory/page_table.h"
 #include "../util/string.h"
 #include "../util/sysinfo.h"
+#include "emodules/emod_futex/emod_futex.h"
 
 #include <emodules/emod_uart/emod_uart.h>
 #include <emodules/emod_vfs/emod_vfs.h>
@@ -59,6 +60,7 @@
 #define SYS_fsync			82
 #define SYS_exit 			93	// 0x5d
 #define SYS_exit_group 		94
+#define SYS_futex	 		98
 #define SYS_nanosleep		101
 #define SYS_clock_gettime	113
 #define SYS_sched_setaffinity 122
@@ -96,7 +98,8 @@
 
 static emod_vfs_t emod_vfs;
 static emod_uart_t emod_uart;
-static emod_net_t emod_net;
+// static emod_net_t emod_net;
+static emod_futex_t emod_futex;
 
 static void load_emod_vfs()
 {
@@ -138,24 +141,45 @@ static void load_emod_uart(void)
 	}
 }
 
-static void load_emod_net(void)
+static void load_emod_futex()
 {
 	static u8 loaded = 0;
-	vaddr_t emod_net_getter;
-
+	
 	if (!loaded) {
 		START_TIMER(module);
 		STOP_TIMER(syscall);
 
-		emod_net_getter = acquire_emodule(EMODULE_ID_NET);
-		emod_net = ((emod_net_t (*)(void))emod_net_getter)();
+		debug("emod_futex not loaded\n");
+		vaddr_t emod_futex_getter = acquire_emodule(EMODULE_ID_FUTEX);
+		emod_futex = ((emod_futex_t (*)(void))emod_futex_getter)();
 
 		START_TIMER(syscall);
 		STOP_TIMER(module);
 
 		loaded = 1;
 	}
+
+	info("CP1\n");
 }
+
+// static void load_emod_net(void)
+// {
+// 	static u8 loaded = 0;
+// 	vaddr_t emod_net_getter;
+
+// 	if (!loaded) {
+// 		START_TIMER(module);
+// 		STOP_TIMER(syscall);
+
+// 		emod_net_getter = acquire_emodule(EMODULE_ID_NET);
+// 		emod_net = ((emod_net_t (*)(void))emod_net_getter)();
+
+// 		START_TIMER(syscall);
+// 		STOP_TIMER(module);
+
+// 		loaded = 1;
+// 	}
+// }
 
 // simple syscall handlers
 
@@ -408,7 +432,7 @@ static int syscall_handler_fstat_stdio(int fd, struct stat *stat)
     stat->st_mode = S_IWUSR | S_IRUSR | S_IRGRP;
     stat->st_uid = 1000;
     stat->st_gid = 5;
-    stat->st_rdev = 34819;
+    stat->st_rdev = (dev_t)34819;
     stat->st_size = 0;
     stat->st_blksize = 1024;
     stat->st_blocks = 0;
@@ -448,52 +472,52 @@ void syscall_handler(
 	show(sepc);
 	show(read_csr(sscratch));
 
-	debug("syscall %ld begins\n", syscall_num);
+	info("syscall %ld begins\n", syscall_num);
 	show(syscall_num);
 
 	switch (syscall_num)
 	{
 	case SYS_getcwd:
-	 	debug("syscall getcwd\n");
+	 	info("syscall getcwd\n");
 		ret = (u64)syscall_handler_getcwd(
 			(char *)	regs[CTX_INDEX_a0],
 			(size_t)	regs[CTX_INDEX_a1]
 		);
-	 	debug("end of syscall getcwd\n");
+	 	info("end of syscall getcwd\n");
 		break;
 
 	case SYS_fcntl:
-		debug("syscall open\n");
+		info("syscall open\n");
 		ret = (u64)syscall_handler_fcntl(
 			(int)			regs[CTX_INDEX_a0],
 			(unsigned int)	regs[CTX_INDEX_a1],
 			(int)			regs[CTX_INDEX_a2]
 		);
-		debug("end of syscall open\n");
+		info("end of syscall open\n");
 		break;
 
 	case SYS_unlinkat:
-		debug("syscall unlinkat\n");
+		info("syscall unlinkat\n");
 		ret = (u64)syscall_handler_unlinkat(
 			(int)			regs[CTX_INDEX_a0],
 			(const char *)	regs[CTX_INDEX_a1]
 		);
-		debug("end of syscall unlinkat\n");
+		info("end of syscall unlinkat\n");
 		break;
 
 	case SYS_faccessat:
-		debug("syscall faccessat\n");
+		info("syscall faccessat\n");
 		ret = (u64)syscall_handler_faccessat(
 			(int)			regs[CTX_INDEX_a0],
 			(const char *)	regs[CTX_INDEX_a1],
 			(int) 			regs[CTX_INDEX_a2],
 			(int) 			regs[CTX_INDEX_a3]
 		);
-		debug("end of syscall faccessat\n");
+		info("end of syscall faccessat\n");
 		break;
 
 	case SYS_open:
-		debug("syscall open\n");
+		info("syscall open\n");
 		show(regs[CTX_INDEX_a0]);
 		show(regs[CTX_INDEX_a1]);
 		show(regs[CTX_INDEX_a2]);
@@ -502,22 +526,22 @@ void syscall_handler(
 			(int)			regs[CTX_INDEX_a1],
 			(mode_t)		regs[CTX_INDEX_a2]
 		);
-		debug("end of syscall open\n");
+		info("end of syscall open\n");
 		break;
 
 	case SYS_openat:
-		debug("syscall openat\n");
+		info("syscall openat\n");
 		ret = (u64)syscall_handler_openat(
 			(int)			regs[CTX_INDEX_a0],
 			(const char *)	regs[CTX_INDEX_a1],
 			(int)			regs[CTX_INDEX_a2],
 			(int)			regs[CTX_INDEX_a3]
 		);
-		debug("end of syscall openat\n");
+		info("end of syscall openat\n");
 		break;
 
 	case SYS_close:
-		debug("syscall close\n");
+		info("syscall close\n");
 		if (is_stdio(regs[CTX_INDEX_a0])) {
 			ret = (u64)syscall_handler_close_stdio(
 				(int)regs[CTX_INDEX_a0]
@@ -527,73 +551,73 @@ void syscall_handler(
 				(int)regs[CTX_INDEX_a0]
 			);
 		}
-		debug("end of syscall close\n");
+		info("end of syscall close\n");
 		break;
 
 	case SYS_getdents:
-		debug("syscall gendents\n");
+		info("syscall gendents\n");
 		ret = (u64)syscall_handler_getdents(
 			(int)				regs[CTX_INDEX_a0],
 			(struct dirent *)	regs[CTX_INDEX_a1],
 			(size_t)			regs[CTX_INDEX_a2]
 		);
-		debug("end of syscall gendents\n");
+		info("end of syscall gendents\n");
 		break;
 
 	case SYS_lseek:
-		debug("syscall lseek\n");
+		info("syscall lseek\n");
 		ret = (u64)syscall_handler_lseek(
 			(int)		regs[CTX_INDEX_a0],
 			(off_t)		regs[CTX_INDEX_a1],
 			(int)		regs[CTX_INDEX_a2]
 		);
-		debug("end of syscall lseek\n");
+		info("end of syscall lseek\n");
 		break;
 
 	case SYS_pread:
-		debug("syscall pread\n");
+		info("syscall pread\n");
 		ret = (u64)syscall_handler_pread64(
 			(int)		regs[CTX_INDEX_a0],
 			(void *)	regs[CTX_INDEX_a1],
 			(size_t)	regs[CTX_INDEX_a2],
 			(off_t)		regs[CTX_INDEX_a3]
 		);
-		debug("end of syscall pread\n");
+		info("end of syscall pread\n");
 		break;
 
 	case SYS_read:
-		debug("syscall read\n");
+		info("syscall read\n");
 		ret = (u64)syscall_handler_read(
 			(int)		regs[CTX_INDEX_a0],
 			(void *)	regs[CTX_INDEX_a1],
 			(size_t)	regs[CTX_INDEX_a2]
 		);
-		debug("end of syscall read\n");
+		info("end of syscall read\n");
 		break;
 	
 	case SYS_pwrite:
-		debug("syscall pwrite\n");
+		info("syscall pwrite\n");
 		ret = (u64)syscall_handler_pwrite64(
 			(int)		regs[CTX_INDEX_a0],
 			(void *)	regs[CTX_INDEX_a1],
 			(size_t)	regs[CTX_INDEX_a2],
 			(off_t)		regs[CTX_INDEX_a3]
 		);
-		debug("end of syscall pwrite\n");
+		info("end of syscall pwrite\n");
 		break;
 
 	case SYS_readv:
-		debug("syscall readv\n");
+		info("syscall readv\n");
 		ret = (u64)syscall_handler_readv(
 			(int)					regs[CTX_INDEX_a0],
 			(const struct iovec *)	regs[CTX_INDEX_a1],
 			(int)					regs[CTX_INDEX_a2]
 		);
-		debug("end of syscall readv\n");
+		info("end of syscall readv\n");
 		break;
 
 	case SYS_writev:
-		debug("syscall writev\n");
+		info("syscall writev\n");
 		// time0 = read_csr(cycle);
 		ret = (u64)syscall_handler_writev(
 			(int)					regs[CTX_INDEX_a0],
@@ -602,11 +626,11 @@ void syscall_handler(
 		);
 		// time1 = read_csr(cycle);
 		// printf("syscall %ld cycles = %ld\n", syscall_num, time1 - time0);
-		debug("end of syscall writev\n");
+		info("end of syscall writev\n");
 		break;
 
 	case SYS_write:
-		debug("syscall write\n");
+		info("syscall write\n");
 		if (is_stdio(regs[CTX_INDEX_a0])) {
 			ret = (u64)syscall_handler_write_stdio(
 				(int)			regs[CTX_INDEX_a0],
@@ -620,11 +644,11 @@ void syscall_handler(
 				(size_t)		regs[CTX_INDEX_a2]
 			);
 		}
-		debug("end of syscall write\n");
+		info("end of syscall write\n");
 		break;
 
 	case SYS_fstat:
-		debug("syscall fstat\n");
+		info("syscall fstat\n");
 		if (is_stdio(regs[CTX_INDEX_a0])) {
 			ret = syscall_handler_fstat_stdio(
 				(int)			regs[CTX_INDEX_a0],
@@ -636,88 +660,109 @@ void syscall_handler(
 				(struct stat *)	regs[CTX_INDEX_a1]
 			);
 		}
-		debug("end of syscall fstat\n");
+		info("end of syscall fstat\n");
 		break;
 
 	case SYS_fstatat:
-		debug("syscall fstatat\n");
+		info("syscall fstatat\n");
 		ret = (u64)syscall_handler_fstatat(
 			(int)			regs[CTX_INDEX_a0],
 			(const char *)	regs[CTX_INDEX_a1],
 			(struct stat *)	regs[CTX_INDEX_a2],
 			(int)			regs[CTX_INDEX_a3]
 		);
-		debug("end of syscall fstatat\n");
+		info("end of syscall fstatat\n");
 		break;
 
 	case SYS_mkdirat:
-		debug("syscall mkdirat\n");
+		info("syscall mkdirat\n");
 		ret = (u64)syscall_handler_mkdirat(
 			(int)			regs[CTX_INDEX_a0],
 			(const char *)	regs[CTX_INDEX_a1],
 			(mode_t)		regs[CTX_INDEX_a2]
 		);
-		debug("end of syscall mkdirat\n");
+		info("end of syscall mkdirat\n");
 		break;
 
 	case SYS_fsync:
-	 	debug("syscall fsync\n");
+	 	info("syscall fsync\n");
 		ret = (u64)syscall_handler_fsync(
 			(int) regs[CTX_INDEX_a0]
 		);
-	 	debug("end of syscall fsync\n");
+	 	info("end of syscall fsync\n");
 		break;
 
 	case SYS_ftruncate:
-		debug("syscall ftruncate\n");
+		info("syscall ftruncate\n");
 		ret = (u64)syscall_handler_ftruncate(
 			(int)	regs[CTX_INDEX_a0],
 			(off_t)	regs[CTX_INDEX_a1]
 		);
-		debug("end of syscall ftruncate\n");
+		info("end of syscall ftruncate\n");
 		break;
 
 	case SYS_getppid:
 	case SYS_getpid:
-		debug("syscall getpid\n");
+		info("syscall getpid\n");
 		ret = (u64)syscall_handler_getpid();
-		debug("end of syscall getpid\n");
+		info("end of syscall getpid\n");
 		break;
 
 	case SYS_geteuid:
 	case SYS_getuid:
-		debug("syscall geteuid\n");
+		info("syscall geteuid\n");
 		ret = (u64)syscall_handler_geteuid();
-		debug("end of syscall geteuid\n");
+		info("end of syscall geteuid\n");
 		break;
 
 	case SYS_exit:
+	 	info("syscall exit\n");
+        if (__ecall_ebi_get_tid() == 0UL) {
+		    set_s_timer();
+		    __ecall_ebi_exit(EXIT_ENCLAVE);
+            __builtin_unreachable();
+        } else {
+		    __ecall_ebi_exit_thread(INTERRUPT);
+            __builtin_unreachable();
+        }
+        break;
+
 	case SYS_exit_group:
-	 	debug("syscall exit\n");
-		show(get_umode_page_pool_avail_size());
-		show(regs[CTX_INDEX_a0]);
-		// dump_emodule_table();	
-		// dump_page_table();
+	 	info("syscall exit_group\n");
 		set_s_timer();
 		__ecall_ebi_exit(EXIT_ENCLAVE);
+        __builtin_unreachable();
 		break;
 
+    case SYS_futex:
+        info("syscall futex\n");
+        load_emod_futex();
+        ret = (u64)emod_futex.emod_futex_api.sys_futex_handler(
+            (u32 *) regs[CTX_INDEX_a0],
+            (int)   regs[CTX_INDEX_a1],
+            (int)   regs[CTX_INDEX_a2],
+            (u64)   regs[CTX_INDEX_a3],
+            (u64)   regs[CTX_INDEX_a4]
+        );
+        info("end of syscall futex\n");
+        break;
+
 	case SYS_uname:
-		debug("syscall uname\n");
+		info("syscall uname\n");
 		syscall_handler_uname(
 			(struct utsname *)regs[CTX_INDEX_a0]
 		);
-		debug("end of syscall uname\n");
+		info("end of syscall uname\n");
 		break;
 
 	case SYS_brk:
-		debug("syscall brk\n");
+		info("syscall brk\n");
 		ret = sys_brk_handler(regs[CTX_INDEX_a0]);
-		debug("end of syscall brk\n");
+		info("end of syscall brk\n");
 		break;
 	
 	case SYS_mmap:
-		debug("syscall mmap\n");
+		info("syscall mmap\n");
 		ret = (u64)syscall_handler_mmap(
 			(void *)		regs[CTX_INDEX_a0],
 			(size_t)		regs[CTX_INDEX_a1],
@@ -726,71 +771,71 @@ void syscall_handler(
 			(int)			regs[CTX_INDEX_a4],
 			(off_t)			regs[CTX_INDEX_a5]
 		);
-		debug("end of syscall mmap\n");
+		info("end of syscall mmap\n");
 		break;
 
 	case SYS_munmap:
-		debug("syscall munmap\n");
+		info("syscall munmap\n");
 		ret = (u64)syscall_handler_munmap(
 			(void *)	regs[CTX_INDEX_a0],
 			(size_t)	regs[CTX_INDEX_a1]
 		);
-		debug("end of syscall munmap\n");
+		info("end of syscall munmap\n");
 		break;
 
 	case SYS_clock_gettime:
-		debug("syscall clock_gettime\n");
+		info("syscall clock_gettime\n");
 		syscall_handler_clock_gettime(
 			(clockid_t)			regs[CTX_INDEX_a0],
 			(struct timespec *)	regs[CTX_INDEX_a1]
 		);
-		debug("end of syscall clock_gettime\n");
+		info("end of syscall clock_gettime\n");
 		break;
 
 	case SYS_gettimeofday:
-		debug("syscall gettimeofday\n");
+		info("syscall gettimeofday\n");
 		syscall_handler_gettimeofday(
 			(struct timeval *)	regs[CTX_INDEX_a0],
 			NULL
 		);
-		debug("end of syscall gettimeofday\n");
+		info("end of syscall gettimeofday\n");
 		break;
 
 	case SYS_getrusage:
-		debug("syscall getrusage\n");
+		info("syscall getrusage\n");
 		ret = (u64)syscall_handler_getrusage(
 			(int)				regs[CTX_INDEX_a0],
 			(struct rusage *)	regs[CTX_INDEX_a1]
 		);
-		debug("end of syscall getrusage\n");
+		info("end of syscall getrusage\n");
 		break;
 	
 	case SYS_getcpu:
-		debug("syscall getcpu\n");
+		info("syscall getcpu\n");
 		ret = (u64)syscall_handler_getcpu(
 			(unsigned int *)	regs[CTX_INDEX_a0],
 			(unsigned int *)	regs[CTX_INDEX_a1]
 		);
-		debug("end of syscall getcpu\n");
+		info("end of syscall getcpu\n");
 		break;
 
 	case SYS_sysinfo:
-		debug("syscall sysinfo\n");
+		info("syscall sysinfo\n");
 		ret = (u64)syscall_handler_sysinfo(
 			(struct sysinfo *)	regs[CTX_INDEX_a0]
 		);
-		debug("end of syscall sysinfo\n");
+		info("end of syscall sysinfo\n");
 		break;
 
 	case SYS_prlimit64:
-		debug("syscall prlimit64\n");
+		info("syscall prlimit64\n");
 		ret = (u64)syscall_handler_prlimit64(
 			(pid_t) 				regs[CTX_INDEX_a0],
 			(int)					regs[CTX_INDEX_a1],
 			(const struct rlimit *) regs[CTX_INDEX_a2],
 			(struct rlimit *)		regs[CTX_INDEX_a3]
 		);
-		debug("end of syscall prlimit64\n");
+		info("end of syscall prlimit64\n");
 		break;
 
 // omitted syscalls
@@ -812,12 +857,12 @@ void syscall_handler(
 		break;
 	
 // Custom syscalls
-	case SYS_test:
-		debug("syscall test\n");
-		load_emod_net();
-		emod_net.emod_net_api.test(123);
-		debug("end of syscall test\n");
-		break;
+	// case SYS_test:
+	// 	info("syscall test\n");
+	// 	load_emod_net();
+	// 	emod_net.emod_net_api.test(123);
+	// 	info("end of syscall test\n");
+	// 	break;
 
 	case SYS_uart_getc:
 		load_emod_uart();
@@ -844,7 +889,7 @@ void syscall_handler(
 	}
 	show(ret);
 	debug("(int)ret = %d\n", ret);
-	debug("end of %ld syscall handler\n", syscall_num);
+	info("end of %ld syscall handler\n", syscall_num);
 
 	show(sepc);
 	show(sepc + 4);

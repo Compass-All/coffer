@@ -54,4 +54,21 @@
 		___p1;                   \
 	})
 
+#define	UK_ACCESS_ONCE(x)			(*(volatile __typeof(x) *)&(x))
+
+#define	UK_WRITE_ONCE(x, v) do {	\
+	smp_mb();		\
+	UK_ACCESS_ONCE(x) = (v);	\
+	smp_mb();		\
+} while (0)
+
+#define	UK_READ_ONCE(x) ({		\
+	__typeof(x) __var = ({		\
+        smp_mb();		\
+		UK_ACCESS_ONCE(x);	\
+	});				\
+	smp_mb();		\
+	__var;				\
+})
+
 #endif

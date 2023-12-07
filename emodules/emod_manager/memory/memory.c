@@ -177,12 +177,14 @@ void map_sections()
 	MAP_SECTION(bss, 		PTE_R | PTE_W);
 }
 
-paddr_t alloc_smode_stack()
+vaddr_t alloc_smode_stack()
 {
-	debug("allocating S mode stack: %lu pages\n",
-		SMODE_STACK_SIZE >> PAGE_SHIFT);
+// #ifndef __ASSEMBLY__
+// 	debug("allocating S mode stack: %lu pages\n",
+// 		SMODE_STACK_SIZE >> PAGE_SHIFT);
+// #endif
 	return alloc_smode_page(SMODE_STACK_SIZE >> PAGE_SHIFT)
-		+ SMODE_STACK_SIZE;
+		+ SMODE_STACK_SIZE + get_va_pa_offset();
 }
 
 void map_user_argv(paddr_t user_argv_pa, u64 argc)
