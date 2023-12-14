@@ -38,6 +38,7 @@ static u64 inline __ecall_ebi_enter(
 
 static u64 inline __ecall_ebi_resume(
 	u64 enclave_id,
+	u64 thread_id,
 	u64 short_message
 )
 {
@@ -45,8 +46,8 @@ static u64 inline __ecall_ebi_resume(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_RESUME,
 		enclave_id,
-		short_message,
-		0UL
+        thread_id,
+		short_message
 	);
 }
 

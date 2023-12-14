@@ -1,4 +1,5 @@
 #include "futex.h"
+#include "emodules/grand_lock.h"
 #include "lock.h"
 #include "message/short_message.h"
 #include "types.h"
@@ -6,7 +7,9 @@
 #include <util/list.h>
 #include <memory/memory.h>
 #include <enclave/enclave_ops.h>
+#include <enclave/threads.h>
 #include <util/errno.h>
+#include <util/gnu_attribute.h>
 #include "dependency.h"
 
 #define list_head           uk_list_head
@@ -47,7 +50,7 @@ static inline unsigned long hash_long(unsigned long val, unsigned int bits) {
     return hash >> (64 - bits);
 }
 
-static inline struct list_head *hash_futex(vaddr_t uaddr) {
+__unused static inline struct list_head *hash_futex(vaddr_t uaddr) {
     /* struct page is shared, so we can hash on its address */
     return &futex_queues[hash_long(uaddr, FUTEX_HASHBITS)];
 }
@@ -64,7 +67,7 @@ static inline void wake_one_waiter(struct list_head *head, vaddr_t uaddr) {
         show(this);
 
         if (this->uaddr == uaddr) {
-            __ecall_ebi_unblock_thread(this->tid);
+            __ecall_ebi_unblock_threads(1UL << this->tid);
             break;
         }
     }
@@ -109,16 +112,13 @@ static inline void unqueue_me(struct futex_q *q) {
 }
 
 /* Try to decrement the user count to zero. */
-static int decrement_to_val(vaddr_t uaddr, int val) {
+static int decrement_to_zero(vaddr_t uaddr) {
     atomic_t *count;
+    count = (void *)uaddr;
     int ret = 0;
 
-    count = (void *)uaddr;
-    /* If we take the semaphore from 1 to 0, it's ours.    If it's
-                 zero, decrement anyway, to indicate we are waiting.    If
-                 it's negative, don't decrement so we don't wrap... */
     int cur_val = atomic_read(count);
-    if (cur_val >= 0 && !atomic_sub_return(count, val))
+    if (cur_val >= 0 && atomic_sub_return(count, 1) == 0)
         ret = 1;
 
     info("Futex at 0x%lx current value: 0x%lx\n", uaddr, cur_val);
@@ -129,7 +129,7 @@ static int decrement_to_val(vaddr_t uaddr, int val) {
 }
 
 /* Simplified from arch/ppc/kernel/semaphore.c: Paul M. is a genius. */
-int futex_down(struct list_head *head, vaddr_t uaddr, int val) {
+__unused int futex_down(struct list_head *head, vaddr_t uaddr, int val) {
     int retval = 0;
     struct futex_q q;
     u64 tid = __ecall_ebi_get_tid();
@@ -144,12 +144,14 @@ int futex_down(struct list_head *head, vaddr_t uaddr, int val) {
 
     info("CP1\n");
 
-    while (!decrement_to_val(uaddr, val)) {
+    while (!decrement_to_zero(uaddr)) {
         if (first) {
-            __ecall_ebi_block_thread(tid);
+            // __ecall_ebi_block_thread(tid);
             first = 0;
         }
-        __ecall_ebi_suspend(INTERRUPT);
+        spin_unlock_grand();
+        __ecall_ebi_suspend(BLOCKED);
+        spin_lock_grand_suspend();
     }
 
     info("CP2\n");
@@ -167,7 +169,7 @@ int futex_down(struct list_head *head, vaddr_t uaddr, int val) {
     return retval;
 }
 
-int futex_up(struct list_head *head, vaddr_t uaddr, int val) {
+__unused int futex_up(struct list_head *head, vaddr_t uaddr, int val) {
     atomic_t *count;
 
     count = (void *)uaddr;
@@ -177,12 +179,58 @@ int futex_up(struct list_head *head, vaddr_t uaddr, int val) {
     return 0;
 }
 
+static int futex_wait(vaddr_t uaddr, u32 val)
+{
+    atomic_t *atom_val = (void *)uaddr;
+
+    int cur_val = atomic_read(atom_val);
+    debug("val = %u, cur_val = %d\n", val, cur_val);
+
+    if (cur_val != val) {
+        return -EWOULDBLOCK;
+    }
+    info("Blocking thread\n");
+
+    u64 tid = __ecall_ebi_get_tid();
+    __ecall_ebi_block_thread(tid);
+    spin_unlock_grand();
+    __ecall_ebi_suspend(BLOCKED);
+    spin_lock_grand_suspend(); 
+
+    return 0;
+}
+
+static int futex_wake(vaddr_t uaddr, int nr_wake)
+{
+    u64 threads_to_unblock = 0UL;
+    u64 blocked_threads = __ecall_ebi_get_blocked_threads();
+    show(blocked_threads);
+
+    int cnt = 0;
+    for (int i = 0; i < MAX_THREADS; i++) {
+        if (cnt == nr_wake)
+            break;
+
+        if (blocked_threads & (1UL << i)) {
+            threads_to_unblock |= 1UL << i;
+            cnt++;
+        }
+    }
+    if (cnt < nr_wake) {
+        LOG(cnt); LOG(nr_wake);
+        warn("No enough blocked threads to wake\n");
+    }
+    info("Waking threads 0x%lx\n", threads_to_unblock);
+    __ecall_ebi_unblock_threads(threads_to_unblock);
+
+    return 0;
+}
+
 // shall we duplicate kernel stack?
 
 static int sys_futex(vaddr_t uaddr, int op, int val) {
     int ret;
     unsigned long pos_in_page;
-    struct list_head *head;
 
     pos_in_page = ((unsigned long)uaddr) % PAGE_SIZE;
 
@@ -191,18 +239,12 @@ static int sys_futex(vaddr_t uaddr, int op, int val) {
             pos_in_page + sizeof(atomic_t) > PAGE_SIZE)
         return -EINVAL;
 
-#define FUTEX_WAIT		0
-#define FUTEX_WAKE		1
-#define FUTEX_UP    FUTEX_WAKE
-#define FUTEX_DOWN  FUTEX_WAIT
-
-    head = hash_futex(uaddr);
     switch (op & 1UL) {
-    case FUTEX_UP:
-        ret = futex_up(head, uaddr, val);
+    case FUTEX_WAKE:
+        ret = futex_wake(uaddr, val);
         break;
-    case FUTEX_DOWN:
-        ret = futex_down(head, uaddr, val);
+    case FUTEX_WAIT:
+        ret = futex_wait(uaddr, val);
         break;
     /* Add other lock types here... */
     default:
@@ -215,10 +257,11 @@ static int sys_futex(vaddr_t uaddr, int op, int val) {
 // long syscall(SYS_futex, uint32_t *uaddr, int futex_op, uint32_t val,
 // 		const struct timespec *timeout,   /* or: uint32_t _val2_ */
 //         uint32_t *uaddr2, uint32_t val3)
-int sys_futex_handler(u32 *uaddr, int futex_op, int val, u64 _2, u64 _3)
+int sys_futex_handler(u32 *uaddr, int futex_op, int val, u64 _2, u64 _3, u64 _4)
 {
     show(uaddr);
     show(futex_op);
+    show(val);
     return sys_futex((vaddr_t)uaddr, futex_op, val);
 }
 

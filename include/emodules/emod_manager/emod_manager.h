@@ -28,6 +28,12 @@ typedef struct {
 	// panic
 	void 		(*panic)(const char *panic_message);
 
+    // lock
+    int         (*spin_trylock_grand)(void);
+    void        (*spin_unlock_grand)(void);
+    void        (*spin_lock_log)(void);
+    void        (*spin_unlock_log)(void);
+
 	// debug
 	paddr_t		(*get_pa)(vaddr_t va);
 

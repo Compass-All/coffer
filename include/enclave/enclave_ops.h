@@ -74,12 +74,39 @@ static u64 inline __ecall_ebi_block_thread(u64 tid)
 	);
 }
 
-static u64 inline __ecall_ebi_unblock_thread(u64 tid)
+static u64 inline __ecall_ebi_unblock_threads(u64 threads)
 {
 	return __ecall(
 		SBI_EXT_EBI,
-		SBI_EXT_EBI_UNBLOCK_THREAD,
-		tid, 0UL, 0UL
+		SBI_EXT_EBI_UNBLOCK_THREADS,
+		threads, 0UL, 0UL
+	);
+}
+
+static u64 inline __ecall_ebi_get_blocked_threads()
+{
+	return __ecall(
+		SBI_EXT_EBI,
+		SBI_EXT_EBI_GET_BLOCKED_THREADS,
+		0UL, 0UL, 0UL
+	);
+}
+
+static u64 inline __ecall_ebi_set_clear_child_tid(int *tidptr)
+{
+	return __ecall(
+		SBI_EXT_EBI,
+		SBI_EXT_EBI_GET_CLEAR_CHILD_TID,
+		(u64)tidptr, 0UL, 0UL
+	);
+}
+
+static u64 inline __ecall_ebi_get_clear_child_tid()
+{
+	return __ecall(
+		SBI_EXT_EBI,
+		SBI_EXT_EBI_GET_CLEAR_CHILD_TID,
+		0UL, 0UL, 0UL
 	);
 }
 
@@ -106,6 +133,15 @@ static u64 inline __ecall_ebi_get_tid()
 	return __ecall(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_GET_TID,
+		0UL, 0UL, 0UL
+	);
+}
+
+static u64 inline __ecall_ebi_get_hartid()
+{
+	return __ecall(
+		SBI_EXT_EBI,
+		SBI_EXT_EBI_GET_HARTID,
 		0UL, 0UL, 0UL
 	);
 }
