@@ -23,7 +23,7 @@ static int func1(int arg1, int arg2)
 
 static void func2(int arg1)
 {
-	printf("func2: %d\n", arg1);
+	dummy_printf("func2: %d\n", arg1);
 	return;
 }
 
@@ -51,7 +51,7 @@ vaddr_t dummy_init(vaddr_t emod_manager_getter)
 
 	// record emod_manager
 	if (emod_manager_getter == (vaddr_t)0UL) {
-		printf("Error: NULL emod_manager getter\n");
+		dummy_printf("Error: NULL emod_manager getter\n");
 		return (vaddr_t)0UL;
 	}
 

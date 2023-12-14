@@ -66,8 +66,6 @@ static u32 get_reg(u32 num)
 static void set_reg(u32 num, u32 val)
 {
     writel(val, uart_base + (num * 0x4));
-    // if(num!=0)
-    // printf("should set to 0x%x, actual is 0x%x\n",val, get_reg(num));
 }
 
 void sifive_uart_putc(char ch)
@@ -138,9 +136,6 @@ int sifive_uart_init(void* base, u32 in_freq, u32 baudrate)
     set_reg(UART_REG_TXCTRL, UART_TXCTRL_TXEN);
     /* Enable Rx */
     set_reg(UART_REG_RXCTRL, UART_RXCTRL_RXEN);
-
-    // printf("[uart driver] div: 0x%x\n", get_reg(UART_REG_DIV));
-    // printf("[uart driver] ip: 0x%x\n", get_reg(UART_REG_IP));
 
     return 0;
 }

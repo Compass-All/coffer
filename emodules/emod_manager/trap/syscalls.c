@@ -19,6 +19,8 @@
 #include "../util/string.h"
 #include "../util/sysinfo.h"
 #include "emodules/emod_futex/emod_futex.h"
+#include "emodules/grand_lock.h"
+#include "enclave/threads.h"
 
 #include <emodules/emod_uart/emod_uart.h>
 #include <emodules/emod_vfs/emod_vfs.h>
@@ -60,6 +62,7 @@
 #define SYS_fsync			82
 #define SYS_exit 			93	// 0x5d
 #define SYS_exit_group 		94
+#define SYS_set_tid_address 96
 #define SYS_futex	 		98
 #define SYS_nanosleep		101
 #define SYS_clock_gettime	113
@@ -100,6 +103,8 @@ static emod_vfs_t emod_vfs;
 static emod_uart_t emod_uart;
 // static emod_net_t emod_net;
 static emod_futex_t emod_futex;
+
+u64 coffer_pid = 0;
 
 static void load_emod_vfs()
 {
@@ -182,9 +187,6 @@ static void load_emod_futex()
 // }
 
 // simple syscall handlers
-
-// #define COFFER_PID	1
-u64 coffer_pid = 0;
 
 static u64 syscall_handler_getpid()
 {
@@ -414,7 +416,7 @@ DEFINE_FS_SYSCALL_HANDLER_6(void *, mmap, void *, addr, size_t, len, int, prot,
 
 DEFINE_FS_SYSCALL_HANDLER_2(int, munmap, void *, addr, size_t, len)
 
-static inline bool is_stdio(u64 fd)
+static inline int is_stdio(u64 fd)
 {
 	return (
 		fd == 0 ||	// stdin
@@ -464,6 +466,8 @@ void syscall_handler(
 {
 	START_TIMER(syscall);
 	u64 syscall_num = regs[CTX_INDEX_a7];
+    u64 tid;
+    int *clear_child_tid;
 	u64 ret = 0;
 
 	debug("---------------\n");
@@ -717,12 +721,25 @@ void syscall_handler(
 
 	case SYS_exit:
 	 	info("syscall exit\n");
-        if (__ecall_ebi_get_tid() == 0UL) {
+        tid = __ecall_ebi_get_tid();
+        if (tid == 0UL) {
 		    set_s_timer();
+	 	    info("exit enclave\n");
 		    __ecall_ebi_exit(EXIT_ENCLAVE);
             __builtin_unreachable();
         } else {
-		    __ecall_ebi_exit_thread(INTERRUPT);
+	 	    info("exit thread\n");
+            clear_child_tid = (int *)__ecall_ebi_get_clear_child_tid();
+            if (clear_child_tid) {
+                *clear_child_tid = 0;
+                // load_emod_futex();
+                // emod_futex.emod_futex_api.sys_futex_handler(
+                //     (u32 *)clear_child_tid,
+                //     FUTEX_WAKE, 1, 0, 0, 0
+                // );
+            }
+            spin_unlock_grand();
+		    __ecall_ebi_exit_thread(EXIT_ENCLAVE);
             __builtin_unreachable();
         }
         break;
@@ -736,15 +753,34 @@ void syscall_handler(
 
     case SYS_futex:
         info("syscall futex\n");
+        show(regs[CTX_INDEX_a0]);
+		show(regs[CTX_INDEX_a1]);
+		show(regs[CTX_INDEX_a2]);
+		show(regs[CTX_INDEX_a3]);
+		show(regs[CTX_INDEX_a4]);
+		show(regs[CTX_INDEX_a5]);
         load_emod_futex();
         ret = (u64)emod_futex.emod_futex_api.sys_futex_handler(
             (u32 *) regs[CTX_INDEX_a0],
             (int)   regs[CTX_INDEX_a1],
             (int)   regs[CTX_INDEX_a2],
             (u64)   regs[CTX_INDEX_a3],
-            (u64)   regs[CTX_INDEX_a4]
+            (u64)   regs[CTX_INDEX_a4],
+            (u64)   regs[CTX_INDEX_a5]
         );
         info("end of syscall futex\n");
+        break;
+
+    case SYS_set_tid_address:
+        info("syscall set_tid_address\n");
+        show(regs[CTX_INDEX_a0]);
+        tid = __ecall_ebi_get_tid();
+        show(tid);
+        __ecall_ebi_set_clear_child_tid(
+            (int *)regs[CTX_INDEX_a0]
+        );
+        ret = (int)tid;
+        info("end of syscall set_tid_address\n");
         break;
 
 	case SYS_uname:
@@ -840,7 +876,6 @@ void syscall_handler(
 
 // omitted syscalls
 	case 29: // ioctl
-	case 96: // set_tid_address
 	case 55: // fchown
 	case 101: // nanosleep
 	case 103: // setitimer

@@ -10,9 +10,11 @@
 #include <util/register.h>
 #include <emodules/ecall.h>
 #include <enclave/enclave_ops.h>
+#include <memory/riscv_barrier.h>
 #include "../memory/page_table.h"
 #include "../emod_table/emod_table.h"
 #include "util/console.h"
+#include <emodules/grand_lock.h>
 
 #define SCAUSE_INTER	(1UL << 63)
 #define SCAUSE_ECALL	0x8UL
@@ -25,12 +27,22 @@ void exception_handler(
 	u64		stval
 )
 {
+    if (scause == SCAUSE_ECALL) {
+        info("triggered by ecall\n");
+        spin_lock_grand_suspend();
+    } else if (scause & SCAUSE_INTER) {
+        info("triggered by interrupt\n");
+        spin_lock_grand_suspend();
+    } else {
+        info("triggered by exception\n");
+    }
+
 	if (scause == SCAUSE_ECALL) {
 		syscall_handler(regs, sepc, scause, stval);
-		return;
+        goto out;
 	} else if (scause & SCAUSE_INTER) {
 		interrupt_handler(regs, sepc, scause & (~SCAUSE_INTER), stval);
-		return;
+        goto out;
 	}
 
 	error("Trapped! Exception!\n");
@@ -81,7 +93,7 @@ void exception_handler(
 		printf(KMAG "Load access fault, stval = 0x%lx, pa = 0x%lx, count = %lu\n" RESET,
 			stval, access_fault_pa, acc_fault_count);
 		__ecall_unmatched_acc_fault(stval);
-		return;
+        goto out;
 	case 0x6:
 		error("Store/AMO address misaligned\n");
 		break;
@@ -122,4 +134,8 @@ void exception_handler(
 	}
 
 	panic("Exception unhandled\n");
+
+out:
+    spin_unlock_grand();
+    return;
 }

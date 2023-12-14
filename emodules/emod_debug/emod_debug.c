@@ -99,13 +99,13 @@ vaddr_t debug_init(vaddr_t emod_manager_getter)
 		.emod_debug_api = emod_debug_api
 	};
 
-	debug("[debug_init] emod_manager_getter at 0x%lx\n",
-		emod_manager_getter);
+	// debug("[debug_init] emod_manager_getter at 0x%lx\n",
+	// 	emod_manager_getter);
 
-	if (emod_manager_getter == (vaddr_t)0UL) {
-		debug("Error: NULL emod_manager getter\n");
-		return (vaddr_t)0UL;
-	}
+	// if (emod_manager_getter == (vaddr_t)0UL) {
+	// 	debug("Error: NULL emod_manager getter\n");
+	// 	return (vaddr_t)0UL;
+	// }
 
 	emod_manager_t (*getter)(void)
 		= (void *)emod_manager_getter;

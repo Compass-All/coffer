@@ -5,6 +5,8 @@
 #include "../vfs/prex.h"
 #include "types.h"
 
+typedef int bool;
+
 /*
  * File/directory node for RAMFS
  */

@@ -1,4 +1,5 @@
 #include "syscall_handlers.h"
+#include "emodules/grand_lock.h"
 #include "syscalls.h"
 #include <emodules/emod_vfs/iovec.h>
 #include "task.h"

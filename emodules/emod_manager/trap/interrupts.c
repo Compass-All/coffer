@@ -8,6 +8,7 @@
 #include <util/console.h>
 #include <enclave/enclave_ops.h>
 #include <message/short_message.h>
+#include "emodules/grand_lock.h"
 
 #define INTER_S_TIMER 5
 
@@ -41,7 +42,9 @@ static void timer_interrupt_handler()
 	static u64 count = 1;
 	if (count % 10 == 0) {
 		STOP_TIMER(interrupt);
+        spin_unlock_grand();
 		__ecall_ebi_suspend(INTERRUPT);
+        spin_lock_grand_suspend();
 		START_TIMER(interrupt);
 	}	
 	count++;

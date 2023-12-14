@@ -21,20 +21,14 @@ typedef unsigned long u64;
 typedef unsigned long ulong;
 typedef unsigned long uint64_t;
 
-#ifndef __GNUG__ // GNU C++
-typedef int bool;
-#endif
-
 typedef u64 usize;
 typedef unsigned long size_t;
 typedef signed long ssize_t;
 
-typedef u64 paddr_t;
-typedef u64 vaddr_t;
-typedef paddr_t __paddr_t;
-
+#ifndef _ASM_GENERIC_TYPES_H
 typedef signed   char      __s8;
 typedef unsigned char      __u8;
+#endif
 #define __PRIs8 "d"
 #define __PRIu8 "u"
 #define __PRIx8 "x"
@@ -43,8 +37,10 @@ typedef unsigned char      __u8;
 #define __SCNx8 "hhx"
 #define __HAVE_INT8__
 
+#ifndef _ASM_GENERIC_TYPES_H
 typedef signed   short     __s16;
 typedef unsigned short     __u16;
+#endif
 #define __PRIs16 "d"
 #define __PRIu16 "u"
 #define __PRIx16 "x"
@@ -53,8 +49,10 @@ typedef unsigned short     __u16;
 #define __SCNx16 "hx"
 #define __HAVE_INT16__
 
+#ifndef _ASM_GENERIC_TYPES_H
 typedef signed   int     __s32;
 typedef unsigned int     __u32;
+#endif
 #define __PRIs32 "d"
 #define __PRIu32 "u"
 #define __PRIx32 "x"
@@ -63,9 +61,10 @@ typedef unsigned int     __u32;
 #define __SCNx32 "x"
 #define __HAVE_INT32__
 
-
+#ifndef _ASM_GENERIC_TYPES_H
 typedef signed   long      __s64;
 typedef unsigned long      __u64;
+#endif
 #define __PRIs64 "ld"
 #define __PRIu64 "lu"
 #define __PRIx64 "lx"
@@ -93,6 +92,9 @@ typedef __uptr __vaddr_t; /* virtual address */
 typedef __u64 __paddr_t;
 #define __PRIpaddr __PRIx64
 #define __HAVE_PADDR__
+
+typedef u64 paddr_t;
+typedef u64 vaddr_t;
 
 #ifndef __NULL
 #define __NULL ((void *) 0)

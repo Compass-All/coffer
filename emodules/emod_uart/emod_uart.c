@@ -22,12 +22,6 @@ static emod_desc_t emod_uart_desc = {
 static emod_uart_api_t emod_uart_api;
 static emod_uart_t emod_uart;
 
-// #ifdef EMODULES_DEBUG
-#define debug(fmt, ...) printf_(fmt, ##__VA_ARGS__)
-// #else
-// #define debug(fmt, ...)
-// #endif
-
 static emod_uart_t get_emod_uart(void)
 {
     return emod_uart;

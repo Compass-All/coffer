@@ -6,6 +6,7 @@
 #include <enclave/host_ops.h>
 #include <enclave/enclave_ops.h>
 #include "debug/debug.h"
+#include "emodules/grand_lock.h"
 #include "panic/panic.h"
 #include "memory/memory.h"
 #include "memory/page_table.h"
@@ -15,6 +16,7 @@
 #include "attest/key.h"
 #include "attest/md2.h"
 #include "attest/ecc.h"
+#include "lock/lock.h"
 
 #include <emodules/emod_dummy/emod_dummy.h>
 #include <emodules/emod_debug/emod_debug.h>
@@ -86,7 +88,7 @@ static void load_emodule(u32 emodule_id)
 	usize emodule_size = get_emodule_size(emodule_id);	
 
 	vaddr_t vaddr = alloc_map_emodule(emodule_size);
-    info("Emod %u loaded at 0x%lx, size: 0x%lx\n", emodule_id, vaddr, emodule_size);
+    info("Emod %u will be loaded at 0x%lx, size: 0x%lx\n", emodule_id, vaddr, emodule_size);
 
 	__ecall_ebi_listen_message(
 		0UL,
@@ -145,6 +147,10 @@ void emod_manager_init()
 	emod_manager_api.unmap_page			= unmap_page;
 	emod_manager_api.panic				= panic;
 	emod_manager_api.get_pa				= get_pa;
+    emod_manager_api.spin_trylock_grand = spin_trylock_grand;
+    emod_manager_api.spin_unlock_grand  = spin_unlock_grand;
+    emod_manager_api.spin_lock_log      = spin_lock_log;
+    emod_manager_api.spin_unlock_log    = spin_unlock_log;
 
 	show(emod_manager_api.test);
 	show(emod_manager_api.acquire_emodule);

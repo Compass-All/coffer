@@ -14,6 +14,7 @@ emodule-objs-y += trap/exceptions.o
 emodule-objs-y += trap/syscalls.o
 emodule-objs-y += trap/interrupts.o
 emodule-objs-y += emod_table/emod_table.o
+emodule-objs-y += lock/lock.o
 emodule-objs-y += printf/printf.o
 emodule-objs-y += util/string.o
 emodule-objs-y += eval/eval.o
@@ -29,6 +30,7 @@ emodule-genflags += -DEUSR_HEAP_START_ALIGNED=$(EUSR_HEAP_START_ALIGNED)
 emodule-genflags += -DSMODE_STACK_SIZE=$(SMODE_STACK_SIZE)
 emodule-genflags += -DATTEST_PUB_KEY=$(ATTEST_PUB_KEY)
 # emodule-genflags += -DATTEST_PRI_KEY=$(ATTEST_PRI_KEY)
+emodule-genflags += -DIN_EMOD_MANAGER
 
 
 ifeq ($(TARGET_PLATFORM), qemu)
