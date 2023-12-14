@@ -732,11 +732,11 @@ void syscall_handler(
             clear_child_tid = (int *)__ecall_ebi_get_clear_child_tid();
             if (clear_child_tid) {
                 *clear_child_tid = 0;
-                // load_emod_futex();
-                // emod_futex.emod_futex_api.sys_futex_handler(
-                //     (u32 *)clear_child_tid,
-                //     FUTEX_WAKE, 1, 0, 0, 0
-                // );
+                load_emod_futex();
+                emod_futex.emod_futex_api.sys_futex_handler(
+                    (u32 *)clear_child_tid,
+                    FUTEX_WAKE, 1, 0, 0, 0
+                );
             }
             spin_unlock_grand();
 		    __ecall_ebi_exit_thread(EXIT_ENCLAVE);

@@ -123,7 +123,7 @@ void vref(struct vnode *vp)
 	vp->v_refcnt++;
 }
 
-static const char *
+__unused static const char *
 vn_path(struct vnode *vp)
 {
 	struct dentry *dp;

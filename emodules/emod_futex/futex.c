@@ -217,8 +217,8 @@ static int futex_wake(vaddr_t uaddr, int nr_wake)
         }
     }
     if (cnt < nr_wake) {
-        LOG(cnt); LOG(nr_wake);
-        warn("No enough blocked threads to wake\n");
+        show(cnt); show(nr_wake);
+        info("No enough blocked threads to wake\n");
     }
     info("Waking threads 0x%lx\n", threads_to_unblock);
     __ecall_ebi_unblock_threads(threads_to_unblock);
