@@ -207,7 +207,7 @@ static int futex_wake(vaddr_t uaddr, int nr_wake)
     show(blocked_threads);
 
     int cnt = 0;
-    for (int i = 0; i < MAX_THREADS; i++) {
+    for (int i = 0; i < NUM_THREADS; i++) {
         if (cnt == nr_wake)
             break;
 
