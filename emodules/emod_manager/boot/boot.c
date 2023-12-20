@@ -53,9 +53,6 @@ void emain_upper_half(
 	extern u8 _end; // defined in the linker script
 	paddr_t emod_manager_pa_end = (paddr_t)&_end;
 
-	extern u64 coffer_pid;
-	coffer_pid = (int)eid;
-
 	/* upper half of enclave initialization */
 	debug("Beginning of emain upper half\n");
 	show(eid);

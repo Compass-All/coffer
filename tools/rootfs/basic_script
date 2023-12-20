@@ -131,3 +131,9 @@ rm dbbench_sqlite3*
 /prog/host/test_eapp /prog/enclave/musl_eapp/eapp_thread
 
 /prog/host/test_eapp /prog/enclave/eapp_test_ecall 57005
+
+/prog/host/test_eapp  /prog/enclave/stress-ng/stress-ng --memrate 1 --memrate-ops 10 --memrate-wr-mbs 2000 --memrate-rd-mbs 1000 --memrate-bytes 64M
+
+
+/prog/host/test_eapp  /prog/enclave/stress-ng/stress-ng --vm 1 --vm-bytes 256m --vm-ops 8192 --vm-keep --vm-madvise normal --vm-method modulo-x --metrics-brief
+

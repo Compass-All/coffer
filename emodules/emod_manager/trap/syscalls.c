@@ -21,6 +21,7 @@
 #include "emodules/emod_futex/emod_futex.h"
 #include "emodules/grand_lock.h"
 #include "enclave/threads.h"
+#include "sys/types.h"
 
 #include <emodules/emod_uart/emod_uart.h>
 #include <emodules/emod_vfs/emod_vfs.h>
@@ -68,6 +69,7 @@
 #define SYS_clock_gettime	113
 #define SYS_sched_setaffinity 122
 #define SYS_sched_getaffinity 122
+#define SYS_sched_yield		124
 #define SYS_kill 			129
 #define SYS_signalstack		132
 #define SYS_rt_sigaction 	134
@@ -83,6 +85,7 @@
 #define SYS_geteuid 		175
 #define SYS_getgid 			176
 #define SYS_getegid 		177
+#define SYS_gettid			178
 #define SYS_sysinfo 		179
 #define SYS_brk 			214
 #define SYS_munmap 			215
@@ -104,7 +107,7 @@ static emod_uart_t emod_uart;
 // static emod_net_t emod_net;
 static emod_futex_t emod_futex;
 
-u64 coffer_pid = 0;
+// u64 coffer_pid = 0;
 
 static void load_emod_vfs()
 {
@@ -190,7 +193,8 @@ static void load_emod_futex()
 
 static u64 syscall_handler_getpid()
 {
-	return coffer_pid;
+	return __ecall_ebi_get_tid();
+	// return coffer_pid;
 }
 
 static int syscall_handler_geteuid()
@@ -217,12 +221,21 @@ static int syscall_handler_getcpu(unsigned int *cpu, unsigned int *node)
 
 static int syscall_handler_uname(struct utsname *buf)
 {
-	memcpy(buf->sysname, "Coffer", 6);
-	memcpy(buf->nodename, "Coffer", 6);
-	memcpy(buf->release, "0.1", 3);
-	memcpy(buf->version, "0.1", 3);
-	memcpy(buf->machine, "riscv64", 7);
-	memcpy(buf->domainname, "Coffer", 6);
+	if (!buf) {
+		panic("syscall_handler_uname buf is NULL\n");
+	}
+	// if (buf->sysname != NULL)
+	// 	memcpy(buf->sysname, "Coffer", 6);
+	// if (buf->nodename != NULL)
+	// 	memcpy(buf->nodename, "Coffer", 6);
+	// if (buf->release != NULL)
+	// 	memcpy(buf->release, "0.1", 3);
+	// if (buf->version != NULL)
+	// 	memcpy(buf->version, "0.1", 3);
+	// if (buf->machine != NULL)
+	// 	memcpy(buf->machine, "riscv64", 7);
+	// if (buf->domainname != NULL)
+	// 	memcpy(buf->domainname, "Coffer", 6);
 
 	return 0;
 }
@@ -309,6 +322,11 @@ static void syscall_handler_clock_gettime(
 	tp->tv_sec	= time / FREQ;
 	tp->tv_nsec	= time % FREQ;
 	return;
+}
+
+static pid_t syscall_handler_gettid()
+{
+	return 0;
 }
 
 // other syscall handlers
@@ -720,15 +738,16 @@ void syscall_handler(
 		break;
 
 	case SYS_exit:
-	 	info("syscall exit\n");
-        tid = __ecall_ebi_get_tid();
-        if (tid == 0UL) {
-		    set_s_timer();
-	 	    info("exit enclave\n");
-		    __ecall_ebi_exit(EXIT_ENCLAVE);
-            __builtin_unreachable();
-        } else {
-	 	    info("exit thread\n");
+	case SYS_exit_group:
+		info("syscall exit_group\n");
+		tid = __ecall_ebi_get_tid();
+		if (tid == 0UL) {
+			set_s_timer();
+			info("exit enclave\n");
+			__ecall_ebi_exit(EXIT_ENCLAVE);
+			__builtin_unreachable();
+		} else {
+			info("exit thread\n");
             clear_child_tid = (int *)__ecall_ebi_get_clear_child_tid();
             if (clear_child_tid) {
                 *clear_child_tid = 0;
@@ -741,14 +760,7 @@ void syscall_handler(
             spin_unlock_grand();
 		    __ecall_ebi_exit_thread(EXIT_ENCLAVE);
             __builtin_unreachable();
-        }
-        break;
-
-	case SYS_exit_group:
-	 	info("syscall exit_group\n");
-		set_s_timer();
-		__ecall_ebi_exit(EXIT_ENCLAVE);
-        __builtin_unreachable();
+		}
 		break;
 
     case SYS_futex:
@@ -873,10 +885,22 @@ void syscall_handler(
 		);
 		info("end of syscall prlimit64\n");
 		break;
+	case SYS_gettid:
+		info("syscall gettid\n");
+		ret = (u64)syscall_handler_gettid();
+		info("end of syscall gettid\n");
+		break;
+	case SYS_sched_yield:
+		info("syscall sched_yield\n");
+		// ret = (u64)syscall_handler_sched_yield();
+		info("end of syscall sched_yield\n");
+		break;
 
 // omitted syscalls
 	case 29: // ioctl
+	case 43: // statfs
 	case 55: // fchown
+	case 58: // vhangup
 	case 101: // nanosleep
 	case 103: // setitimer
 	case 122: // setaffinity
@@ -884,10 +908,15 @@ void syscall_handler(
 	case 132: // signalstack
 	case 134: // sigaction
 	case 135: // sigprocmask
+	case 154: // setpgid
+	case 155: // getpgid
+	case 157: // setsid
 	case 166: // umask
 	case 167: // prctl
 	case 226: // mprotect
+	case 227: // msync
 	case 233: // madvise
+	case 260: // wait4
 		info("skipping syscall\n");
 		break;
 	

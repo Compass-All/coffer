@@ -3,6 +3,7 @@
 
 #include <types.h>
 #include <memory/page_table.h>
+#include <enclave/threads.h>
 
 #ifndef ROUNDUP
 #define ROUNDUP(a, b) ((((a)-1) / (b) + 1) * (b))
@@ -29,7 +30,8 @@
 #define PARTITION_UP(addr) (ROUNDUP(addr, PARTITION_SIZE))
 #define PARTITION_DOWN(addr) ((addr) & (~((PARTITION_SIZE)-1)))
 
-#define UMODE_STACK_SIZE 0x20000
+#define UMODE_STACK_SIZE_TOTAL 0x80000
+#define UMODE_STACK_SIZE   (UMODE_STACK_SIZE_TOTAL / MAX_FORK)
 #define UMODE_STACK_TOP_VA 0x3fff000000
 
 #endif

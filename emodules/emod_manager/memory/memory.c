@@ -214,14 +214,14 @@ void map_user_argv(paddr_t user_argv_pa, u64 argc)
 // allocate user mode stack, return stack top va
 vaddr_t alloc_map_umode_stack()
 {
-	usize number_of_pages = UMODE_STACK_SIZE >> PAGE_SHIFT;
+	usize number_of_pages = UMODE_STACK_SIZE_TOTAL >> PAGE_SHIFT;
 	debug("allocating U mode stack: %lu pages\n",
 		number_of_pages);
 
 	paddr_t umode_stack_bottom_paddr =
 		alloc_umode_page(number_of_pages);
 	vaddr_t umode_stack_bottom_vaddr =
-		UMODE_STACK_TOP_VA - UMODE_STACK_SIZE;
+		UMODE_STACK_TOP_VA - UMODE_STACK_SIZE_TOTAL;
 
 	show(umode_stack_bottom_paddr);
 	show(umode_stack_bottom_vaddr);
