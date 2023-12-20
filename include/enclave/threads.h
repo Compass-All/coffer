@@ -9,7 +9,7 @@
 #endif 
 
 #define THREADS_LIMIT   64
-#define __NUM_THREADS   (2048 / NUM_ENCLAVE)
+#define __NUM_THREADS   (1024 / NUM_ENCLAVE)
 #define NUM_THREADS     (__NUM_THREADS > THREADS_LIMIT ? THREADS_LIMIT : __NUM_THREADS)
 #define MAX_FORK     4
 
