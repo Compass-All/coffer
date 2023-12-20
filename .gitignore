@@ -1,4 +1,5 @@
 screenlog.0
+*.pcap
 
 __pycache__
 
