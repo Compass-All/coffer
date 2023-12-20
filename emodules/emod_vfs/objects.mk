@@ -21,3 +21,9 @@ emodule-objs-y += mmap/mmap.o
 
 emodule-genflags = 
 emodule-genflags += -DMMAP_START_VA=$(MMAP_START_VA)
+
+ifeq ($(TARGET_PLATFORM), qemu)
+emodule-genflags += -D__QEMU__
+else ifeq  ($(TARGET_PLATFORM), unmatched)
+emodule-genflags += -D__UNMATCHED__
+endif
