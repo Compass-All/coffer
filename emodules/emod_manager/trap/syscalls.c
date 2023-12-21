@@ -197,6 +197,12 @@ static u64 syscall_handler_getpid()
 	// return coffer_pid;
 }
 
+static pid_t syscall_handler_gettid()
+{
+	return __ecall_ebi_get_tid();
+	// return coffer_pid;
+}
+
 static int syscall_handler_geteuid()
 {
 	return 0;
@@ -322,11 +328,6 @@ static void syscall_handler_clock_gettime(
 	tp->tv_sec	= time / FREQ;
 	tp->tv_nsec	= time % FREQ;
 	return;
-}
-
-static pid_t syscall_handler_gettid()
-{
-	return 0;
 }
 
 // other syscall handlers
