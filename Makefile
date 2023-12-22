@@ -109,12 +109,15 @@ $(UBOOT_SPL_IMAGE): $(FW_DYNAMIC_BIN) $(DTB_DIR)/hifive-unmatched-a00.dtb
 	cp $(UBOOT_SRC)/spl/u-boot-spl.bin $@
 	@printf "[*] Building U-Boot SPL Image Done...\n\n"
 
+clean_log:
+	-rm *.log
+
 clean:
 	rm -rf $(BUILD_DIR)
 
-clean_all: clean
+clean_all: clean clean_log
 	make clean -C coffer-opensbi
 	make clean -C coffer_user_mode
 	make clean -C $(UBOOT_SRC)
 
-.PHONY: all clean clean_all prog emodules opensbi
+.PHONY: all clean clean_all clean_log prog emodules opensbi

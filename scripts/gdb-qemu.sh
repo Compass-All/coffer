@@ -9,7 +9,7 @@ ROOTFS=tools/rootfs/old-root.img
 
 # qemu-system-riscv64 -M virt -m 16G -smp 4 -nographic \
 # qemu-system-riscv64 -M virt -m 16G -smp 1 -nographic \
-qemu-system-riscv64 -M virt -m 16G -smp 1 -nographic -s -S \
+qemu-system-riscv64 -M virt -m 16G -smp 2 -nographic -s -S \
     -bios $BIOS \
     -kernel $KERNEL \
     -device loader,file=$KERNEL,addr=0x80200000 \
