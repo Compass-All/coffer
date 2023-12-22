@@ -3,7 +3,7 @@
 #if defined __QEMU__
 #define NUM_ENCLAVE     64
 #elif defined __UNMATCHED__
-#define NUM_ENCLAVE		32
+#define NUM_ENCLAVE     64
 #else
 #error "Unknown Platform"
 #endif 
