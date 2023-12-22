@@ -124,6 +124,7 @@ static void *alloc_mega_page(usize num)
 			while (left) {
 				usize sug = left, allocated;
 				do {
+                    sug = 1;
 					allocated = sug;
 					pa = __ecall_ebi_mem_alloc(allocated, &sug);
 				} while (pa == -1UL);

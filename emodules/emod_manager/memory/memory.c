@@ -274,6 +274,7 @@ static void alloc_map_brk_outside_pool(
 		paddr_t pa;
 
 		do {
+			sug = 1;
 			allocated = sug;
 			pa = __ecall_ebi_mem_alloc(sug, &sug);
 		} while (pa == -1UL);
