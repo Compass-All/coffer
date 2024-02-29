@@ -1,0 +1,80 @@
+name: build-docker-image-edge
+
+on:
+  push:
+    branches:
+      - master
+  schedule:
+    - cron: 0 0 * * *
+
+env:
+  GITHUB_REGISTRY: ghcr.io
+
+jobs:
+  build-image:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - name: Read Docker Image Identifiers
+        id: read-docker-image-identifiers
+        run: echo "IMAGE_REPOSITORY=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Log into registry ${{ env.GITHUB_REGISTRY }}
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.GITHUB_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log into DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: |
+            ${{ env.GITHUB_REGISTRY }}/${{ env.IMAGE_REPOSITORY }}
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v3
+        with:
+          push: true
+          context: .
+          tags: |
+            ${{ env.GITHUB_REGISTRY }}/${{ env.IMAGE_REPOSITORY }}:${{ github.sha }}
+            ${{ env.GITHUB_REGISTRY }}/${{ env.IMAGE_REPOSITORY }}:latest
+            ${{ env.IMAGE_REPOSITORY }}:${{ github.sha }}
+            ${{ env.IMAGE_REPOSITORY }}:latest
+          platforms: linux/amd64,linux/s390x,linux/ppc64le,linux/arm64
+          labels: ${{ steps.meta.outputs.labels }}
+  scan-image:
+    runs-on: ubuntu-latest
+    needs: [build-image]
+    steps:
+      - name: Read Docker Image Identifiers for Trivy
+        id: read-docker-image-identifiers-for-trivy
+        run: echo "IMAGE_REPOSITORY=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+      - name: Trivy image scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          format: sarif
+          # ignore-unfixed: true
+          image-ref: ${{ env.GITHUB_REGISTRY }}/${{ env.IMAGE_REPOSITORY }}:latest
+          output: trivy-results.sarif
+          # severity: CRITICAL,HIGH
+          # vuln-type: os,library
+      - name: Revert Docker Image Identifiers for Trivy for Upload
+        id: revert-docker-image-identifiers-for-trivy-for-upload
+        run: echo "IMAGE_REPOSITORY=$(echo ${{ github.repository }})"
+      - if: always()
+        name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: trivy-results.sarif

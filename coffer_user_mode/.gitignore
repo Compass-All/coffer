@@ -1,0 +1,7 @@
+*.weights
+*.o
+*.a
+*.so
+
+src/enclave_app/darknet/darknet
+src/enclave_app/sqlite-bench/sqlite-bench
