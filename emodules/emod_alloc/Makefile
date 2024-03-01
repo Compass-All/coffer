@@ -25,12 +25,14 @@ CPP		=	$(CROSS_COMPILE)cpp
 AR		=	$(CROSS_COMPILE)ar
 LD		=	$(CROSS_COMPILE)ld
 OBJCOPY		=	$(CROSS_COMPILE)objcopy
+OBJDUMP 	=	$(CROSS_COMPILE)objdump
 else
 CC		?=	gcc
 CPP		?=	cpp
 AR		?=	ar
 LD		?=	ld
 OBJCOPY		?=	objcopy
+OBJDUMP 	=	objdump
 endif
 AS		=	$(CC)
 DTC		=	dtc
@@ -90,6 +92,7 @@ $(target): $(target_dir)/$(MODULE).elf
 
 $(target_dir)/$(MODULE).elf: $(target-objs-y) $(target_dir)/$(MODULE).ld | $(target_dir)
 	$(CC) $(CFLAGS) $(target-objs-y) -T $(target_dir)/$(MODULE).ld -o $@
+	$(OBJDUMP) -d $@ > $(target_dir)/$(MODULE).asm
 
 $(target_dir)/$(MODULE).ld: $(src_dir)/$(MODULE).lds | $(target_dir)
 	$(CPP) $(CPPFLAGS) -x c $< | grep -v "\#" > $@
