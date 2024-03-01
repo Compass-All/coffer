@@ -114,6 +114,7 @@ clean_log:
 
 clean:
 	rm -rf $(BUILD_DIR)
+	make clean -C emodules/emod_rust_dummy
 
 clean_all: clean clean_log
 	make clean -C coffer-opensbi

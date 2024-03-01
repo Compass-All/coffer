@@ -26,6 +26,7 @@
 #include <emodules/emod_uart/emod_uart.h>
 #include <emodules/emod_vfs/emod_vfs.h>
 #include <emodules/emod_net/emod_net.h>
+#include <emodules/emod_rust_dummy/emod_rust_dummy.h>
 
 #include <sys/stat.h>
 #include <time.h>
@@ -106,6 +107,7 @@ static emod_vfs_t emod_vfs;
 static emod_uart_t emod_uart;
 // static emod_net_t emod_net;
 static emod_futex_t emod_futex;
+static emod_rust_dummy_t emod_rust_dummy;
 
 // u64 coffer_pid = 0;
 
@@ -168,6 +170,27 @@ static void load_emod_futex()
 	}
 
 	info("CP1\n");
+}
+
+static void load_emod_rust_dummy()
+{
+    static u8 loaded = 0;
+
+    if (!loaded) {
+        START_TIMER(module);
+        STOP_TIMER(syscall);
+
+        debug("emod_rust_dummy not loaded\n");
+        vaddr_t emod_rust_dummy_getter = acquire_emodule(EMODULE_ID_RUST_DUMMY);
+        emod_rust_dummy = ((emod_rust_dummy_t (*)(void))emod_rust_dummy_getter)();
+
+        START_TIMER(syscall);
+        STOP_TIMER(module);
+
+        loaded = 1;
+    }
+
+    info("CP1\n");
 }
 
 // static void load_emod_net(void)
@@ -922,12 +945,11 @@ void syscall_handler(
 		break;
 	
 // Custom syscalls
-	// case SYS_test:
-	// 	info("syscall test\n");
-	// 	load_emod_net();
-	// 	emod_net.emod_net_api.test(123);
-	// 	info("end of syscall test\n");
-	// 	break;
+	case SYS_test:
+		info("syscall test\n");
+		load_emod_rust_dummy();
+		info("end of syscall test\n");
+		break;
 
 	case SYS_uart_getc:
 		load_emod_uart();

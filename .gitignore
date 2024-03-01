@@ -72,6 +72,9 @@ dkms.conf
 .vscode/
 .idea/
 
+# cargo
+.cargo
+
 # build directory
 build/
 

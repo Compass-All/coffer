@@ -21,6 +21,7 @@
 #include <emodules/emod_dummy/emod_dummy.h>
 #include <emodules/emod_debug/emod_debug.h>
 #include <emodules/emod_alloc/emod_alloc.h>
+#include <emodules/emod_rust_dummy/emod_rust_dummy.h>
 
 // ---------------
 // emodule manager descriptor

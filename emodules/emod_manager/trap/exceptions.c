@@ -31,7 +31,7 @@ void exception_handler(
         info("triggered by ecall\n");
         spin_lock_grand_suspend();
     } else if (scause & SCAUSE_INTER) {
-        info("triggered by interrupt\n");
+        // info("triggered by interrupt\n");
         spin_lock_grand_suspend();
     } else {
         info("triggered by exception\n");

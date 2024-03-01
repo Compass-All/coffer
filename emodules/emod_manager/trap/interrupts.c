@@ -43,7 +43,7 @@ static void timer_interrupt_handler()
 	if (count % 10 == 0) {
 		STOP_TIMER(interrupt);
         spin_unlock_grand();
-		__ecall_ebi_suspend(INTERRUPT);
+		// __ecall_ebi_suspend(INTERRUPT);
         spin_lock_grand_suspend();
 		START_TIMER(interrupt);
 	}	

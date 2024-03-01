@@ -8,4 +8,5 @@
 #define EMODULE_ID_UART			5
 #define EMODULE_ID_FUTEX		6
 #define EMODULE_ID_DUMMY		7
-#define EMODULE_ID_MAX      	8
+#define EMODULE_ID_RUST_DUMMY	8
+#define EMODULE_ID_MAX      	9
