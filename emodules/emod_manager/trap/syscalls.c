@@ -180,9 +180,8 @@ static void load_emod_rust_dummy()
         START_TIMER(module);
         STOP_TIMER(syscall);
 
-        debug("emod_rust_dummy not loaded\n");
         vaddr_t emod_rust_dummy_getter = acquire_emodule(EMODULE_ID_RUST_DUMMY);
-        emod_rust_dummy = ((emod_rust_dummy_t (*)(void))emod_rust_dummy_getter)();
+        emod_rust_dummy = ((emod_rust_dummy_t (*)(void))emod_rust_dummy_getter)(); // this assignment is problematic
 
         START_TIMER(syscall);
         STOP_TIMER(module);

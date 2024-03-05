@@ -5,8 +5,7 @@
 #include <emodules/emodule_id.h>
 
 typedef struct {
-	int (*dummy_func1)(int arg1, int arg2);
-	void (*dummy_func2)(int arg1);
+	usize (*handler)(usize arg1, usize arg2);
 } emod_rust_dummy_api_t;
 
 typedef struct {

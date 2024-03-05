@@ -13,7 +13,9 @@ ifconfig lo 127.0.0.1
 # route add default gw 10.0.2.2
 
 /prog/host/test_eapp /prog/enclave/eapp_write
+# /prog/host/test_eapp /prog/enclave/musl_eapp/eapp_fs_test
 /prog/host/test_eapp /prog/enclave/eapp_test_ecall 7890
+
 # /prog/host/reset_coffer
 
 # /prog/host/test_eapp /prog/enclave/musl_eapp/eapp_thread
