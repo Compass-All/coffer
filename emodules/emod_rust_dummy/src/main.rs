@@ -77,7 +77,7 @@ struct EModManagerApi {
     acquire_emodule: extern "C" fn(u32) -> usize,
     map_page: extern "C" fn(usize, usize, u8, u8),
     unmap_page: extern "C" fn(usize, u8),
-    panic: extern "C" fn(*const c_char),
+    panic: extern "C" fn(*const c_uchar) -> !,
     spin_trylock_grand: extern "C" fn() -> i32,
     spin_unlock_grand: extern "C" fn(),
     spin_lock_log: extern "C" fn(),
@@ -126,6 +126,8 @@ unsafe extern "C" fn _start(
     EMOD_MANAGER.0.replace(Some(emod_manager));
     (EMOD_MANAGER.0.borrow().as_ref().unwrap().emod_manager_api.test)();
 
+    panic!("Test");
+
     get_emod_rust_dummy
 }
 
@@ -142,5 +144,6 @@ extern "C" fn handler(_arg0: usize, _arg1: usize) -> usize {
 fn on_panic(info: &PanicInfo) -> ! {
     let mut mc = EModuleConsole();
     writeln!(mc, "[Panic] {}", info).unwrap();
-    loop {}
+    let panic_msg = b"Rust panic\n\0" as *const u8;
+    (EMOD_MANAGER.0.borrow().as_ref().unwrap().emod_manager_api.panic)(panic_msg)
 }
