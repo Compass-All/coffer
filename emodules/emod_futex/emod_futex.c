@@ -9,7 +9,6 @@
 static emod_desc_t emod_futex_desc = {
 	.emod_id = EMODULE_ID_FUTEX,
 	.name = "emodule futex",
-	.__signature = 0
 };
 static emod_futex_api_t emod_futex_api;
 static emod_futex_t emod_futex;

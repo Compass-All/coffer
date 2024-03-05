@@ -13,7 +13,6 @@
 static emod_desc_t emod_vfs_desc = {
 	.emod_id = EMODULE_ID_VFS,
 	.name = "emodule vfs",
-	.__signature = 0
 };
 static emod_vfs_api_t emod_vfs_api;
 static emod_vfs_t emod_vfs;

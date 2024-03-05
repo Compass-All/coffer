@@ -9,7 +9,6 @@
 static emod_desc_t emod_alloc_desc = {
 	.emod_id = EMODULE_ID_ALLOC,
 	.name = "emodule alloc",
-	.__signature = 0
 };
 static emod_alloc_api_t emod_alloc_api;
 static emod_alloc_t 	emod_alloc;

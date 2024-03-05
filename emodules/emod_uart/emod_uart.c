@@ -16,7 +16,6 @@
 static emod_desc_t emod_uart_desc = {
     .emod_id = EMODULE_ID_UART,
     .name = "emodule uart",
-    .__signature = 0,
 };
 
 static emod_uart_api_t emod_uart_api;

@@ -9,7 +9,6 @@
 static emod_desc_t emod_debug_desc = {
 	.emod_id = EMODULE_ID_DEBUG,
 	.name = "emodule debug",
-	.__signature = 0
 };
 static emod_debug_api_t emod_debug_api;
 static emod_debug_t emod_debug;

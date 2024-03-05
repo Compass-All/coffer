@@ -8,7 +8,6 @@
 static emod_desc_t emod_dummy_desc = {
 	.emod_id = EMODULE_ID_DUMMY,
 	.name = "emodule dummy",
-	.__signature = 0
 };
 static emod_dummy_api_t emod_dummy_api;
 static emod_dummy_t emod_dummy;

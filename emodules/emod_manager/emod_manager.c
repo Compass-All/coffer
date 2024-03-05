@@ -29,7 +29,6 @@
 static emod_desc_t emod_manager_desc = {
 	.emod_id = EMODULE_ID_MANAGER,
 	.name = "emodule manager",
-	.__signature = 0
 };
 
 static emod_manager_api_t 	emod_manager_api;
@@ -42,7 +41,7 @@ static emod_manager_t get_emod_manager();
 
 static void api_test()
 {
-	debug("Emodule manager api testing\n");
+	info("Emodule manager api testing\n");
 	return;
 }
 
