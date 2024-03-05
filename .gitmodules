@@ -1,0 +1,9 @@
+[submodule "opensbi"]
+	path = opensbi
+	url = git@github.com:GartonChan/opensbi.git
+[submodule "qemu"]
+	path = qemu
+	url = git@github.com:GartonChan/qemu.git
+[submodule "u-boot"]
+	path = u-boot
+	url = git@github.com:GartonChan/u-boot.git
