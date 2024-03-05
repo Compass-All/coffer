@@ -79,7 +79,7 @@ __unused void dump_bin(bin_t *bin)
 
     node_t *temp = bin->head;
     while (temp != NULL) {
-        display_chunk(temp);
+//        display_chunk(temp);
         temp = temp->next;
     }
 }
@@ -191,7 +191,7 @@ void *heap_alloc(size_t size) {
     debug("allocating size 0x%lx\n", size);
 
     info("wild before allocation\n");
-    display_chunk(get_wilderness());
+//    display_chunk(get_wilderness());
 
     uint index = 0;
     // search for a chunk of proper size
@@ -246,11 +246,11 @@ void *heap_alloc(size_t size) {
     found->next = NULL;
 
     debug("alloc return chunk: \n");
-    display_chunk(found);
+//    display_chunk(found);
     // dump_heap(&bins[0]);
 
     info("wild after allocation:\n");
-    display_chunk(wild);
+//    display_chunk(wild);
 
     void *ret = (void *)((u64)found + sizeof(node_t));
 
@@ -306,7 +306,7 @@ void *heap_memalign(size_t sz, size_t align)
         found->hole = 1;
         found->size = prev_sz;
         debug("previous new chunk:\n");
-        display_chunk(found);
+//        display_chunk(found);
 
         create_foot(found);
         add_node_to_bin(found);
@@ -322,7 +322,7 @@ void *heap_memalign(size_t sz, size_t align)
         remain->hole = 1;
         remain->size = remain_sz;
         debug("remain chunk:\n");
-        display_chunk(remain);
+//        display_chunk(remain);
 
         create_foot(remain);
         add_node_to_bin(remain);
@@ -349,7 +349,7 @@ void *heap_memalign(size_t sz, size_t align)
     }
 
     debug("memalign return chunk:\n");
-    display_chunk(node);
+//    display_chunk(node);
 
     // dump_heap(&bins[0]);
 
@@ -368,8 +368,8 @@ void heap_free(void *p) {
     footer_t *new_foot, *old_foot;
 
     node_t *head = (node_t *) ((char *) p - sizeof(node_t));
-    debug("free chunk: \n");
-    display_chunk(head);
+    // debug("free chunk: \n");
+//    display_chunk(head);
 
     if (head == (node_t *)heap.start) {
         head->hole = 1; 
@@ -381,10 +381,10 @@ void heap_free(void *p) {
     footer_t *f = (footer_t *) ((char *) head - sizeof(footer_t));
     node_t *prev = f->header;
 
-    debug("prev chunk:\n");
-    display_chunk(prev);
-    debug("next chunk:\n");
-    display_chunk(next);
+    // debug("prev chunk:\n");
+//    display_chunk(prev);
+    // debug("next chunk:\n");
+//    display_chunk(next);
 
     if (prev->hole) {
         list = heap.bins[get_bin_index(prev->size)];
@@ -397,7 +397,7 @@ void heap_free(void *p) {
         head = prev;
 
         info("prev is free, merged chunk:\n");
-        display_chunk(head);
+//        display_chunk(head);
     }
 
     if (next->hole) {
@@ -415,7 +415,7 @@ void heap_free(void *p) {
         new_foot->header = head;
 
         info("next is free, merged chunk:\n");
-        display_chunk(head);
+//        display_chunk(head);
     }
 
     head->hole = 1;
@@ -472,7 +472,7 @@ uint expand(size_t sz)
     show(heap.end);
 
     debug("wild chunk after expansion:\n");
-    display_chunk(wild);
+//    display_chunk(wild);
 
     return 1;
 }

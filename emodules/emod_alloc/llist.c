@@ -68,8 +68,8 @@ node_t *get_best_fit(bin_t *bin, size_t size) {
     __unused size_t index = get_index_by_bin(bin);
 
     if (bin->head == NULL) {
-        debug("bin %lu (~ 0x%lx) is empty, searching for size 0x%lx\n",
-            index, 4UL << index, size);
+        // debug("bin %lu (~ 0x%lx) is empty, searching for size 0x%lx\n",
+        //     index, 4UL << index, size);
 		return NULL; // empty list!
 	}
  
@@ -81,7 +81,7 @@ node_t *get_best_fit(bin_t *bin, size_t size) {
         debug("node @ %p has size: 0x%lx\n", temp, temp->size);
         if (temp->size >= size) {
             debug("found proper node: %p\n", temp);
-            display_chunk(temp);
+//            display_chunk(temp);
             return temp; // found a fit!
         }
         temp = temp->next;

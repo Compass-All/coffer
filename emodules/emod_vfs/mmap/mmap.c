@@ -56,8 +56,8 @@ static void *alloc_small_page(usize num)
 			info("%lu more pages\n", left);
 
 			for (int i = 0; i < PARTITION_SIZE / PAGE_SIZE; i++) {
-				debug("mapping page: va = 0x%lx, pa = 0x%lx, size = 0x%lx\n",
-						mmap_top, pa, 0x1000);
+				// debug("mapping page: va = 0x%lx, pa = 0x%lx, size = 0x%lx\n",
+				// 		mmap_top, pa, 0x1000);
 				map_page(mmap_top, pa, PTE_R | PTE_W | PTE_U, SV39_LEVEL_PAGE);
 				mmap_top += PAGE_SIZE;
 				pa += PAGE_SIZE;
