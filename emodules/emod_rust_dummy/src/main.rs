@@ -126,8 +126,6 @@ unsafe extern "C" fn _start(
     EMOD_MANAGER.0.replace(Some(emod_manager));
     (EMOD_MANAGER.0.borrow().as_ref().unwrap().emod_manager_api.test)();
 
-    panic!("Test");
-
     get_emod_rust_dummy
 }
 
