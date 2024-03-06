@@ -7,3 +7,6 @@
 [submodule "u-boot"]
 	path = u-boot
 	url = git@github.com:GartonChan/u-boot.git
+[submodule "coffer_emodules"]
+	path = coffer_emodules
+	url = git@github.com:GartonChan/coffer_emodules.git
