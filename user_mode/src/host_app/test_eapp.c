@@ -15,11 +15,11 @@ int main(int argc, char *argv[])
 
 	// create enclave
 	char *payload_path = argv[1];
-	
+	printf("To create_enclave with payload: %s\n", payload_path);
 	u64 eid = create_enclave();
 
-	// printf("enclave created: eid = %ld\n", eid);
-	// fflush(stdout);
+	printf("enclave created: eid = %ld\n", eid);
+	fflush(stdout);
 
 	enter_enclave(
 		eid,

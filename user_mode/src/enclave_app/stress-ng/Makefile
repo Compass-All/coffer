@@ -607,11 +607,13 @@ OBJS += $(SRC:.c=.o)
 
 APPARMOR_PARSER=/sbin/apparmor_parser
 
-all: config.h stress-ng ../../../../build/prog/enclave/stress-ng/stress-ng
+# all: config.h stress-ng ../../../../build/prog/enclave/stress-ng/stress-ng
 
-../../../../build/prog/enclave/stress-ng/stress-ng: stress-ng
-	mkdir -p ../../../../build/prog/enclave/stress-ng
-	cp stress-ng ../../../../build/prog/enclave/stress-ng/stress-ng
+# ../../../../build/prog/enclave/stress-ng/stress-ng: stress-ng
+# 	mkdir -p ../../../../build/prog/enclave/stress-ng
+# 	cp stress-ng ../../../../build/prog/enclave/stress-ng/stress-ng
+all:
+	echo "skip stress-ng"
 
 .SUFFIXES: .cpp .c .o
 

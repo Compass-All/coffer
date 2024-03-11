@@ -1,0 +1,11 @@
+set architecture riscv
+
+set disassemble-next-line on
+
+target remote : 1234
+
+file build/opensbi/fw_jump.elf
+
+add-symbol-file build/emodules/emod_manager/emod_manager.elf 0xffffffe000000000
+
+b ebi_suspend_handler
