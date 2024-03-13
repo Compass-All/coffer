@@ -1,6 +1,7 @@
 #pragma once
 
 #include <emodules/ecall.h>
+#include <emodules/ebi_call.h>
 #include <types.h>
 #include <ebi_ecall.h>
 #include <enclave/eid.h>
@@ -9,7 +10,7 @@
 
 static u64 inline __ecall_ebi_create()
 {
-	return __ecall(
+	return __ebi_call(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_CREATE,
 		0UL, 0UL, 0UL
@@ -25,7 +26,7 @@ static u64 inline __ecall_ebi_enter(
 
 )
 {
-	return __ecall_5(
+	return __ebi_call_5(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_ENTER,
 		enclave_id,
@@ -42,7 +43,7 @@ static u64 inline __ecall_ebi_resume(
 	u64 short_message
 )
 {
-	return __ecall(
+	return __ebi_call(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_RESUME,
 		enclave_id,
@@ -53,7 +54,7 @@ static u64 inline __ecall_ebi_resume(
 
 static void inline __ecall_dump_enclave_status()
 {
-	__ecall(
+	__ebi_call(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_DEBUG_DUMP_STATUS,
 		0UL, 0UL, 0UL
@@ -62,7 +63,7 @@ static void inline __ecall_dump_enclave_status()
 
 static void inline __ecall_dump_enclave_memory()
 {
-	__ecall(
+	__ebi_call(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_DEBUG_DUMP_OWNERSHIP,
 		0UL, 0UL, 0UL
@@ -71,7 +72,7 @@ static void inline __ecall_dump_enclave_memory()
 
 static void inline __ecall_dump_pmp()
 {
-	__ecall(
+	__ebi_call(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_DEBUG_DUMP_PMP,
 		0UL, 0UL, 0UL
@@ -80,7 +81,7 @@ static void inline __ecall_dump_pmp()
 
 static void inline __ecall_dump_region()
 {
-	__ecall(
+	__ebi_call(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_DEBUG_DUMP_REGION,
 		0UL, 0UL, 0UL
@@ -89,7 +90,7 @@ static void inline __ecall_dump_region()
 
 static void inline __ecall_unmatched_acc_fault(u64 addr)
 {
-	__ecall(
+	__ebi_call(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_DEBUG_UNMATCHED_ACC_FAULT,
 		addr, 0UL, 0UL
@@ -98,7 +99,7 @@ static void inline __ecall_unmatched_acc_fault(u64 addr)
 
 static u64 inline __ecall_get_timer(u64 eid, u64 timer)
 {
-	return __ecall(
+	return __ebi_call(
 		SBI_EXT_EBI,
 		SBI_EXT_EVAL_GET_TIMER,
 		eid, timer, 0UL
@@ -107,7 +108,7 @@ static u64 inline __ecall_get_timer(u64 eid, u64 timer)
 
 static u64 inline __ecall_eval_config(u64 config, u64 max_pmp)
 {
-	return __ecall(
+	return __ebi_call(
 		SBI_EXT_EBI,
 		SBI_EXT_EVAL_CONFIG,
 		config, max_pmp, 0UL
@@ -116,7 +117,7 @@ static u64 inline __ecall_eval_config(u64 config, u64 max_pmp)
 
 static u64 inline __ecall_eval_get_config()
 {
-	return __ecall(
+	return __ebi_call(
 		SBI_EXT_EBI,
 		SBI_EXT_EVAL_DUMP_CONFIG,
 		0UL, 0UL, 0UL
@@ -125,7 +126,7 @@ static u64 inline __ecall_eval_get_config()
 
 static void inline __ecall_reset_coffer()
 {
-	__ecall(
+	__ebi_call(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_RESET,
 		0UL, 0UL, 0UL
@@ -134,7 +135,7 @@ static void inline __ecall_reset_coffer()
 
 static u64 inline __ecall_get_eid_count()
 {
-	return __ecall(
+	return __ebi_call(
 		SBI_EXT_EBI,
 		SBI_EXT_GET_EID_COUND,
 		0UL, 0UL, 0UL
@@ -143,7 +144,7 @@ static u64 inline __ecall_get_eid_count()
 
 static u64 inline __ecall_get_alive_count()
 {
-	return __ecall(
+	return __ebi_call(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_GET_ALIVE_COUNT,
 		0UL, 0UL, 0UL
@@ -152,7 +153,7 @@ static u64 inline __ecall_get_alive_count()
 
 static u64 inline __ecall_get_enclave_status(u64 eid)
 {
-	return __ecall(
+	return __ebi_call(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_GET_STATUS,
 		eid, 0UL, 0UL

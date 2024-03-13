@@ -1,0 +1,15 @@
+/bin/busybox --install -s
+dmesg -n 1
+
+mount proc /proc -t proc
+mount sys /sys -t sysfs
+
+/prog/host/test_eapp /prog/enclave/eapp_fix_malloc 0x200000
+/prog/host/test_eapp /prog/enclave/eapp_fix_malloc 0x200000
+/prog/host/test_eapp /prog/enclave/eapp_fix_malloc 0x200000
+
+repeat=19
+for i in `seq 1 $repeat`
+do
+	/prog/host/resume_eapp 1;
+done

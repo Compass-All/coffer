@@ -13,5 +13,5 @@ int main(int argc, char* argv[])
 
     int fid = atoi(argv[1]);
 
-    __ecall(SBI_EXT_EBI, (u64)fid, 0UL, 0UL, 0UL);
+    __ebi_call(SBI_EXT_EBI, (u64)fid, 0UL, 0UL, 0UL);
 }

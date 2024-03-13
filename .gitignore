@@ -1,0 +1,83 @@
+screenlog.0
+*.pcap
+logs/
+
+__pycache__
+
+# clangd
+.cache/
+compile_commands.json
+
+Image
+root.bin
+*.img
+*.gdb
+*.log
+*.itb
+
+# Prerequisites
+*.d
+
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
+
+# Linker output
+*.ilk
+*.map
+*.exp
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+*.asm
+
+# Kernel Module Compile Results
+*.mod*
+*.cmd
+.tmp_versions/
+modules.order
+Module.symvers
+Mkfile.old
+dkms.conf
+
+# vscode
+.vscode/
+.idea/
+
+# build directory
+build/
+
+# tmp
+tmp/
+
+# macos auxiliary files
+.DS_STORE

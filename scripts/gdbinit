@@ -5,7 +5,10 @@ set disassemble-next-line on
 target remote : 1234
 
 file build/opensbi/fw_jump.elf
+# file build/prog/host/test_eapp
+# add-symbol-file build/emodules/emod_manager/emod_manager.elf 0xffffffe000000000
 
-add-symbol-file build/emodules/emod_manager/emod_manager.elf 0xffffffe000000000
-
-b ebi_suspend_handler
+# b ebi_suspend_handler
+# b emain_lower_half
+# b emod_manager_test
+b sbi_domain_init

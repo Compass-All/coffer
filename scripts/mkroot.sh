@@ -7,17 +7,17 @@ RCS=tools/rootfs/script
 PROG=build/prog
 EMOD=build/emodules
 
-# if test ! -d $PROG
-# then
-# 	echo "Error: payload directory not found:" $PROG
-# 	exit 1
-# fi
+if test ! -d $PROG
+then
+	echo "Error: payload directory not found:" $PROG
+	exit 1
+fi
 
-# if test ! -d $EMOD
-# then
-# 	echo "Error: emodules directory not found:" $EMOD
-# 	exit 1
-# fi
+if test ! -d $EMOD
+then
+	echo "Error: emodules directory not found:" $EMOD
+	exit 1
+fi
 
 echo "[*] Creating image file:" $ROOTFS
 dd if=/dev/zero of=$ROOTFS bs=1M count=1024
@@ -41,8 +41,8 @@ sudo cp $RCS $MNT/etc/init.d/rcS
 sudo chmod +x $MNT/etc/init.d/rcS
 
 if [ $? -ne 0 ]; then echo "Error cp!"; umount $MNT; exit 1; fi
-sudo ln -s ../bin/busybox $MNT/sbin/init
-sudo ln -s ../bin/busybox $MNT/bin/sh
+sudo ln -sf ../bin/busybox $MNT/sbin/init
+sudo ln -sf ../bin/busybox $MNT/bin/sh
 cd $CWD
 
 echo "[*] Copying emodules and payloads"

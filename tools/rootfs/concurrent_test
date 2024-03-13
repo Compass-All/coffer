@@ -1,0 +1,179 @@
+/bin/busybox --install -s
+dmesg -n 1
+
+mount proc /proc -t proc
+mount sys /sys -t sysfs
+
+
+# echo 1 > /proc/sys/kernel/lock_stat
+
+# console  (boot)
+systemctl stop sshd
+mkdir -p /run/sshd
+/usr/sbin/sshd -t
+taskset 0x1 /usr/sbin/sshd -D &
+
+# ssh  (boot)
+echo 0 > /proc/sys/kernel/hung_task_panic
+echo 0 > /proc/sys/kernel/softlockup_panic
+echo 0 > /proc/sys/kernel/watchdog
+dmesg -n 1
+taskset 0x1 /bin/bash
+
+taskset 0xe /prog/host/test_eapp /prog/enclave/eapp_write
+/prog/host/reset_coffer
+
+/prog/host/test_eapp /prog/enclave/stress-ng/stress-ng --vm 1 --vm-bytes 32m --vm-ops 1 --vm-keep --vm-madvise normal --vm-method all --metrics-brief
+
+
+
+
+repeat=42
+for i in `seq 1 $repeat`
+do
+	taskset 0xe /prog/host/test_eapp /prog/enclave/rv8/rv8_qsort &
+done
+
+repeat=5
+for i in `seq 1 $repeat`
+do
+	taskset 0xe /prog/host/test_eapp /prog/enclave/rv8/rv8_bigint &
+done
+
+/prog/host/dump_timer 1
+
+repeat=6
+for i in `seq 1 $repeat`
+do
+	/prog/host/dump_timer $i
+done
+
+/prog/host/get_eid_count
+/prog/host/reset_coffer
+
+watch -n 4 /prog/host/dump_all
+
+taskset 0xe strace -c /prog/enclave/rv8/rv8_qsort &
+
+
+repeat=819
+for i in `seq 1 $repeat`
+do
+	taskset 0xe /prog/host/test_eapp /prog/enclave/rv8/rv8_primes &
+done
+
+repeat=81
+for i in `seq 1 $repeat`
+do
+	taskset 0xe /prog/host/test_eapp /prog/enclave/rv8/rv8_aes &
+done
+
+repeat=80
+for i in `seq 1 $repeat`
+do
+	taskset 0xe /prog/host/test_eapp /prog/enclave/rv8/rv8_norx &
+done
+
+repeat=1024
+for i in `seq 1 $repeat`
+do
+	taskset 0xe /prog/host/test_eapp /prog/enclave/rv8/rv8_sha512 &
+done
+
+repeat=273
+for i in `seq 1 $repeat`
+do
+	taskset 0xe /prog/host/test_eapp /prog/enclave/rv8/rv8_miniz &
+done
+
+repeat=1024
+for i in `seq 1 $repeat`
+do
+	taskset 0xe /prog/host/test_eapp /prog/enclave/rv8/rv8_dhrystone &
+done
+
+repeat=1024
+for i in `seq 1 $repeat`
+do
+	taskset 0xe /prog/host/test_eapp /prog/enclave/rv8/rv8_bigint &
+done
+
+/prog/host/test_eapp /prog/enclave/rv8/rv8_qsort &
+/prog/host/test_eapp /prog/enclave/rv8/rv8_qsort &
+
+taskset 0x2 /prog/host/test_eapp /prog/enclave/rv8/rv8_qsort &
+taskset 0x2 /prog/host/test_eapp /prog/enclave/rv8/rv8_qsort &
+
+watch -n 2 /prog/host/dump_all
+
+# /prog/host/dump_enc_status
+# /prog/host/dump_enc_memory
+# /prog/host/dump_pmp
+
+/prog/host/create_enclave
+
+repeat=1024
+for i in `seq 1 $repeat`
+do
+	taskset 0x1 /prog/host/create_enclave &> /dev/zero &
+done
+for i in `seq 1 $repeat`
+do
+	/prog/host/enter_enclave $i /prog/enclave/rv8/rv8_bigint &
+done
+
+/prog/host/enter_enclave 1 /prog/enclave/rv8/rv8_qsort &
+/prog/host/enter_enclave 2 /prog/enclave/rv8/rv8_qsort &
+/prog/host/enter_enclave 3 /prog/enclave/rv8/rv8_qsort &
+/prog/host/enter_enclave 4 /prog/enclave/rv8/rv8_qsort &
+/prog/host/enter_enclave 5 /prog/enclave/rv8/rv8_qsort &
+/prog/host/enter_enclave 6 /prog/enclave/rv8/rv8_qsort &
+/prog/host/enter_enclave 7 /prog/enclave/rv8/rv8_qsort &
+
+cat /etc/sysctl.conf | grep vm
+
+
+dmesg -n 1
+echo 1 > /proc/sys/kernel/hung_task_panic
+echo 20 > /proc/sys/kernel/hung_task_timeout_secs
+echo 1 > /proc/sys/kernel/hung_task_all_cpu_backtrace
+echo ttySIF0 > /sys/module/kgdboc/parameters/kgdboc
+
+echo 1 > /proc/sys/kernel/lock_stat
+
+#less /proc/lock_stat
+#grep : /proc/lock_stat | head
+
+/prog/host/test_happ /prog/enclave/rv8/rv8_qsort
+
+repeat=4
+for i in `seq 1 $repeat`
+do
+	taskset 0xe /prog/host/test_eapp /prog/enclave/rv8/rv8_qsort &
+done
+
+repeat=16
+for i in `seq 1 $repeat`
+do
+	/prog/host/test_eapp /prog/enclave/rv8/rv8_qsort &
+done
+
+
+repeat=16
+for i in `seq 1 $repeat`
+do
+	taskset 0xe /prog/host/ebi_call 51966 &
+done
+
+
+
+repeat=81
+start=2
+for i in `seq 1 $repeat`
+do
+	taskset 0xe /prog/host/create_enclave &
+done
+for i in `seq $start $(($repeat + $start - 1))`
+do
+	taskset 0xe /prog/host/enter_enclave $i /prog/enclave/rv8/rv8_aes &
+done

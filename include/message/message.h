@@ -1,6 +1,7 @@
 #pragma once
 
 #include <emodules/ecall.h>
+#include <emodules/ebi_call.h>
 #include <types.h>
 #include <ebi_ecall.h>
 
@@ -10,7 +11,7 @@ static void inline __ecall_ebi_listen_message(
 	usize 	len
 )
 {
-	__ecall(
+	__ebi_call(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_LISTEN_MESSAGE,
 		sender_eid,
@@ -25,7 +26,7 @@ static void inline __ecall_ebi_send_message(
 	usize	len
 )
 {
-	__ecall(
+	__ebi_call(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_SEND_MESSAGE,
 		receiver_eid,
@@ -36,7 +37,7 @@ static void inline __ecall_ebi_send_message(
 
 static void inline __ecall_ebi_stop_listen(u64 sender_eid)
 {
-	__ecall(
+	__ebi_call(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_STOP_LISTEN,
 		sender_eid,

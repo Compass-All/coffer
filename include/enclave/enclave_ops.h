@@ -1,6 +1,7 @@
 #pragma once
 
 #include <emodules/ecall.h>
+#include <emodules/ebi_call.h>
 #include <types.h>
 #include <ebi_ecall.h>
 
@@ -15,7 +16,7 @@ static paddr_t inline __ecall_ebi_mem_alloc(
 {
 	paddr_t paddr;
 	usize ret;
-	__ecall(
+	__ebi_call(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_MEM_ALLOC,
 		0UL, number_of_partitions, 0UL
@@ -38,7 +39,7 @@ static paddr_t inline __ecall_ebi_mem_alloc(
 // 	paddr_t umode_pool_pa_aligned_ptr
 // )
 // {
-// 	__ecall(
+// 	__ebi_call(
 // 		SBI_EXT_EBI,
 // 		SBI_EXT_EBI_ADDR_RECORD,
 // 		emod_manager_start_pa_ptr,
@@ -49,7 +50,7 @@ static paddr_t inline __ecall_ebi_mem_alloc(
 
 static void inline __ecall_ebi_exit(u64 exit_val)
 {
-	__ecall(
+	__ebi_call(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_EXIT,
 		exit_val, 0UL, 0UL
@@ -58,7 +59,7 @@ static void inline __ecall_ebi_exit(u64 exit_val)
 
 static void inline __ecall_ebi_exit_thread(u64 exit_val)
 {
-	__ecall(
+	__ebi_call(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_EXIT_THREAD,
 		exit_val, 0UL, 0UL
@@ -67,7 +68,7 @@ static void inline __ecall_ebi_exit_thread(u64 exit_val)
 
 static u64 inline __ecall_ebi_block_thread(u64 tid)
 {
-	return __ecall(
+	return __ebi_call(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_BLOCK_THREAD,
 		tid, 0UL, 0UL
@@ -76,7 +77,7 @@ static u64 inline __ecall_ebi_block_thread(u64 tid)
 
 static u64 inline __ecall_ebi_unblock_threads(u64 threads)
 {
-	return __ecall(
+	return __ebi_call(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_UNBLOCK_THREADS,
 		threads, 0UL, 0UL
@@ -85,7 +86,7 @@ static u64 inline __ecall_ebi_unblock_threads(u64 threads)
 
 static u64 inline __ecall_ebi_get_blocked_threads()
 {
-	return __ecall(
+	return __ebi_call(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_GET_BLOCKED_THREADS,
 		0UL, 0UL, 0UL
@@ -94,7 +95,7 @@ static u64 inline __ecall_ebi_get_blocked_threads()
 
 static u64 inline __ecall_ebi_set_clear_child_tid(int *tidptr)
 {
-	return __ecall(
+	return __ebi_call(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_GET_CLEAR_CHILD_TID,
 		(u64)tidptr, 0UL, 0UL
@@ -103,7 +104,7 @@ static u64 inline __ecall_ebi_set_clear_child_tid(int *tidptr)
 
 static u64 inline __ecall_ebi_get_clear_child_tid()
 {
-	return __ecall(
+	return __ebi_call(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_GET_CLEAR_CHILD_TID,
 		0UL, 0UL, 0UL
@@ -112,7 +113,7 @@ static u64 inline __ecall_ebi_get_clear_child_tid()
 
 static u64 inline __ecall_ebi_suspend(u64 short_message)
 {
-	return __ecall(
+	return __ebi_call(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_SUSPEND,
 		short_message, 0UL, 0UL
@@ -121,7 +122,7 @@ static u64 inline __ecall_ebi_suspend(u64 short_message)
 
 static u64 inline __ecall_ebi_get_eid()
 {
-	return __ecall(
+	return __ebi_call(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_GET_EID,
 		0UL, 0UL, 0UL
@@ -130,7 +131,7 @@ static u64 inline __ecall_ebi_get_eid()
 
 static u64 inline __ecall_ebi_get_tid()
 {
-	return __ecall(
+	return __ebi_call(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_GET_TID,
 		0UL, 0UL, 0UL
@@ -139,7 +140,7 @@ static u64 inline __ecall_ebi_get_tid()
 
 static u64 inline __ecall_ebi_get_hartid()
 {
-	return __ecall(
+	return __ebi_call(
 		SBI_EXT_EBI,
 		SBI_EXT_EBI_GET_HARTID,
 		0UL, 0UL, 0UL

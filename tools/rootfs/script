@@ -1,0 +1,43 @@
+# /bin/busybox --install -s
+dmesg -n 1
+
+# mount proc /proc -t proc
+# mount sys /sys -t sysfs
+# mount -t debugfs none debug
+
+ifconfig lo up
+ifconfig lo 127.0.0.1
+
+# ifconfig eth0 up
+# ifconfig eth0 10.0.2.15
+# route add default gw 10.0.2.2
+
+/prog/host/test_eapp /prog/enclave/eapp_write
+/prog/host/reset_coffer
+
+# /prog/host/test_eapp /prog/enclave/musl_eapp/eapp_thread
+# /prog/host/test_eapp /prog/enclave/musl_eapp/eapp_thread_compute
+# /prog/host/test_eapp /prog/enclave/musl_eapp/eapp_fork
+# /prog/host/test_eapp /prog/enclave/rv8/rv8_qsort
+
+# /prog/host/test_eapp /prog/enclave/eapp_test_ecall 57005 &
+
+# command="/prog/enclave/sqlite-bench/sqlite-bench \
+# 	--num=500 \
+# 	--reads=500 \
+# 	--histogram=1"
+
+# bench="--benchmarks=overwrite"
+# /prog/host/test_eapp $command $bench
+
+# /prog/host/dump_enc_status
+# /prog/host/dump_enc_memory
+# /prog/host/dump_pmp
+
+# command="/prog/enclave/sqlite-bench/sqlite-bench \
+# 	--num=500 \
+# 	--reads=500 \
+# 	--histogram=1"
+
+# bench="--benchmarks=fillseq"
+# /prog/host/test_eapp $command $bench
