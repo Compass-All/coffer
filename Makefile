@@ -92,7 +92,7 @@ opensbi: $(EMOD_MANAGER_BIN)
 $(FW_DYNAMIC_BIN): opensbi
 $(FW_JUMP_ELF): opensbi
 
-$(UBOOT_IMAGE): $(FW_DYNAMIC_BIN) #$(DTB_DIR)/hifive-unmatched-a00.dtb $(DTB_DIR)/jh7110-starfive-visionfive-2.dtb
+$(UBOOT_IMAGE): $(FW_DYNAMIC_BIN) $(DTB_DIR)/hifive-unmatched-a00.dtb #$(DTB_DIR)/jh7110-starfive-visionfive-2.dtb
 	@printf "\n[.] Building U-Boot Image...\n"
 	mkdir -p $(UBOOT_IMAGE_DIR)
 	CROSS_COMPILE=riscv64-unknown-linux-gnu- \
@@ -101,7 +101,7 @@ $(UBOOT_IMAGE): $(FW_DYNAMIC_BIN) #$(DTB_DIR)/hifive-unmatched-a00.dtb $(DTB_DIR
 	cp $(UBOOT_SRC)/u-boot.itb $@
 	@printf "[*] Building U-Boot Image Done...\n\n"
 
-$(UBOOT_SPL_IMAGE): $(FW_DYNAMIC_BIN) #$(DTB_DIR)/hifive-unmatched-a00.dtb $(DTB_DIR)/jh7110-starfive-visionfive-2.dtb
+$(UBOOT_SPL_IMAGE): $(FW_DYNAMIC_BIN) $(DTB_DIR)/hifive-unmatched-a00.dtb #$(DTB_DIR)/jh7110-starfive-visionfive-2.dtb
 	@printf "\n[.] Building U-Boot SPL Image...\n"
 	mkdir -p $(UBOOT_IMAGE_DIR)
 	CROSS_COMPILE=riscv64-unknown-linux-gnu- \
