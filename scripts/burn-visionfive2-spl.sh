@@ -1,7 +1,9 @@
 #!/bin/bash
 
 TARGET=$1
-SOURCE=build/u-boot/u-boot-spl.bin
+SOURCE_0=build/u-boot/u-boot-spl.bin
+SOURCE=build/u-boot/u-boot-spl.bin.normal.out
+
 
 if [ $# != 1 ]
 then
@@ -14,6 +16,14 @@ then
 	echo "Error: Unrecognised block device"
 	exit 1
 fi
+
+if test ! -f $SOURCE_0
+then
+	echo "Error: file not found:" $SOURCE_0
+	exit 1
+fi
+
+./tools/visionfive2Tools/spl_tool/spl_tool -c -f $SOURCE_0
 
 if test ! -f $SOURCE
 then

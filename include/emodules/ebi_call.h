@@ -2,8 +2,7 @@
 #include <types.h>
 #include <util/cpu.h>
 
-// #define EBI_INSN ".word 0x11111113"
-#define EBI_INSN ".word 0"
+#define EBI_INSN ".word 0x999999a7"
 
 #define SBI_EBI_CALL(__extid, __funid, __arg0, __arg1, __arg2)     \
     ({                                                          \

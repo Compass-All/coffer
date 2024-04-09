@@ -1,9 +1,9 @@
 # /bin/busybox --install -s
 dmesg -n 1
 
-# mount proc /proc -t proc
-# mount sys /sys -t sysfs
-# mount -t debugfs none debug
+mount proc /proc -t proc
+mount sys /sys -t sysfs
+mount -t debugfs none debug
 
 ifconfig lo up
 ifconfig lo 127.0.0.1
@@ -13,6 +13,8 @@ ifconfig lo 127.0.0.1
 # route add default gw 10.0.2.2
 
 /prog/host/test_eapp /prog/enclave/eapp_write
+# /prog/host/test_eapp /prog/enclave/rv8/rv8_aes
+# /prog/host/test_eapp /prog/enclave/rv8/rv8_norx
 /prog/host/reset_coffer
 
 # /prog/host/test_eapp /prog/enclave/musl_eapp/eapp_thread
@@ -41,3 +43,4 @@ ifconfig lo 127.0.0.1
 
 # bench="--benchmarks=fillseq"
 # /prog/host/test_eapp $command $bench
+

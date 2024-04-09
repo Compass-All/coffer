@@ -4,11 +4,18 @@ set disassemble-next-line on
 
 target remote : 1234
 
-file build/opensbi/fw_jump.elf
+# file build/opensbi/fw_jump.elf
 # file build/prog/host/test_eapp
+# file build/prog/enclave/rv8/rv8_norx
 # add-symbol-file build/emodules/emod_manager/emod_manager.elf 0xffffffe000000000
+
+# file ./u-boot/spl/u-boot-spl
+# b _start
+# b secondary_hart_loop
 
 # b ebi_suspend_handler
 # b emain_lower_half
 # b emod_manager_test
-b sbi_domain_init
+# b sbi_domain_init
+# b partition_pool.c:630
+

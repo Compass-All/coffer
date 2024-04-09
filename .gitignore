@@ -82,3 +82,11 @@ tmp/
 # macos auxiliary files
 .DS_STORE
 .clangd
+
+# temporary files
+*.log
+*.txt
+screenlog*
+
+# root filesystem
+/rootfs
