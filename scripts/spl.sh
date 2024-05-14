@@ -15,10 +15,12 @@ ROOTFS=tools/rootfs/old-root.img
 qemu-system-riscv64 -M virt -m 16G -smp 4 -nographic \
     -bios $UBOOT_SPL \
     -kernel $KERNEL \
-    -device loader,file=$UBOOT_FIT,addr=0x80300000 \
+    -device loader,file=$UBOOT_FIT,addr=0x80800000 \
     -blockdev driver=file,filename=./disk.img,node-name=disk \
     -device virtio-blk-device,drive=disk \
-
+    -device virtio-net-device,netdev=net0\
+    -netdev user,id=net0,net=192.168.42.0/24,hostfwd=tcp:127.0.0.1:5555-:22
+    
     # -drive file=$ROOTFS,format=raw,id=hd0 \
     # -device virtio-blk-device,drive=hd0 \
     # -netdev user,id=net0,hostfwd=tcp::8080-:80 \

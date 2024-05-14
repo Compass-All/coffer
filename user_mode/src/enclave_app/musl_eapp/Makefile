@@ -13,7 +13,7 @@ cpp_src := $(wildcard *.cc)
 targets := $(src:.c=)
 
 all: dir $(addprefix $(target_dir)/, $(targets))
-# all:
+#all:
 #	echo "skip musl_eapp"
 
 dir:

@@ -2,6 +2,9 @@
 
 #include <sys/time.h>
 #include <assert.h>
+#include "../../../../include/enclave_app/enclave_util.h"
+#include <message/short_message.h>
+#include <stdio.h>
 
 float *get_regression_values(char **labels, int n)
 {
@@ -481,6 +484,8 @@ void validate_classifier_multi(char *datacfg, char *cfg, char *weights)
 
 void try_classifier(char *datacfg, char *cfgfile, char *weightfile, char *filename, int layer_num)
 {
+    u64 eid = __ebi_call(SBI_EXT_EBI, (u64)SBI_EXT_EBI_GET_EID, 0UL, 0UL, 0UL);
+  
     network *net = load_network(cfgfile, weightfile, 0);
     set_batch_network(net, 1);
     srand(2222222);
@@ -548,6 +553,11 @@ void try_classifier(char *datacfg, char *cfgfile, char *weightfile, char *filena
 
         top_predictions(net, top, indexes);
         printf("%s: Predicted in %f seconds.\n", input, sec(clock()-time));
+        if (eid != 0UL) {
+            suspend_enclave_with_message(SAVE_MSG | (u32)(sec(clock()-time)*10000));
+        } else {
+            printf("%s: Predicted in %f seconds.\n", input, sec(clock()-time));
+        }
         for(i = 0; i < top; ++i){
             int index = indexes[i];
             printf("%s: %f\n", names[index], predictions[index]);
@@ -559,6 +569,8 @@ void try_classifier(char *datacfg, char *cfgfile, char *weightfile, char *filena
 // core function tested in coffer
 void predict_classifier(char *datacfg, char *cfgfile, char *weightfile, char *filename, int top)
 {
+    u64 eid = __ebi_call(SBI_EXT_EBI, (u64)SBI_EXT_EBI_GET_EID, 0UL, 0UL, 0UL);
+  
     network *net = load_network(cfgfile, weightfile, 0);
     set_batch_network(net, 1);
     srand(2222222);

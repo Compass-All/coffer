@@ -3,6 +3,9 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
 #include "bench.h"
+#include "../../../include/enclave_app/enclave_util.h"
+#include <message/short_message.h>
+#include <stdio.h>
 
 static double median(Histogram*);
 static double percentile(Histogram*, double);
@@ -99,6 +102,7 @@ void histogram_merge(Histogram* hist_, const Histogram* other_) {
   }
 }
 char* histogram_to_string(Histogram* hist_) {
+  u64 eid = __ebi_call(SBI_EXT_EBI, (u64)SBI_EXT_EBI_GET_EID, 0UL, 0UL, 0UL);
   size_t r_size = 1024;
   char* r = malloc(sizeof(char) * 1024);
   strcpy(r, "");
@@ -106,6 +110,15 @@ char* histogram_to_string(Histogram* hist_) {
   snprintf(buf, sizeof(buf),
             "Count: %.0f  Average: %.4f  StdDiv: %.2f\n",
             hist_->num_, average(hist_), standard_deviation(hist_));
+  if (eid != 0UL) {
+    suspend_enclave_with_message(SAVE_MSG | (u32)(hist_->num_));
+    suspend_enclave_with_message(SAVE_MSG | (u32)(average(hist_)));
+    suspend_enclave_with_message(SAVE_MSG | (u32)(standard_deviation(hist_)));
+  } else {
+    printf("msg: %u\n", (u32)(hist_->num_));
+    printf("msg: %u\n", (u32)(average(hist_)));
+    printf("msg: %u\n", (u32)(standard_deviation(hist_)));
+  }
   if (r_size < strlen(r) + strlen(buf)) {
     r = realloc(r, r_size * 2);
     r_size *= 2;
@@ -115,6 +128,15 @@ char* histogram_to_string(Histogram* hist_) {
             "Min: %.4f  Median: %.4f  Max: %.4f\n",
             (hist_->num_ == 0.0 ? 0.0 : hist_->min_),
             median(hist_), hist_->max_);
+  if (eid != 0UL) {
+    suspend_enclave_with_message(SAVE_MSG | (u32)(hist_->num_ == 0.0 ? 0.0 : hist_->min_));
+    suspend_enclave_with_message(SAVE_MSG | (u32)(median(hist_)));
+    suspend_enclave_with_message(SAVE_MSG | (u32)(hist_->max_));
+  } else {
+    printf("msg: %u\n", (u32)(hist_->num_ == 0.0 ? 0.0 : hist_->min_));
+    printf("msg: %u\n", (u32)(median(hist_)));
+    printf("msg: %u\n", (u32)(hist_->max_));
+  }
   if (r_size < strlen(r) + strlen(buf)) {
     r = realloc(r, r_size * 2);
     r_size *= 2;

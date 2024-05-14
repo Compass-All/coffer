@@ -255,6 +255,11 @@ u64 enter_enclave(
 		// 	printf("thread exit! short_message = 0x%lx\n\r", short_message);
         //     // printf("send_message = 0x%lx\n\r", ((u64)short_message << 32) >> 32);
 		// 	break;
+
+		case SAVE_MSG:
+			printf("[E%luT%lu]msg: %u\n", eid, tid, (u32)short_message);
+			fflush(stdout);
+			break;
 		default:
 			break;
 		}

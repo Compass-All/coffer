@@ -21,7 +21,7 @@ static paddr_t inline __ecall_ebi_mem_alloc(
 		SBI_EXT_EBI_MEM_ALLOC,
 		0UL, number_of_partitions, 0UL
 	);
-	asm volatile (
+	__asm__ __volatile__ (
 		"mv		%0, a0	\n\t"
 		"mv		%1, a1	\n\t"
 		: "=r"(ret), "=r"(paddr)

@@ -16,6 +16,7 @@ ifconfig lo 127.0.0.1
 # /prog/host/test_eapp /prog/enclave/rv8/rv8_aes
 # /prog/host/test_eapp /prog/enclave/rv8/rv8_norx
 /prog/host/reset_coffer
+/prog/host/eval_config 8 1 0 0 0
 
 # /prog/host/test_eapp /prog/enclave/musl_eapp/eapp_thread
 # /prog/host/test_eapp /prog/enclave/musl_eapp/eapp_thread_compute

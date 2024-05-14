@@ -50,6 +50,7 @@ clean:
 	make clean -C $(ENCLAVE_SRC_DIR)/darknet
 	make clean -C $(ENCLAVE_SRC_DIR)/sqlite-bench
 	make clean -C $(ENCLAVE_SRC_DIR)/stress-ng
+	make clean -C $(ENCLAVE_SRC_DIR)/musl_eapp
 
 # ---------------
 host_dir:

@@ -27,7 +27,7 @@ AR=$(CROSS_COMPILE)ar
 ARFLAGS=rcs
 OPTS=-Ofast
 LDFLAGS= -lm -pthread 
-COMMON= -Iinclude/ -Isrc/
+COMMON= -Iinclude/ -Isrc/ -I../../../../include 
 CFLAGS=-Wall -Wno-unused-result -Wno-unknown-pragmas -Wfatal-errors -fPIC
 CFLAGS+= -static
 
@@ -77,10 +77,13 @@ DEPS = $(wildcard src/*.h) Makefile include/darknet.h
 
 BUILDDIR = ../../../../build/prog/enclave/$(shell basename $(CURDIR))
 
-# all: weights obj backup results $(SLIB) $(ALIB) $(EXEC) copy 
-all:
-	echo "skip DarkNet"
-#all: obj  results $(SLIB) $(ALIB) $(EXEC)
+all: weights obj backup results $(SLIB) $(ALIB) $(EXEC) copy 
+
+# all:
+#	echo "skip DarkNet"
+
+# original
+# all: obj  results $(SLIB) $(ALIB) $(EXEC)
 
 
 $(EXEC): $(EXECOBJ) $(ALIB)

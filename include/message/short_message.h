@@ -8,5 +8,6 @@
 #define GET_FILE_SIZE	(0x44556677UL << 32)
 #define NEW_THREAD      (0x55667788UL << 32)
 #define BLOCKED         (0x66778899UL << 32)
+#define SAVE_MSG        (0x77889900UL << 32)
 
 #define TASK_MASK	(0xFFFFFFFFUL << 32)

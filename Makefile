@@ -31,6 +31,7 @@ UBOOT_DIR = u-boot
 UBOOT_IMAGE_DIR = $(BUILD_DIR)/u-boot
 UBOOT_SPL_IMAGE = $(UBOOT_IMAGE_DIR)/u-boot-spl.bin
 UBOOT_IMAGE = $(UBOOT_IMAGE_DIR)/u-boot.itb
+UBOOT_CONFIG = $(UBOOT_DIR)/.config
 UBOOT_SRC = u-boot
 
 all: sd_part1 sd_part2 emodules prog opensbi #$(LINUX_IMAGE) 
@@ -92,7 +93,7 @@ opensbi: $(EMOD_MANAGER_BIN)
 $(FW_DYNAMIC_BIN): opensbi
 $(FW_JUMP_ELF): opensbi
 
-$(UBOOT_IMAGE): $(FW_DYNAMIC_BIN) $(DTB_DIR)/hifive-unmatched-a00.dtb #$(DTB_DIR)/jh7110-starfive-visionfive-2.dtb
+$(UBOOT_IMAGE): $(FW_DYNAMIC_BIN) uboot_config $(DTB_DIR)/hifive-unmatched-a00.dtb #$(DTB_DIR)/jh7110-starfive-visionfive-2.dtb
 	@printf "\n[.] Building U-Boot Image...\n"
 	mkdir -p $(UBOOT_IMAGE_DIR)
 	CROSS_COMPILE=riscv64-unknown-linux-gnu- \
@@ -101,7 +102,7 @@ $(UBOOT_IMAGE): $(FW_DYNAMIC_BIN) $(DTB_DIR)/hifive-unmatched-a00.dtb #$(DTB_DIR
 	cp $(UBOOT_SRC)/u-boot.itb $@
 	@printf "[*] Building U-Boot Image Done...\n\n"
 
-$(UBOOT_SPL_IMAGE): $(FW_DYNAMIC_BIN) $(DTB_DIR)/hifive-unmatched-a00.dtb #$(DTB_DIR)/jh7110-starfive-visionfive-2.dtb
+$(UBOOT_SPL_IMAGE): $(FW_DYNAMIC_BIN) uboot_config $(DTB_DIR)/hifive-unmatched-a00.dtb #$(DTB_DIR)/jh7110-starfive-visionfive-2.dtb
 	@printf "\n[.] Building U-Boot SPL Image...\n"
 	mkdir -p $(UBOOT_IMAGE_DIR)
 	CROSS_COMPILE=riscv64-unknown-linux-gnu- \
@@ -109,6 +110,14 @@ $(UBOOT_SPL_IMAGE): $(FW_DYNAMIC_BIN) $(DTB_DIR)/hifive-unmatched-a00.dtb #$(DTB
 	make -C $(UBOOT_SRC) -j$(nproc)
 	cp $(UBOOT_SRC)/spl/u-boot-spl.bin $@
 	@printf "[*] Building U-Boot SPL Image Done...\n\n"
+
+uboot_config: $(UBOOT_DIR)/configs/coffer_$(TARGET_PLATFORM)_defconfig
+	@printf "\n[.] Copying U-Boot Configuration File...\n"
+	make -C $(UBOOT_SRC) coffer_$(TARGET_PLATFORM)_defconfig
+	@printf "[*] Copying U-Boot Configuration File Done...\n\n"
+
+$(UBOOT_DIR)/configs/coffer_$(TARGET_PLATFORM)_defconfig:
+	cp tools/u-boot/configs/coffer_$(TARGET_PLATFORM)_defconfig $(UBOOT_DIR)/configs/
 
 clean_log:
 	-rm *.log

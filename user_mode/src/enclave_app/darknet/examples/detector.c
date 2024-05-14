@@ -1,4 +1,7 @@
 #include "darknet.h"
+#include "../../../../include/enclave_app/enclave_util.h"
+#include <message/short_message.h>
+#include <stdio.h>
 
 static int coco_ids[] = {1,2,3,4,5,6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22,23,24,25,27,28,31,32,33,34,35,36,37,38,39,40,41,42,43,44,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,67,70,72,73,74,75,76,77,78,79,80,81,82,84,85,86,87,88,89,90};
 
@@ -562,6 +565,8 @@ void validate_detector_recall(char *cfgfile, char *weightfile)
 // core function tested in coffer
 void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filename, float thresh, float hier_thresh, char *outfile, int fullscreen)
 {
+    u64 eid = __ebi_call(SBI_EXT_EBI, (u64)SBI_EXT_EBI_GET_EID, 0UL, 0UL, 0UL);
+
     list *options = read_data_cfg(datacfg);
     char *name_list = option_find_str(options, "names", "data/names.list");
     char **names = get_labels(name_list);
@@ -596,13 +601,24 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
         float *X = sized.data;
         time=what_time_is_it_now();
         network_predict(net, X);
-        printf("%s: Predicted in %f seconds.\n", input, what_time_is_it_now()-time);
-        int nboxes = 0;
-        detection *dets = get_network_boxes(net, im.w, im.h, thresh, hier_thresh, 0, 1, &nboxes);
-        //printf("%d\n", nboxes);
+        //what_time_is_it_now()-time
+        if (eid != 0UL) {
+            suspend_enclave_with_message(SAVE_MSG | (u32)((what_time_is_it_now()-time)*1000));
+        } else {
+            printf("%s: Predicted in %f seconds.\n", input, what_time_is_it_now()-time);
+        }
+        
+        // int nboxes = 0;
+        // detection *dets = get_network_boxes(net, im.w, im.h, thresh, hier_thresh, 0, 1, &nboxes);
+        // printf("%d\n", nboxes);
+
+        // --- Exist BUGs below
         //if (nms) do_nms_obj(boxes, probs, l.w*l.h*l.n, l.classes, nms);
-        if (nms) do_nms_sort(dets, nboxes, l.classes, nms);
-        draw_detections(im, dets, nboxes, thresh, names, alphabet, l.classes);
+
+        /* BUGS probabily exists these two functions */
+        // if (nms) do_nms_sort(dets, nboxes, l.classes, nms);  
+        // draw_detections(im, dets, nboxes, thresh, names, alphabet, l.classes);
+        
         /* we currently do not need image drawing in coffer (image processing part in the above function is removed)
         if(outfile){
             save_image(im, outfile);
@@ -615,10 +631,10 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
 #endif
         }
         */
-        free_detections(dets, nboxes);
+        // free_detections(dets, nboxes);
 
-        free_image(im);
-        free_image(sized);
+        // free_image(im);
+        // free_image(sized);
         if (filename) break;
     }
 }
