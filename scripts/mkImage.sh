@@ -6,7 +6,7 @@ PROG=build/prog
 EMOD=build/emodules
 
 # Create disk image
-dd if=/dev/zero of=disk.img bs=1M count=256
+dd if=/dev/zero of=disk.img bs=2M count=1024
 sudo parted disk.img mklabel gpt
 
 # loop set up
@@ -26,16 +26,29 @@ sudo parted $pos set 1 boot on
 # sudo parted $pos set 2 root on
 
 # Copy kernel and rootfs
-sudo rm -rf /mnt/kernel/
-sudo rm -rf /mnt/rootfs/
-sudo mkdir /mnt/kernel/
-sudo mkdir /mnt/rootfs/
+if test -d /mnt/kernel
+then
+    sudo umount /mnt/kernel
+    sudo rm -rf /mnt/kernel
+fi
+
+if test -d /mnt/rootfs
+then
+    sudo umount /mnt/kernel
+    sudo rm -rf /mnt/rootfs/
+fi
+
+sudo mkdir -p /mnt/kernel/
+sudo mkdir -p /mnt/rootfs/
 
 sudo mount $pos"p1" /mnt/kernel
 sudo mount $pos"p2" /mnt/rootfs
 
 sudo cp $KERNEL /mnt/kernel
-sudo cp -r ./busybox/_install/* /mnt/rootfs
+sudo cp -r ./tools/busybox/* /mnt/rootfs
+
+# Create root directory
+sudo mkdir -p /mnt/rootfs/root
 
 # Create a few directories for mounting key filesystems
 sudo mkdir -p /mnt/rootfs/proc /mnt/rootfs/sys /mnt/rootfs/dev
@@ -59,6 +72,8 @@ echo "[*] Copying emodules and payloads"
 sudo cp -r $PROG /mnt/rootfs
 sudo mkdir -p /mnt/rootfs/emodules
 sudo cp $EMOD/*/*.bin.signed /mnt/rootfs/emodules
+sudo cp ./Image /mnt/rootfs/root
+
 if [ $? -ne 0 ]; then echo "Error cp!"; umount $MNT; exit 1; fi
 
 
