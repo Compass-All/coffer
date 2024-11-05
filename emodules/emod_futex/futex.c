@@ -1,4 +1,6 @@
 #include "futex.h"
+#include "emodules/debug.h"
+#include "emodules/dependency.h"
 #include "emodules/grand_lock.h"
 #include "lock.h"
 #include "message/short_message.h"
@@ -184,16 +186,16 @@ static int futex_wait(vaddr_t uaddr, u32 val)
     atomic_t *atom_val = (void *)uaddr;
 
     int cur_val = atomic_read(atom_val);
-    debug("val = %u, cur_val = %d\n", val, cur_val);
+    // DEBUG("uaddr = %x, val = %u, cur_val = %d\n", uaddr, val, cur_val);
 
     if (cur_val != val) {
         return -EWOULDBLOCK;
     }
-    info("Blocking thread\n");
 
     u64 tid = __ecall_ebi_get_tid();
     __ecall_ebi_block_thread(tid);
     spin_unlock_grand();
+    // DEBUG("Blocking thread %lu now!\n", tid);
     __ecall_ebi_suspend(BLOCKED);
     spin_lock_grand_suspend(); 
 
@@ -202,9 +204,18 @@ static int futex_wait(vaddr_t uaddr, u32 val)
 
 static int futex_wake(vaddr_t uaddr, int nr_wake)
 {
+    
+    atomic_t *atom_val = (void *)uaddr;
+    __unused int cur_val = atomic_read(atom_val);
     u64 threads_to_unblock = 0UL;
     u64 blocked_threads = __ecall_ebi_get_blocked_threads();
-    show(blocked_threads);
+    
+    // DEBUG("uaddr = %0lx, cur_val = %d, nr_wake = %d\n", (u64)uaddr, cur_val, nr_wake);
+    // LOG(blocked_threads);
+    if (blocked_threads == 0) {
+        // show("No blocked threads to wake, early return 0\n");
+        return 0;
+    }
 
     int cnt = 0;
     for (int i = 0; i < NUM_THREADS; i++) {
@@ -216,13 +227,16 @@ static int futex_wake(vaddr_t uaddr, int nr_wake)
             cnt++;
         }
     }
+
     if (cnt < nr_wake) {
         show(cnt); show(nr_wake);
-        info("No enough blocked threads to wake\n");
+        // DEBUG("No enough blocked threads to wake\n");
+    } 
+    if (threads_to_unblock != 0) {
+        // DEBUG("Waking threads(bitmap) 0x%lx\n", threads_to_unblock);
+        __ecall_ebi_unblock_threads(threads_to_unblock);
     }
-    info("Waking threads 0x%lx\n", threads_to_unblock);
-    __ecall_ebi_unblock_threads(threads_to_unblock);
-
+    
     return 0;
 }
 
@@ -231,15 +245,25 @@ static int futex_wake(vaddr_t uaddr, int nr_wake)
 static int sys_futex(vaddr_t uaddr, int op, int val) {
     int ret;
     unsigned long pos_in_page;
-
     pos_in_page = ((unsigned long)uaddr) % PAGE_SIZE;
-
+    
+    // show(pos_in_page);
+    // show((pos_in_page % __alignof__(atomic_t)));
+    // show((pos_in_page + sizeof(atomic_t)));
+    // show((u64)uaddr);
+    // show(op);
+    // show(val);
+    
     /* Must be "naturally" aligned, and not on page boundary. */
+    /*
+     * On all platforms, futexes are four-byte integers 
+     * that must be aligned on a four-byte boundary.  
+     */
     if ((pos_in_page % __alignof__(atomic_t)) != 0 ||
             pos_in_page + sizeof(atomic_t) > PAGE_SIZE)
         return -EINVAL;
-
-    switch (op & 1UL) {
+    int cmd = op & FUTEX_CMD_MASK;
+    switch (cmd) {
     case FUTEX_WAKE:
         ret = futex_wake(uaddr, val);
         break;
@@ -248,6 +272,8 @@ static int sys_futex(vaddr_t uaddr, int op, int val) {
         break;
     /* Add other lock types here... */
     default:
+        show(uaddr); show(op); show(val);
+        panic("unhandled cases in sys_futex()...\n");
         ret = -EINVAL;
     }
 
@@ -259,9 +285,6 @@ static int sys_futex(vaddr_t uaddr, int op, int val) {
 //         uint32_t *uaddr2, uint32_t val3)
 int sys_futex_handler(u32 *uaddr, int futex_op, int val, u64 _2, u64 _3, u64 _4)
 {
-    show(uaddr);
-    show(futex_op);
-    show(val);
     return sys_futex((vaddr_t)uaddr, futex_op, val);
 }
 
