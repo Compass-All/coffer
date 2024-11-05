@@ -285,6 +285,10 @@ static int syscall_handler_sysinfo(struct sysinfo *info)
 #define MTIME_PA_ALIGNED	0x200B000UL
 #define MTIME_PA_OFFSET		0xFF8
 #define FREQ 				1000000UL
+#elif defined __VISIONFIVE2__
+#define MTIME_PA_ALIGNED	0x200B000UL
+#define MTIME_PA_OFFSET		0xFF8
+#define FREQ 				1000000UL
 #else
 #error "unsupported platform"
 #endif
@@ -301,7 +305,7 @@ static u64 get_time()
 	u64 offset = MTIME_PA_OFFSET;
 
 	u64 time = *(volatile u64 *)(va + offset);	
-
+	// LOG(time);
 	return time;
 }
 
@@ -311,10 +315,10 @@ static void syscall_handler_gettimeofday(
 )
 {
 	u64 time = get_time();
-	debug("time: %ld\n", time);
 
 	tv->tv_sec 	= time / FREQ;
-	tv->tv_usec = time % FREQ;
+	tv->tv_usec = time % FREQ;  // * (FREQ/10e6)
+
 	return;
 }
 
@@ -324,9 +328,14 @@ static void syscall_handler_clock_gettime(
 )
 {
 	u64 time = get_time();
-	debug("time: %ld\n", time);
+
+	#define NSEC_PER_SEC 1000000000
+	const u32 ratio = NSEC_PER_SEC / FREQ;
+	
 	tp->tv_sec	= time / FREQ;
-	tp->tv_nsec	= time % FREQ;
+	// tv_nsec: nanosecond
+	tp->tv_nsec	= (time % FREQ) * ratio;
+	
 	return;
 }
 
@@ -486,7 +495,7 @@ void syscall_handler(
 	START_TIMER(syscall);
 	u64 syscall_num = regs[CTX_INDEX_a7];
     u64 tid;
-    int *clear_child_tid;
+    u32 *clear_child_tid;
 	u64 ret = 0;
 
 	debug("---------------\n");
@@ -740,18 +749,24 @@ void syscall_handler(
 
 	case SYS_exit:
 	case SYS_exit_group:
-		info("syscall exit_group\n");
+		info("syscall exit/exit_group\n");
 		tid = __ecall_ebi_get_tid();
-		if (tid == 0UL) {
+		
+		if (tid == 1UL) {
 			set_s_timer();
-			info("exit enclave\n");
+			DEBUG("exit enclave (main thread)\n");
 			__ecall_ebi_exit(EXIT_ENCLAVE);
 			__builtin_unreachable();
-		} else {
-			info("exit thread\n");
-            clear_child_tid = (int *)__ecall_ebi_get_clear_child_tid();
-            if (clear_child_tid) {
-                *clear_child_tid = 0;
+		} else {			
+            clear_child_tid = (u32 *)__ecall_ebi_get_clear_child_tid();
+			DEBUG("exit thread %lu with clear_child_tid = 0x%lx\n", (u64)tid, clear_child_tid);
+            // When a thread whose clear_child_tid is not NULL terminates,
+			// then, if the thread is sharing memory with other threads, 
+			// then 0 is written at the address specified in clear_child_tid
+			// and the kernel performs the following operation:
+			// futex(clear_child_tid, FUTEX_WAKE, 1, NULL, NULL, 0);
+			if (clear_child_tid) {
+                *(u32 *)clear_child_tid = (u32)0;
                 load_emod_futex();
                 emod_futex.emod_futex_api.sys_futex_handler(
                     (u32 *)clear_child_tid,
