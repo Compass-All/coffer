@@ -200,7 +200,7 @@ u64 enter_enclave(
 	u64 send_message = 0;
 	free(payload);
 
-    u32 tid = 0;
+	u32 tid = 1;
 	u64 int_cnt = 0;
 	while (short_message != EXIT_ENCLAVE) {
         pid_t ppid_before_fork = getpid();
@@ -251,10 +251,6 @@ u64 enter_enclave(
                 send_message = ((u64)short_message << 32) >> 32; 
             }
             break;
-		// case EXIT_THREAD:
-		// 	printf("thread exit! short_message = 0x%lx\n\r", short_message);
-        //     // printf("send_message = 0x%lx\n\r", ((u64)short_message << 32) >> 32);
-		// 	break;
 
 		case SAVE_MSG:
 			printf("[E%luT%lu]msg: %u\n", eid, tid, (u32)short_message);

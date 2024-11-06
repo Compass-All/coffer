@@ -25,6 +25,7 @@ EMOD_MANAGER_BIN = $(BUILD_DIR)/emodules/emod_manager/emod_manager.bin
 OPENSBI_SRC = opensbi
 FW_DIR = $(shell pwd)/$(BUILD_DIR)/opensbi
 FW_DYNAMIC_BIN = $(FW_DIR)/fw_dynamic.bin
+FW_DYNAMIC_ELF = $(FW_DIR)/fw_dynamic.elf
 FW_JUMP_ELF = $(FW_DIR)/fw_jump.elf
 
 UBOOT_DIR = u-boot
@@ -88,6 +89,7 @@ opensbi: $(EMOD_MANAGER_BIN)
 	make -C $(OPENSBI_SRC) -j$(nproc)
 	cp $(OPENSBI_SRC)/build/platform/generic/firmware/fw_dynamic.bin $(FW_DYNAMIC_BIN)
 	cp $(OPENSBI_SRC)/build/platform/generic/firmware/fw_jump.elf $(FW_JUMP_ELF)
+	cp $(OPENSBI_SRC)/build/platform/generic/firmware/fw_dynamic.elf $(FW_DYNAMIC_ELF)
 	@printf "[*] Building Security Monitor Done...\n\n"
 
 $(FW_DYNAMIC_BIN): opensbi
