@@ -22,11 +22,11 @@ RUN tar xJf /root/qemu-${QEMU_VERSION}.tar.xz -C /root
 # MUSL
 ADD tools/musl/patch /root/musl_patch
 RUN mkdir -p /root/musl-cross-make/patches/musl-1.2.3 \
-    && cp /root/musl_patch/0001-memset_main_tls.diff /root/musl-cross-make/patches/musl-1.2.3/0001-memset_main_tls.diff \
-    && cp /root/musl_patch/0002-assert.diff /root/musl-cross-make/patches/musl-1.2.3/0002-assert.diff
+    && cp /root/musl_patch/* /root/musl-cross-make/patches/musl-1.2.3/
 
 WORKDIR /root/musl-cross-make
-RUN make TARGET=riscv64-linux-musl install -j$(nproc) 
+RUN sed -i 's/^MUSL_VER = .*/MUSL_VER = 1.2.3/' Makefile \
+    && make TARGET=riscv64-linux-musl install -j$(nproc) 
 ENV RISCV_MUSL "/root/musl-cross-make/output"
 ENV PATH "$RISCV_MUSL/bin:$PATH"
 WORKDIR /
