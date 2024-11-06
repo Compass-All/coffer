@@ -62,8 +62,8 @@ typedef unsigned int     __u32;
 #define __HAVE_INT32__
 
 #ifndef _ASM_GENERIC_TYPES_H
-typedef signed   long      __s64;
-typedef unsigned long      __u64;
+typedef long long int		__s64;
+typedef unsigned long long  __u64;
 #endif
 #define __PRIs64 "ld"
 #define __PRIu64 "lu"
@@ -75,7 +75,7 @@ typedef unsigned long      __u64;
 
 typedef __s64 __sptr;
 typedef __u64 __uptr;
-typedef __u64 uintptr_t;
+// typedef __u64 uintptr_t;
 #define __PRIuptr __PRIx64
 #define __PRIsz   __PRIu64
 #define __PRIssz  __PRIs64

@@ -1,14 +1,16 @@
 #pragma  once
 
-#if defined __QEMU__
 #define NUM_ENCLAVE     32
-#elif defined __UNMATCHED__
-#define NUM_ENCLAVE     16
-#elif defined __VISIONFIVE2__
-#define NUM_ENCLAVE     16
-#else
-#error "Unknown Platform"
-#endif 
+
+// #if defined __QEMU__
+// #define NUM_ENCLAVE     32
+// #elif defined __UNMATCHED__
+// #define NUM_ENCLAVE     16
+// #elif defined __VISIONFIVE2__
+// #define NUM_ENCLAVE     16
+// #else
+// #error "Unknown Platform"
+// #endif 
 
 #define THREADS_LIMIT   16
 #define __NUM_THREADS   (1024 / NUM_ENCLAVE)
