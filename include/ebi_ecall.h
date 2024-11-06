@@ -16,6 +16,7 @@
 #define SBI_EXT_EBI_SET_CLEAR_CHILD_TID			409
 #define SBI_EXT_EBI_GET_CLEAR_CHILD_TID			410
 #define SBI_EXT_EBI_EXIT_THREAD				    411
+#define SBI_EXT_EBI_SHARED_MEM_ALLOC 			412  // shared buffer
 
 #define SBI_EXT_EBI_PERI_INFORM 				420
 #define SBI_EXT_EBI_FETCH 						421

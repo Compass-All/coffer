@@ -34,6 +34,31 @@ static paddr_t inline __ecall_ebi_mem_alloc(
 	return paddr;
 }
 
+static paddr_t inline __ecall_ebi_shared_mem_alloc(
+	usize number_of_partitions,
+	usize *suggestion
+)
+{
+	paddr_t paddr;
+	usize ret;
+	__ebi_call(
+		SBI_EXT_EBI,
+		SBI_EXT_EBI_SHARED_MEM_ALLOC,
+		0UL, number_of_partitions, 0UL
+	);
+	__asm__ __volatile__ (
+		"mv		%0, a0	\n\t"
+		"mv		%1, a1	\n\t"
+		: "=r"(ret), "=r"(paddr)
+		:
+		: "a0", "a1", "memory"
+	);
+	if (suggestion)
+		*suggestion = ret;
+
+	return paddr;
+}
+
 // static void inline __ecall_ebi_addr_record(
 // 	paddr_t emod_manager_start_pa_ptr,
 // 	paddr_t umode_pool_pa_aligned_ptr
