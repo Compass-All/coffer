@@ -9,14 +9,14 @@ RUN apt -y update \
     autoconf automake autotools-dev curl python3 libmpc-dev libmpfr-dev libgmp-dev \
     gawk build-essential bison flex texinfo gperf libtool patchutils bc zlib1g-dev libexpat-dev texinfo \
     libncurses5-dev libncursesw5-dev libpython2.7 pkg-config libglib2.0-dev libpixman-1-dev \
-    device-tree-compiler swig \
+    device-tree-compiler swig ninja-build  cmake libslirp-dev \
     && apt install -y python3-pip libssl-dev xz-utils zsh
 RUN pip3 install setuptools importlib_resources
 
 # zsh + oh-my-zsh
 # Uses "p10k" theme with some customization. Uses some bundled plugins and installs some more from github
 RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/v1.2.0/zsh-in-docker.sh)" -- \
-    -t https://github.com/romkatv/powerlevel10k.git \
+    # -t https://github.com/romkatv/powerlevel10k.git \
     -p git \
     -p https://github.com/zsh-users/zsh-autosuggestions \
     -p https://github.com/zsh-users/zsh-syntax-highlighting \
@@ -65,3 +65,5 @@ RUN git apply /root/linux_patch/mem_hotremove_01.patch \
     && cp /root/linux_config/coffer_defconfig arch/riscv/configs/coffer_defconfig \
     && ARCH=riscv make coffer_defconfig
 WORKDIR /
+
+RUN rm -rf *.tar.xz
