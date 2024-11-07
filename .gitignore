@@ -90,3 +90,6 @@ screenlog*
 
 # root filesystem
 /rootfs
+
+busybox/*
+u-boot/*

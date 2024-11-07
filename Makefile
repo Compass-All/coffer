@@ -35,8 +35,7 @@ UBOOT_IMAGE = $(UBOOT_IMAGE_DIR)/u-boot.itb
 UBOOT_CONFIG = $(UBOOT_DIR)/.config
 UBOOT_SRC = u-boot
 
-BUSYBOX_SRC = /root/busybox/_install
-BUSYBOX_ROOTFS_DIR = tools/busybox/build
+BUSYBOX_ROOTFS_DIR = busybox/_install
 
 all: sd_part1 sd_part2 emodules prog opensbi $(LINUX_IMAGE)  $(BUSYBOX_ROOTFS_DIR)
 
@@ -75,9 +74,7 @@ $(LINUX_IMAGE):
 	@printf "[*] Building Kernel Image Done...\n\n"
 
 $(BUSYBOX_ROOTFS_DIR):
-	@printf "\n[.] Copying Busybox Rootfs...\n"
-	cp -r $(BUSYBOX_SRC) $@
-	@printf "[*] Copying Busybox Rootfs Done...\n\n"
+	@printf "[*] Detected Busybox Rootfs...\n\n"
 
 $(EMOD_MANAGER_BIN):
 	@printf "\n[.] Building EMod_Manager...\n"

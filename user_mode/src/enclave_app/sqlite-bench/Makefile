@@ -8,9 +8,9 @@ HDRS=$(wildcard *.h)
 TARGET=sqlite-bench
 BUILDDIR = ../../../../build/prog/enclave/$(shell basename $(CURDIR))
 
-all: $(TARGET) copy
-#all:
-#	echo "skip sqlite"
+# all: $(TARGET) copy
+all:
+	echo "skip sqlite"
 
 $(TARGET): $(OBJS)
 	$(CC) -DTHREADSAFE=1 -o $@ $^ $(LDFLAGS)

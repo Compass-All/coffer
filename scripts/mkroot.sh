@@ -2,7 +2,7 @@
 
 ROOTFS=tools/rootfs/old-root.img
 MNT=tools/rootfs/mnt
-BUSYBOX=tools/busybox/build
+BUSYBOX=busybox/_install
 RCS=tools/rootfs/script
 PROG=build/prog
 EMOD=build/emodules
