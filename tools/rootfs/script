@@ -16,15 +16,28 @@ ifconfig lo 127.0.0.1
 # /prog/host/test_eapp /prog/enclave/rv8/rv8_aes
 # /prog/host/test_eapp /prog/enclave/rv8/rv8_norx
 /prog/host/reset_coffer
+
+# /prog/host/test_eapp /prog/enclave/eapp_test_ecall 57005 &
+
 # pmp_number pmp_enable id_split tlb_cached fragmented
 /prog/host/eval_config 8 1 1 1 1
 
+
+## -------------------------- thread test --------------------------
 # /prog/host/test_eapp /prog/enclave/musl_eapp/eapp_thread
 # /prog/host/test_eapp /prog/enclave/musl_eapp/eapp_thread_compute
 # /prog/host/test_eapp /prog/enclave/musl_eapp/eapp_fork
 # /prog/host/test_eapp /prog/enclave/rv8/rv8_qsort
 
-# /prog/host/test_eapp /prog/enclave/eapp_test_ecall 57005 &
+## ----------------------- proxy network test ----------------------
+# nohup /prog/host/test_eapp /prog/enclave/musl_eapp/eapp_socket_server &
+# /prog/host/test_eapp /prog/enclave/musl_eapp/eapp_socket_client
+
+## ----------------------------- redis -----------------------------
+# nohup /prog/host/test_eapp /prog/enclave/redis/redis-server &
+# /prog/host/test_eapp /prog/enclave/redis/redis-benchmark -q -n 1000
+
+
 
 # command="/prog/enclave/sqlite-bench/sqlite-bench \
 # 	--num=500 \

@@ -26,31 +26,31 @@ mkfs.ext4 -F $ROOTFS
 if [ $? -ne 0 ]; then echo "Error mkfs!"; exit 1; fi
 
 echo "[*] Mount image..."
-sudo mkdir -p $MNT
-sudo mount -o loop $ROOTFS $MNT
+mkdir -p $MNT
+mount -o loop $ROOTFS $MNT
 if [ $? -ne 0 ]; then echo "Error mount!"; exit 1; fi
 
 echo "[*] Copying busybox"
 CWD=`pwd`
 cd $MNT
-sudo mkdir -p bin etc/init.d dev lib sys proc sbin tmp usr \
+mkdir -p bin etc/init.d dev lib sys proc sbin tmp usr \
 	usr/bin usr/lib usr/sbin
 cd -
-sudo cp -r $BUSYBOX/* $MNT
-sudo cp $RCS $MNT/etc/init.d/rcS
-sudo chmod +x $MNT/etc/init.d/rcS
+cp -r $BUSYBOX/* $MNT
+cp $RCS $MNT/etc/init.d/rcS
+chmod +x $MNT/etc/init.d/rcS
 
 if [ $? -ne 0 ]; then echo "Error cp!"; umount $MNT; exit 1; fi
-sudo ln -sf ../bin/busybox $MNT/sbin/init
-sudo ln -sf ../bin/busybox $MNT/bin/sh
+ln -sf ../bin/busybox $MNT/sbin/init
+ln -sf ../bin/busybox $MNT/bin/sh
 cd $CWD
 
 echo "[*] Copying emodules and payloads"
-sudo cp -r $PROG $MNT
-sudo mkdir -p $MNT/emodules
-sudo cp $EMOD/*/*.bin.signed $MNT/emodules
+cp -r $PROG $MNT
+mkdir -p $MNT/emodules
+cp $EMOD/*/*.bin.signed $MNT/emodules
 if [ $? -ne 0 ]; then echo "Error cp!"; umount $MNT; exit 1; fi
 
 echo "[*] umount"
-sudo umount -l $MNT;
+umount -l $MNT;
 if [ $? -ne 0 ]; then echo "Error umount!"; exit 1; fi
