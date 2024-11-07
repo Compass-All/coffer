@@ -1,12 +1,6 @@
 [submodule "opensbi"]
 	path = opensbi
 	url = git@github.com:GartonChan/opensbi.git
-[submodule "qemu"]
-	path = qemu
-	url = git@github.com:GartonChan/qemu.git
-[submodule "u-boot"]
-	path = u-boot
-	url = git@github.com:GartonChan/u-boot.git
 [submodule "coffer_emodules"]
 	path = coffer_emodules
 	url = git@github.com:GartonChan/coffer_emodules.git
