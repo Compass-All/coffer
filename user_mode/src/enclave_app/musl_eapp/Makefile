@@ -1,7 +1,7 @@
 target_dir := ../../../../build/prog/enclave/$(shell basename $(CURDIR))
 include_dir := ../../../include
 
-MUSL_CC = /home/gartonchan/workspace/coffer_updated/musl-cross-make/output/bin
+MUSL_CC = $(RISCV_MUSL)/bin
 CC = $(MUSL_CC)/riscv64-linux-musl-gcc
 # CC := riscv64-unknown-linux-musl-gcc
 

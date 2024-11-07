@@ -77,10 +77,10 @@ DEPS = $(wildcard src/*.h) Makefile include/darknet.h
 
 BUILDDIR = ../../../../build/prog/enclave/$(shell basename $(CURDIR))
 
-all: weights obj backup results $(SLIB) $(ALIB) $(EXEC) copy 
+# all: weights obj backup results $(SLIB) $(ALIB) $(EXEC) copy 
 
-# all:
-#	echo "skip DarkNet"
+all:
+	echo "skip DarkNet"
 
 # original
 # all: obj  results $(SLIB) $(ALIB) $(EXEC)

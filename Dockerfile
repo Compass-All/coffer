@@ -2,8 +2,18 @@
 FROM monstrousmoonshine/riscv_dev
 ARG DEBIAN_FRONTEND=noninteractive
 
-# 0. zsh + oh-my-zsh
-RUN apt install -y zsh
+# 1. Basic dependencies
+RUN apt -y update \
+    && apt -y upgrade \
+    && apt install -y git vim htop magic-wormhole net-tools nethogs wget csh iputils-ping tree \
+    autoconf automake autotools-dev curl python3 libmpc-dev libmpfr-dev libgmp-dev \
+    gawk build-essential bison flex texinfo gperf libtool patchutils bc zlib1g-dev libexpat-dev texinfo \
+    libncurses5-dev libncursesw5-dev libpython2.7 pkg-config libglib2.0-dev libpixman-1-dev \
+    device-tree-compiler swig \
+    && apt install -y python3-pip libssl-dev xz-utils zsh
+RUN pip3 install setuptools importlib_resources
+
+# zsh + oh-my-zsh
 # Uses "p10k" theme with some customization. Uses some bundled plugins and installs some more from github
 RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/v1.2.0/zsh-in-docker.sh)" -- \
     -t https://github.com/romkatv/powerlevel10k.git \
@@ -12,23 +22,12 @@ RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/
     -p https://github.com/zsh-users/zsh-syntax-highlighting \
     -p https://github.com/agkozak/zsh-z
 
-# 1. Basic dependencies
-RUN apt -y update \
-    && apt -y upgrade \
-    && apt install -y git vim htop magic-wormhole net-tools nethogs wget csh iputils-ping tree \
-    autoconf automake autotools-dev curl python3 python3-pip libmpc-dev libmpfr-dev libgmp-dev \
-    gawk build-essential bison flex texinfo gperf libtool patchutils bc zlib1g-dev libexpat-dev texinfo \
-    libncurses5-dev libncursesw5-dev libpython2.7 pkg-config libglib2.0-dev libpixman-1-dev \
-    device-tree-compiler swig libssl-dev xz-utils
-RUN pip3 install importlib_resources
-
 # 2. Get sources
+# busybox, u-boot are moved out.
 ARG QEMU_VERSION=5.0.0
 ARG LINUX_VERSION=5.14
 RUN wget https://download.qemu.org/qemu-${QEMU_VERSION}.tar.xz -P /root --no-verbose
 RUN wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-${LINUX_VERSION}.tar.xz -P /root --no-verbose   
-# RUN git clone https://github.com/u-boot/u-boot.git /root/u-boot
-RUN git clone https://git.busybox.net/busybox /root/busybox
 RUN git clone https://github.com/richfelker/musl-cross-make.git /root/musl-cross-make
 
 # 3. Extract sources
@@ -55,7 +54,7 @@ ENV RISCV_MUSL "/root/musl-cross-make/output"
 ENV PATH "$RISCV_MUSL/bin:$PATH"
 WORKDIR /
 
-# 6. Compile Linux
+# 6. Patching and configuring Linux
 ADD tools/linux/patch /root/linux_patch
 ADD tools/linux/config /root/linux_config
 
@@ -65,13 +64,4 @@ RUN git apply /root/linux_patch/mem_hotremove_01.patch \
     && git apply /root/linux_patch/load_addr.patch \
     && cp /root/linux_config/coffer_defconfig arch/riscv/configs/coffer_defconfig \
     && ARCH=riscv make coffer_defconfig
-WORKDIR /
-
-# 7. Compile Busybox
-ADD tools/busybox/config /root/busybox_config
-
-WORKDIR /root/busybox
-RUN git checkout 1_32_1 \
-    && cp /root/busybox_config/.config . \
-    && CROSS_COMPILE=riscv64-unknown-linux-gnu- make -j
 WORKDIR /

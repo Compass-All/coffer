@@ -1,4 +1,5 @@
-CC=riscv64-unknown-linux-musl-gcc
+MUSL_CC = $(RISCV_MUSL)/bin
+CC = $(MUSL_CC)/riscv64-linux-musl-gcc
 CFLAGS=-Wall -I. -O2 -DNDEBUG -std=c99 -g
 LDFLAGS=-lpthread -ldl -lm -static
 SRCS=$(wildcard *.c)

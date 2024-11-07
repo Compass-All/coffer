@@ -21,7 +21,7 @@ VERSION=0.17.02
 #
 # Codename "omniferous optimized overreacher"
 #
-MUSL_CC = /home/gartonchan/workspace/coffer_updated/musl-cross-make/output/bin
+MUSL_CC = $(RISCV_MUSL)/bin
 CC = $(MUSL_CC)/riscv64-linux-musl-gcc
 STATIC = 1
 
@@ -607,12 +607,13 @@ OBJS += $(SRC:.c=.o)
 
 APPARMOR_PARSER=/sbin/apparmor_parser
 
-all: config.h stress-ng ../../../../build/prog/enclave/stress-ng/stress-ng
-../../../../build/prog/enclave/stress-ng/stress-ng: stress-ng
-	mkdir -p ../../../../build/prog/enclave/stress-ng
-	cp stress-ng ../../../../build/prog/enclave/stress-ng/stress-ng
-# all:
-#	echo "skip stress-ng"
+# all: config.h stress-ng ../../../../build/prog/enclave/stress-ng/stress-ng
+# ../../../../build/prog/enclave/stress-ng/stress-ng: stress-ng
+# 	mkdir -p ../../../../build/prog/enclave/stress-ng
+# 	cp stress-ng ../../../../build/prog/enclave/stress-ng/stress-ng
+
+all:
+	echo "skip building stress-ng"
 
 .SUFFIXES: .cpp .c .o
 

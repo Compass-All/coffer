@@ -13,10 +13,10 @@ SIGN_UTIL = $(SIGN_UTIL_SRC)/build/sign
 DTS_DIR = tools/dts
 DTB_DIR = $(BUILD_DIR)/dtb
 
-# LINUX_DIR = tools/linux
-# LINUX_IMAGE_DIR = $(LINUX_DIR)/build
-# LINUX_IMAGE = $(LINUX_IMAGE_DIR)/Image
-# LINUX_SRC = /root/linux
+LINUX_DIR = tools/linux
+LINUX_IMAGE_DIR = $(LINUX_DIR)/build
+LINUX_IMAGE = $(LINUX_IMAGE_DIR)/Image
+LINUX_SRC = /root/linux-5.14
 
 EMOD_SRC = coffer_emodules
 EMOD_MANAGER_SRC = coffer_emodules/emod_manager
@@ -35,7 +35,10 @@ UBOOT_IMAGE = $(UBOOT_IMAGE_DIR)/u-boot.itb
 UBOOT_CONFIG = $(UBOOT_DIR)/.config
 UBOOT_SRC = u-boot
 
-all: sd_part1 sd_part2 emodules prog opensbi #$(LINUX_IMAGE) 
+BUSYBOX_SRC = /root/busybox/_install
+BUSYBOX_ROOTFS_DIR = tools/busybox/build
+
+all: sd_part1 sd_part2 emodules prog opensbi $(LINUX_IMAGE)  $(BUSYBOX_ROOTFS_DIR)
 
 sd_part1: $(UBOOT_SPL_IMAGE)
 sd_part2: $(UBOOT_IMAGE)
@@ -62,14 +65,19 @@ $(DTB_DIR)/%.dtb: $(DTS_DIR)/%.dts
 	dtc -I dts -O dtb -o $@ $<
 	@printf "[*] Building dtb Done...\n\n"
 
-# $(LINUX_IMAGE):
-# 	@printf "\n[.] Building Kernel Image...\n"
-# 	mkdir -p $(LINUX_IMAGE_DIR)
-# 	ARCH=riscv \
-# 	CROSS_COMPILE=riscv64-unknown-linux-gnu- \
-# 	make -C $(LINUX_SRC) -j$$(($$(nproc)-4)) Image
-# 	cp $(LINUX_SRC)/arch/riscv/boot/Image $@
-# 	@printf "[*] Building Kernel Image Done...\n\n"
+$(LINUX_IMAGE):
+	@printf "\n[.] Building Kernel Image...\n"
+	mkdir -p $(LINUX_IMAGE_DIR)
+	ARCH=riscv \
+	CROSS_COMPILE=riscv64-unknown-linux-gnu- \
+	make -C $(LINUX_SRC) -j$$(($$(nproc)-1)) Image
+	cp $(LINUX_SRC)/arch/riscv/boot/Image $@
+	@printf "[*] Building Kernel Image Done...\n\n"
+
+$(BUSYBOX_ROOTFS_DIR):
+	@printf "\n[.] Copying Busybox Rootfs...\n"
+	cp -r $(BUSYBOX_SRC) $@
+	@printf "[*] Copying Busybox Rootfs Done...\n\n"
 
 $(EMOD_MANAGER_BIN):
 	@printf "\n[.] Building EMod_Manager...\n"
