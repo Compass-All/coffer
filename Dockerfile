@@ -9,7 +9,7 @@ RUN apt -y update \
     autoconf automake autotools-dev curl python3 libmpc-dev libmpfr-dev libgmp-dev \
     gawk build-essential bison flex texinfo gperf libtool patchutils bc zlib1g-dev libexpat-dev texinfo \
     libncurses5-dev libncursesw5-dev libpython2.7 pkg-config libglib2.0-dev libpixman-1-dev \
-    device-tree-compiler swig ninja-build  cmake libslirp-dev \
+    device-tree-compiler swig ninja-build  cmake \
     && apt install -y python3-pip libssl-dev xz-utils zsh
 RUN pip3 install setuptools importlib_resources
 
@@ -44,6 +44,7 @@ WORKDIR /
 # 5. Install musl-libc
 ARG MUSL_VERSION=1.2.3
 # 5.1 Patching musl-cross-make
+RUN sed -i "s/^MUSL_VER = .*/MUSL_VER = ${MUSL_VERSION}/" /root/musl-cross-make/Makefile
 ADD tools/musl/patch /root/musl_patch
 RUN mkdir -p /root/musl-cross-make/patches/musl-1.2.3 \
     && cp /root/musl_patch/* /root/musl-cross-make/patches/musl-1.2.3/
