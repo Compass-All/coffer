@@ -7,6 +7,8 @@
 #define SYS_epoll_create1   20
 #define SYS_epoll_ctl       21
 #define SYS_epoll_pwait     22
+#define SYS_fcntl           25
+#define SYS_close 			57	// 0x39
 #define SYS_pipe2           59
 #define SYS_socket 			198
 #define SYS_socketpair 		199

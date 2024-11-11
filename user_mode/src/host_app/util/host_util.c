@@ -319,10 +319,15 @@ static int host_handle_proxy_syscall(struct proxy_info* proxy_info)
       		ret = connect(connect_args->sockfd, (struct sockaddr *) &connect_args->addr, connect_args->addrlen);
 			break;
 		case (SYS_getsockname):
-			printf("[%s]: skip SYS_getsockname\n", __func__);
+			// printf("[%s]: skip SYS_getsockname\n", __func__);
+			sargs_SYS_getsockname *getsockname_args = (sargs_SYS_getsockname *) proxy_syscall->data;
+      		ret = getsockname(getsockname_args->sockfd, (struct sockaddr *) &getsockname_args->addr, 
+                	&getsockname_args->addrlen);
 			break;
 		case (SYS_getpeername):
-			// printf("[%s]: skip SYS_getpeername\n", __func__);
+			sargs_SYS_getpeername *getpeername_args = (sargs_SYS_getpeername *) proxy_syscall->data;
+			ret = getpeername(getpeername_args->sockfd, (struct sockaddr *) &getpeername_args->addr, 
+					&getpeername_args->addrlen);
 			break;
 		case (SYS_sendto):
 			// printf("[%s]: SYS_sendto\n", __func__);
@@ -360,7 +365,7 @@ static int host_handle_proxy_syscall(struct proxy_info* proxy_info)
 			printf("[%s]: skip SYS_recvmsg\n", __func__);
 			break;
 		case (SYS_readahead):
-			// printf("[%s]: SYS_readahead\n", __func__);
+			printf("[%s]: skip SYS_readahead\n", __func__);
 			break;
 		case (SYS_pipe2):
 			// printf("[%s]: SYS_pipe2\n", __func__);
@@ -380,11 +385,24 @@ static int host_handle_proxy_syscall(struct proxy_info* proxy_info)
 		case (SYS_epoll_pwait):
 			// printf("[%s]: SYS_epoll_epoll\n", __func__);
 			sargs_SYS_epoll_pwait *epoll_pwait_args = (sargs_SYS_epoll_pwait *) proxy_syscall->data;
-      		ret = epoll_wait(epoll_pwait_args->epfd, &epoll_pwait_args->events, 
+			ret = epoll_wait(epoll_pwait_args->epfd, &epoll_pwait_args->events, 
                 epoll_pwait_args->maxevents, epoll_pwait_args->timeout);
+			break;
+		case (SYS_fcntl):
+			sargs_SYS_fcntl *fcntl_args = (sargs_SYS_fcntl *) proxy_syscall->data;
+			if (!fcntl_args->has_struct) {
+				ret = fcntl(fcntl_args->fd, fcntl_args->cmd, fcntl_args->arg[0]);
+			} else {
+				ret = fcntl(fcntl_args->fd, fcntl_args->cmd, fcntl_args->arg);
+			}
+			break;
+		case (SYS_close):
+			sargs_SYS_close *close_args = (sargs_SYS_close *) proxy_syscall->data;
+			ret = close(close_args->fd);
 			break;
 		default:
 			// goto syscall_error;
+			printf("Unimplement proxied syscall !!\n");
 			break;
 	}
 	proxy_info->return_data.call_status = CALL_STATUS_OK;
@@ -473,18 +491,38 @@ u64 enter_enclave(
 			break;
 
         case NEW_THREAD:
-            // printf("New thread! short_message = 0x%lx\n\r", short_message);
-            // printf("send_message = 0x%lx\n\r", ((u64)short_message << 32) >> 32);
-            // fflush(stdout);
-            if (fork() == 0) {
-                int r = prctl(PR_SET_PDEATHSIG, SIGTERM);
-                if (r == -1) { perror(0); exit(1); }
-                if (getppid() != ppid_before_fork)
-                    exit(1);
-                tid = (u32)short_message;
-            } else {
-                send_message = ((u64)short_message << 32) >> 32; 
-            }
+			char *stack = malloc(16 * 4096);
+			if (stack == NULL) {
+				printf("malloc failed\n");
+				exit(1);  // send msg to enclave for exiting
+			}
+			char *stack_top = stack + 16 * 4096;
+			// fork a thread sharing VM and FS
+			pid_t new_tid = syscall(
+				SYS_clone,
+				CLONE_FILES | CLONE_FS,
+				stack_top
+			);
+			if (new_tid <= -1) {
+				perror("clone failed\n");
+				free(stack);
+				exit(1);  // send msg to enclave for exiting
+			} else if (new_tid == 0) {
+				// child thread
+				// printf("child thread: new_tid = %d\n", new_tid);
+				fflush(stdout);
+				int r = prctl(PR_SET_PDEATHSIG, SIGTERM);
+				if (r == -1) { perror(0); exit(1); }
+				if (getppid() != ppid_before_fork)
+					exit(1);
+				tid = (u32)short_message;
+				send_message = 0;   // what message to send to child thread ?
+			} else {
+				// parent thread
+				// printf("parent thread: new_tid = %d\n", new_tid);
+				fflush(stdout);
+				send_message = ((u64)short_message << 32) >> 32; 
+			}
             break;
 
 			case SAVE_MSG:

@@ -51,7 +51,6 @@ typedef struct sargs_SYS_getpeername{
   socklen_t addrlen;
 } sargs_SYS_getpeername;
 
-
 typedef struct sargs_SYS_sendto {
   int sockfd; 
   size_t len; 
@@ -100,3 +99,16 @@ typedef struct sargs_SYS_epoll_pwait{
   int maxevents;
   int timeout;
 } sargs_SYS_epoll_pwait;
+
+typedef struct sargs_SYS_fcntl {
+  int fd;
+  int cmd;
+  int has_struct;
+  unsigned long arg[];
+} sargs_SYS_fcntl;
+
+struct _sargs_fd_only {
+  int fd;
+};
+
+typedef struct _sargs_fd_only sargs_SYS_close;

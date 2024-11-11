@@ -33,6 +33,8 @@ typedef struct {
     void        (*spin_unlock_grand)(void);
     void        (*spin_lock_log)(void);
     void        (*spin_unlock_log)(void);
+	void 		(*spin_lock_proxy)(void);
+	void 		(*spin_unlock_proxy)(void);
 
 	// debug
 	paddr_t		(*get_pa)(vaddr_t va);
