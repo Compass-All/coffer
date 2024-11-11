@@ -30,8 +30,15 @@ ifconfig lo 127.0.0.1
 # /prog/host/test_eapp /prog/enclave/rv8/rv8_qsort
 
 ## ----------------------- proxy network test ----------------------
+### --- socket
 # nohup /prog/host/test_eapp /prog/enclave/musl_eapp/eapp_socket_server &
 # /prog/host/test_eapp /prog/enclave/musl_eapp/eapp_socket_client
+
+### --- epoll
+# /prog/host/test_eapp /prog/enclave/musl_eapp/eapp_epoll_server &
+# /prog/host/test_eapp /prog/enclave/musl_eapp/eapp_epoll_client
+# sleep 2
+# nohup /prog/enclave/musl_eapp/eapp_epoll_client &
 
 ## ----------------------------- redis -----------------------------
 # nohup /prog/host/test_eapp /prog/enclave/redis/redis-server &

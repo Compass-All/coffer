@@ -33,6 +33,14 @@ typedef struct sargs_SYS_accept{
   socklen_t addrlen;
 } sargs_SYS_accept;
 
+typedef struct sargs_SYS_accept4{
+  int sockfd;
+  struct sockaddr_storage addr;
+  socklen_t addrlen;
+  int flags;
+} sargs_SYS_accept4;
+
+
 typedef struct sargs_SYS_connect{
   int sockfd;
   struct sockaddr_storage addr;

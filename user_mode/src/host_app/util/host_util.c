@@ -308,10 +308,11 @@ static int host_handle_proxy_syscall(struct proxy_info* proxy_info)
 			sargs_SYS_listen *listen_args = (sargs_SYS_listen *) proxy_syscall->data; 
       		ret = listen(listen_args->sockfd, listen_args->backlog);
 			break;
-		case (SYS_accept):
+		case (SYS_accept4):
 			// printf("[%s]: SYS_accept\n", __func__);
-			sargs_SYS_accept *accept_args = (sargs_SYS_accept *) proxy_syscall->data; 
-      		ret = accept(accept_args->sockfd, (struct sockaddr *) &accept_args->addr, &accept_args->addrlen);
+			sargs_SYS_accept4 *accept4_args = (sargs_SYS_accept4 *) proxy_syscall->data; 
+      		ret = accept4(accept4_args->sockfd, (struct sockaddr *) &accept4_args->addr,
+					&accept4_args->addrlen, accept4_args->flags);
 			break;
 		case (SYS_connect):
 			// printf("[%s]: SYS_connect\n", __func__);

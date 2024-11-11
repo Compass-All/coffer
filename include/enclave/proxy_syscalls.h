@@ -26,6 +26,7 @@
 #define SYS_sendmsg 		211
 #define SYS_recvmsg 		212
 #define SYS_readahead 		213
+#define SYS_accept4 		242
 
 
 #define SHARED_BUFFER_START 0x2000000000UL
