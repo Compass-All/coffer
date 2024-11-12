@@ -103,9 +103,9 @@ typedef struct sargs_SYS_epoll_ctl{
 
 typedef struct sargs_SYS_epoll_pwait{
   int epfd;
-  struct epoll_event events;
   int maxevents;
   int timeout;
+  struct epoll_event events[];  // flexbile array member
 } sargs_SYS_epoll_pwait;
 
 typedef struct sargs_SYS_fcntl {
@@ -119,4 +119,14 @@ struct _sargs_fd_only {
   int fd;
 };
 
+typedef struct sargs_SYS_write {
+  int fd;
+  size_t len;
+  unsigned char buf[];
+} sargs_SYS_write;
+
+typedef sargs_SYS_write sargs_SYS_read;
+
+typedef struct _sargs_fd_only sargs_SYS_fsync;
 typedef struct _sargs_fd_only sargs_SYS_close;
+
