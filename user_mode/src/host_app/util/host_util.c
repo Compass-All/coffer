@@ -397,13 +397,21 @@ static int host_handle_proxy_syscall(struct proxy_info* proxy_info)
 				ret = fcntl(fcntl_args->fd, fcntl_args->cmd, fcntl_args->arg);
 			}
 			break;
+		case (SYS_read):
+			sargs_SYS_read *read_args = (sargs_SYS_read *) proxy_syscall->data;
+			ret = read(read_args->fd, read_args->buf, read_args->len);
+			break;
+		case (SYS_write):
+			sargs_SYS_write *write_args = (sargs_SYS_write *) proxy_syscall->data;
+			ret = write(write_args->fd, write_args->buf, write_args->len);
+			break;
 		case (SYS_close):
 			sargs_SYS_close *close_args = (sargs_SYS_close *) proxy_syscall->data;
 			ret = close(close_args->fd);
 			break;
 		default:
 			// goto syscall_error;
-			printf("Unimplement proxied syscall !!\n");
+			printf("Unimplement proxied syscall = %u!!\n", proxy_syscall->syscall_num);
 			break;
 	}
 	proxy_info->return_data.call_status = CALL_STATUS_OK;
