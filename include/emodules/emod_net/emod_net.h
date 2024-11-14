@@ -130,3 +130,19 @@ typedef sargs_SYS_write sargs_SYS_read;
 typedef struct _sargs_fd_only sargs_SYS_fsync;
 typedef struct _sargs_fd_only sargs_SYS_close;
 
+
+// -------------------------------------
+struct rlimit_tmp {
+  unsigned long rlim_cur;
+  unsigned long rlim_max;
+};
+// This does not belong to network module
+typedef struct sargs_SYS_prlimit64 {
+  pid_t pid;
+  int resource;
+  int old_limit_is_null;
+  int new_limit_is_null;
+  struct rlimit_tmp old_limit;
+  struct rlimit_tmp new_limit;
+} sargs_SYS_prlimit64;
+// -------------------------------------
