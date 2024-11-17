@@ -1,8 +1,11 @@
 #!/bin/bash
-
+# Output Image File
 ROOTFS=tools/rootfs/old-root.img
+
+# Input Sources
 MNT=tools/rootfs/mnt
-BUSYBOX=busybox/_install
+TMP_MNT=tools/tmp_mnt
+UBUNTU=ubuntu-rootfs.tar.gz  # ubuntu rootfs
 RCS=tools/rootfs/script
 PROG=build/prog
 EMOD=build/emodules
@@ -19,31 +22,38 @@ then
 	exit 1
 fi
 
+if test ! -e $RCS
+then
+    echo "Error: script file not found:" $RCS
+    exit 1
+fi
+
+if test ! -e $UBUNTU
+then
+    echo "Error: Ubuntu image file not found:" $UBUNTU
+    exit 1
+fi
+
 echo "[*] Creating image file:" $ROOTFS
-dd if=/dev/zero of=$ROOTFS bs=4M count=256
+dd if=/dev/zero of=$ROOTFS bs=4M count=512
 if [ $? -ne 0 ]; then echo "Error dd!"; exit 1; fi
 mkfs.ext4 -F $ROOTFS
 if [ $? -ne 0 ]; then echo "Error mkfs!"; exit 1; fi
 
 echo "[*] Mount image..."
-mkdir -p $MNT
+mkdir -p $MNT  # mount point
+
 mount -o loop $ROOTFS $MNT
 if [ $? -ne 0 ]; then echo "Error mount!"; exit 1; fi
 
-echo "[*] Copying busybox"
-CWD=`pwd`
-cd $MNT
-mkdir -p bin etc/init.d dev lib sys proc sbin tmp usr \
-	usr/bin usr/lib usr/sbin
-cd -
-cp -r $BUSYBOX/* $MNT
+# echo "[*] Copying Ubuntu RootFS"
+tar -zxf $UBUNTU -C $MNT
+if [ $? -ne 0 ]; then echo "Error tar!"; umount $MNT; exit 1; fi
+
+# Copy init.d script
 cp $RCS $MNT/etc/init.d/rcS
 chmod +x $MNT/etc/init.d/rcS
-
 if [ $? -ne 0 ]; then echo "Error cp!"; umount $MNT; exit 1; fi
-ln -sf ../bin/busybox $MNT/sbin/init
-ln -sf ../bin/busybox $MNT/bin/sh
-cd $CWD
 
 echo "[*] Copying emodules and payloads"
 cp -r $PROG $MNT

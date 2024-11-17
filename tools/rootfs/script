@@ -21,6 +21,9 @@ ifconfig lo 127.0.0.1
 
 # pmp_number pmp_enable id_split tlb_cached fragmented
 /prog/host/eval_config 8 1 1 1 1
+# /prog/host/eval_config 8 1 0 0 1
+# /prog/host/eval_config 8 0 0 0 1
+# /prog/host/eval_config 8 1 0 0 0
 
 
 ## -------------------------- thread test --------------------------
@@ -37,14 +40,64 @@ ifconfig lo 127.0.0.1
 ### --- epoll
 # /prog/host/test_eapp /prog/enclave/musl_eapp/eapp_epoll_server &
 # /prog/host/test_eapp /prog/enclave/musl_eapp/eapp_epoll_client
+# /prog/enclave/musl_eapp/eapp_epoll_client
 # sleep 2
 # nohup /prog/enclave/musl_eapp/eapp_epoll_client &
 
 ## ----------------------------- redis -----------------------------
+# /prog/host/test_eapp /prog/enclave/redis/redis-server &
 # nohup /prog/host/test_eapp /prog/enclave/redis/redis-server &
-# /prog/host/test_eapp /prog/enclave/redis/redis-benchmark -q -n 1000
+# nohup /prog/enclave/redis/redis-server &
+# sleep 2
+# # /prog/host/test_eapp /prog/enclave/redis/redis-benchmark -q -n 1000
+# /prog/enclave/redis/redis-benchmark -n 1000
+
+# /prog/enclave/redis/redis-server 2>&1 > redis/redis-server.log &
+
+# /prog/enclave/redis/redis-server &
+# sleep 2
+# nohup /prog/enclave/redis/redis-benchmark -q -n 10 &
+
+# /prog/host/test_eapp /prog/enclave/redis/redis-server &
+
+### Focus on benchmarking, we can disable RDB and AOF features by:
+# /prog/host/test_eapp /prog/enclave/redis/redis-server --save "" --appendonly no &
+# /prog/enclave/redis/redis-server &
 
 
+# /prog/enclave/redis/redis-server --save "" --appendonly no --bind 10.0.2.15 --protected-mode no &
+
+# sleep 3
+# nohup /prog/enclave/redis/redis-benchmark -q -n 100 -c 2 &
+
+# nohup /prog/enclave/redis/redis-benchmark -q -d 128 -n 20000 -r 20000 -c 30 &
+# nohup /prog/enclave/redis/redis-benchmark -q -n 20000 -r 20000 -c 50 &
+# nohup /prog/enclave/redis/redis-benchmark -q -t set,get -n 100000 -c 50 &
+# nohup /prog/enclave/redis/redis-benchmark -q -t set,get -n 8000 -c 50 &
+# nohup /prog/enclave/redis/redis-benchmark -q -n 10000 -c 50 -r 10000 &
+# /prog/enclave/redis/redis-benchmark -q -n 1000
+# /prog/host/test_eapp /prog/enclave/redis/redis-benchmark -q -n 10 &
+## ------------------------------------------------------------------
+
+# ------------------- redis-benchmark ------------------------------
+### disable RDB and AOF features in redis-server
+### --io-threads 3
+# /prog/host/test_eapp /prog/enclave/redis/redis-server --save "" --appendonly no --maxclients 10000 --io-threads 3 &
+# sleep 3
+### redis-benchmark
+### 1. -n to specify number of requests, -c to specify number of clients.
+# /prog/host/test_eapp /prog/enclave/redis/redis-benchmark -q -c 100 -n 100000
+### 2. -t to specify type.
+# /prog/host/test_eapp /prog/enclave/redis/redis-benchmark -q -t set,get,incr,lpush,lpop -n 100000 -c 50
+### 3. -d to specify data size, -r to introduce randomness.
+# /prog/host/test_eapp /prog/enclave/redis/redis-benchmark -q -d 128 -n 20000 -r 20000 -c 30
+
+# nohup /prog/enclave/redis/redis-benchmark -q -n 10000 -c 50 -r 10000 &
+
+# nohup /prog/enclave/redis/redis-benchmark -q -n 2000 -c 20 -r 2000 &
+# nohup /prog/enclave/redis/redis-benchmark -q -n 200 -c 200 -r 200 &
+
+# nohup /prog/enclave/redis/redis-benchmark -t set -q -n 200 -c 5 &
 
 # command="/prog/enclave/sqlite-bench/sqlite-bench \
 # 	--num=500 \
