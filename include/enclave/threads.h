@@ -12,7 +12,7 @@
 // #error "Unknown Platform"
 // #endif 
 
-#define THREADS_LIMIT   16
+#define THREADS_LIMIT   32
 #define __NUM_THREADS   (1024 / NUM_ENCLAVE)
 #define NUM_THREADS     (__NUM_THREADS > THREADS_LIMIT ? THREADS_LIMIT : __NUM_THREADS)
 // #define NUM_THREADS    16
