@@ -35,7 +35,9 @@ typedef struct sargs_SYS_accept{
 
 typedef struct sargs_SYS_accept4{
   int sockfd;
+  int addr_is_null;
   struct sockaddr_storage addr;
+  int addrlen_is_null;
   socklen_t addrlen;
   int flags;
 } sargs_SYS_accept4;

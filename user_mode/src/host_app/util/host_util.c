@@ -288,16 +288,13 @@ static int host_handle_proxy_syscall(struct proxy_info* proxy_info)
 	// printf("[%s]: syscall number = %lu\n",
 	// 	__func__, proxy_syscall->syscall_num);
 
-	int64_t ret;
+	int64_t ret = -EPERM;
 	switch (proxy_syscall->syscall_num) {
 		case (SYS_prlimit64):
 			sargs_SYS_prlimit64 *prlimit64_args = (sargs_SYS_prlimit64 *)proxy_syscall->data;
 			struct rlimit *new_limit = prlimit64_args->new_limit_is_null? NULL: &(prlimit64_args->new_limit);
 			struct rlimit *old_limit = prlimit64_args->old_limit_is_null? NULL: &(prlimit64_args->old_limit);
-			printf("pid = %d, resource = %d, new_limit = 0x%lx, old_limit = 0x%lx\n",
-				prlimit64_args->pid, prlimit64_args->resource, new_limit, old_limit);
 			ret = prlimit(prlimit64_args->pid, prlimit64_args->resource, new_limit, old_limit);
-			printf("ret = %d\n", ret);
 			break;
 		case (SYS_socket):
 			// printf("[%s]: SYS_socket\n", __func__);
@@ -320,12 +317,13 @@ static int host_handle_proxy_syscall(struct proxy_info* proxy_info)
 			break;
 		case (SYS_accept4):
 			// printf("[%s]: SYS_accept\n", __func__);
-			sargs_SYS_accept4 *accept4_args = (sargs_SYS_accept4 *) proxy_syscall->data; 
-      		ret = accept4(accept4_args->sockfd, (struct sockaddr *) &accept4_args->addr,
-					&accept4_args->addrlen, accept4_args->flags);
-			if (ret == -1UL) {
-				printf("accept4 ret=%d\n", ret);
-			}
+			sargs_SYS_accept4 *accept4_args = (sargs_SYS_accept4 *) proxy_syscall->data;
+			struct sockaddr *accept_addr = accept4_args->addr_is_null?
+									NULL: (struct sockaddr *) &accept4_args->addr;
+			socklen_t *accept_addrlen = accept4_args->addrlen_is_null?
+									NULL: &accept4_args->addrlen;
+      		ret = accept4(accept4_args->sockfd, accept_addr,
+				accept_addrlen, accept4_args->flags);
 			break;
 		case (SYS_connect):
 			// printf("[%s]: SYS_connect\n", __func__);
@@ -426,6 +424,9 @@ static int host_handle_proxy_syscall(struct proxy_info* proxy_info)
 			// goto syscall_error;
 			printf("Unimplement proxied syscall = %u!!\n", proxy_syscall->syscall_num);
 			break;
+	}
+	if (ret < 0) {
+		ret = -errno;  // pass -errno as the real return value to enclave
 	}
 	proxy_info->return_data.call_status = CALL_STATUS_OK;
 	// printf("[%s]: set call status OK\n", __func__);
