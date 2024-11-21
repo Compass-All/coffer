@@ -74,7 +74,7 @@ usize read_file(const char *path, u8 *content[])
 	}
 	close(fd);
 
-	debug("File %s len: 0x%lx\n", path, offset);
+	printf("[%s]: File %s len: 0x%lx\n", __func__, path, offset);
 
 	return offset;
 }
@@ -145,12 +145,12 @@ static void enclave_get_file_size(u64 short_message, u64 eid, u32 tid)
 	filename[0] = 0;
 	filename[filename_len] = 0;
 
-	printf("filename len = %u\n", filename_len);
+	printf("[%s]: filename len = %u\n", __func__, filename_len);
 	fflush(stdout);
 
 	__ecall_ebi_listen_message(eid, (vaddr_t)filename, filename_len);
 	__ecall_ebi_resume(eid, (u64)tid, 0);
-	printf("host get filename: %s\n", filename);
+	printf("[%s]: host get filename: %s\n", __func__, filename);
 	fflush(stdout);
 
 	struct stat st;
@@ -171,7 +171,7 @@ static void enclave_get_file(u64 short_message, u64 eid, u32 tid)
 	filename[0] = 0;
 	filename[filename_len] = 0;
 
-	printf("filename len = %u\n", filename_len);
+	printf("[%s]: filename len = %u\n", __func__, filename_len);
 	fflush(stdout);
 
 	__ecall_ebi_listen_message(eid, (vaddr_t)filename, filename_len);
@@ -180,7 +180,7 @@ static void enclave_get_file(u64 short_message, u64 eid, u32 tid)
 	u8 *file;
 	usize size;
 
-	printf("filename: %s\n", filename);
+	printf("[%s]: host get filename: %s\n", __func__, filename);
 	fflush(stdout);
 
 	size = read_file(filename, &file);
