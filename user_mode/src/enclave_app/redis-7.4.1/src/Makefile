@@ -75,9 +75,19 @@ endif
 
 # Default allocator defaults to Jemalloc on Linux and libc otherwise
 MALLOC=libc
-ifeq ($(uname_S),Linux)
-	MALLOC=jemalloc
-endif
+# ifeq ($(uname_S),Linux)
+# 	MALLOC=jemalloc
+# endif
+
+# Toolchain Setting
+CC ?= riscv64-linux-musl-gcc
+CXX ?= riscv64-linux-musl-g++
+AR ?= riscv64-linux-musl-ar
+RANLIB ?= riscv64-linux-musl-ranlib
+NM ?= riscv64-linux-musl-nm
+
+# CFLAGS+=-static
+LDFLAGS+=-static
 
 # To get ARM stack traces if Redis crashes we need a special C flag.
 ifneq (,$(filter aarch64 armv%,$(uname_M)))
@@ -363,10 +373,19 @@ REDIS_CHECK_RDB_NAME=redis-check-rdb$(PROG_SUFFIX)
 REDIS_CHECK_AOF_NAME=redis-check-aof$(PROG_SUFFIX)
 ALL_SOURCES=$(sort $(patsubst %.o,%.c,$(REDIS_SERVER_OBJ) $(REDIS_CLI_OBJ) $(REDIS_BENCHMARK_OBJ)))
 
-all: $(REDIS_SERVER_NAME) $(REDIS_SENTINEL_NAME) $(REDIS_CLI_NAME) $(REDIS_BENCHMARK_NAME) $(REDIS_CHECK_RDB_NAME) $(REDIS_CHECK_AOF_NAME) $(TLS_MODULE)
+target_dir := ../../../../../build/prog/enclave/redis
+dir:
+	mkdir -p $(target_dir)
+
+all: $(REDIS_SERVER_NAME) $(REDIS_SENTINEL_NAME) $(REDIS_CLI_NAME) $(REDIS_BENCHMARK_NAME) $(REDIS_CHECK_RDB_NAME) $(REDIS_CHECK_AOF_NAME) $(TLS_MODULE) dir
 	@echo ""
-	@echo "Hint: It's a good idea to run 'make test' ;)"
+	@echo "redis compiled successfully"
+#	@echo "Hint: It's a good idea to run 'make test' ;)"
 	@echo ""
+	cp  $(REDIS_SERVER_NAME) $(REDIS_SENTINEL_NAME) $(REDIS_CLI_NAME) $(REDIS_BENCHMARK_NAME) $(REDIS_CHECK_RDB_NAME) $(REDIS_CHECK_AOF_NAME) $(TLS_MODULE) $(target_dir)
+
+# all:
+# 	@echo "skip redis"
 
 Makefile.dep:
 	-$(REDIS_CC) -MM $(ALL_SOURCES) > Makefile.dep 2> /dev/null || true

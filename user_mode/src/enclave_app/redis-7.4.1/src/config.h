@@ -34,9 +34,9 @@
 
 /* Test for proc filesystem */
 #ifdef __linux__
-#define HAVE_PROC_STAT 1
-#define HAVE_PROC_MAPS 1
-#define HAVE_PROC_SMAPS 1
+// #define HAVE_PROC_STAT 1
+// #define HAVE_PROC_MAPS 1
+// #define HAVE_PROC_SMAPS 1
 #define HAVE_PROC_SOMAXCONN 1
 #define HAVE_PROC_OOM_SCORE_ADJ 1
 #endif

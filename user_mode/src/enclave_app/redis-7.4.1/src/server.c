@@ -7143,11 +7143,12 @@ int main(int argc, char **argv) {
     /* Do system checks */
 #ifdef __linux__
     linuxMemoryWarnings();
-    sds err_msg = NULL;
-    if (checkXenClocksource(&err_msg) < 0) {
-        serverLog(LL_WARNING, "WARNING %s", err_msg);
-        sdsfree(err_msg);
-    }
+    /* Temporarily disable System checks on Coffer */
+    // sds err_msg = NULL;
+    // if (checkXenClocksource(&err_msg) < 0) {
+    //     serverLog(LL_WARNING, "WARNING %s", err_msg);
+    //     sdsfree(err_msg);
+    // }
 #if defined (__arm64__)
     int ret;
     if ((ret = checkLinuxMadvFreeForkBug(&err_msg)) <= 0) {
