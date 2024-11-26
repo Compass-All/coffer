@@ -9,7 +9,8 @@
 #define NEW_THREAD      (0x55667788UL << 32)
 #define BLOCKED         (0x66778899UL << 32)
 #define SAVE_MSG        (0x77889900UL << 32)
-#define PROXY_SYSCALL   (0x88990011UL << 32) 
+#define INIT_SHARED_MEM (0x88990011UL << 32)
+#define PROXY_SYSCALL   (0x99001122UL << 32) 
 
 #define TASK_MASK	(0xFFFFFFFFUL << 32)
 #define MSG_MASK    (0xFFFFFFFFUL)

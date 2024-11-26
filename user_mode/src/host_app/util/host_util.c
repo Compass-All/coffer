@@ -552,23 +552,8 @@ u64 enter_enclave(
 				printf("[E%luT%lu]msg: %u\n", eid, tid, (u32)short_message);
 				fflush(stdout);
 				break;
-
-			case PROXY_SYSCALL:
-				// printf("host recv a short message : proxy syscall and short_message = 0x%lx\n", short_message);
-				// fflush(stdout);
-				
-				// const uint64_t shared_buffer_pa = 0x280200000UL;  // PPN << 12UL
+			case INIT_SHARED_MEM:
 				shared_buffer_pa = ((u64)short_message & (u64)MSG_MASK) << 12;
-				// printf("shared_buffer_pa = 0x%lx\n", shared_buffer_pa);
-
-				// shared_buffer_va = -1UL;
-				// static size_t shared_buffer_size = 0UL;  // unused
-				// 1. if shared memory not mapped into the
-				// host's Address Space, how to map it?
-
-				// 2. another way to achieve?
-				// pass the physical address and size
-				// then use /dev/mem for help
 				static int mem_fd;
 				if (shared_buffer_va == 0UL && shared_buffer_size == 0UL) {  // first map
 					// TODO: when support multi-processing, what if the child process is forked?
@@ -584,15 +569,12 @@ u64 enter_enclave(
 						shared_buffer_pa, shared_buffer_va);
 					fflush(stdout);
 				}
-
-				// printf("host read after mmap /dev/mem:\n");
-				// for (int counter = 0; counter < 64 ; counter++) {
-				// 	printf("value=0x%x\n", ((volatile char*)shared_buffer_va)[counter]);
-				// 	fflush(stdout);
-				// }
-
+				break;
+			case PROXY_SYSCALL:
 				struct proxy_info* proxy_info = (struct proxy_info*)shared_buffer_va;
-				host_handle_proxy_syscall(proxy_info);
+				if (proxy_info->return_data.call_status == CALL_STATUS_ONGOING) {
+					host_handle_proxy_syscall(proxy_info);
+				}
 				break;
 
 			default:
