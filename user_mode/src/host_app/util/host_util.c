@@ -420,6 +420,14 @@ static int host_handle_proxy_syscall(struct proxy_info* proxy_info)
 			sargs_SYS_close *close_args = (sargs_SYS_close *) proxy_syscall->data;
 			ret = close(close_args->fd);
 			break;
+		
+		case (SYS_fstatat):
+			sargs_SYS_fstatat *fstatat_args = (sargs_SYS_fstatat *) proxy_syscall->data;
+			ret = fstatat(fstatat_args->dirfd, fstatat_args->pathname, 
+				(struct stat *) &fstatat_args->stat, fstatat_args->flags);
+			printf("[%s]: fstatat ret = %ld\n", __func__, ret);
+			break;
+
 		default:
 			// goto syscall_error;
 			printf("Unimplement proxied syscall = %u!!\n", proxy_syscall->syscall_num);

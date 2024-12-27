@@ -10,6 +10,9 @@
 #define SYS_fcntl           25
 #define SYS_close 			57	// 0x39
 #define SYS_pipe2           59
+
+#define SYS_fstatat 		79
+
 #define SYS_socket 			198
 #define SYS_socketpair 		199
 #define SYS_bind 			200
