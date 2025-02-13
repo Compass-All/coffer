@@ -43,7 +43,7 @@ ENCLAVE_CFLAG = $(CFLAGS)
 ENCLAVE_CFLAG += -I$(ENCLAVE_INCLUDE_DIR)
 
 # ---------------
-all: host_apps enclave_apps
+all: host_apps enclave_apps zstd
 
 clean:
 	rm -rf $(BUILD_DIR)
@@ -86,3 +86,10 @@ subdirs:
 	for subdir in $(ENCLAVE_SRC_SUBDIR) ; do \
         make -C $$subdir -j; \
     done
+
+zstd:
+#	make CC=riscv64-linux-musl-gcc DEBUGLEVEL=3
+	make CC=riscv64-linux-musl-gcc \
+	CFLAGS="-static -g -Os" LDFLAGS="-static -g -pthread" \
+	-C src/zstd
+	cp src/zstd/programs/zstd $(ENCLAVE_BUILD_DIR)/zstd

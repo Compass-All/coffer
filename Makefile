@@ -137,5 +137,6 @@ clean_all: clean clean_log
 	make clean -C user_mode
 	make clean -C $(UBOOT_SRC)
 	make clean -C tools/sign
+	make clean -C user_mode/src/zstd
 
 .PHONY: all clean clean_all clean_log prog emodules opensbi

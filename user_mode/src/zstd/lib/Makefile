@@ -167,8 +167,8 @@ $(ZSTD_DYNLIB): $(ZSTD_DYNLIB_OBJ)
 	ln -sf $@ libzstd.$(SHARED_EXT_MAJOR)
 	ln -sf $@ libzstd.$(SHARED_EXT)
 
-$(LIBZSTD): $(ZSTD_DYNLIB)
-	cp -f $< $@
+# $(LIBZSTD): $(ZSTD_DYNLIB)
+# 	cp -f $< $@
 
 endif  # ifndef BUILD_DIR
 endif  # if windows
