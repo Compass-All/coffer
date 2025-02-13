@@ -132,6 +132,11 @@ typedef sargs_SYS_write sargs_SYS_read;
 typedef struct _sargs_fd_only sargs_SYS_fsync;
 typedef struct _sargs_fd_only sargs_SYS_close;
 
+typedef struct sargs_SYS_fstat {
+  int fd;
+  struct stat *stat;
+} sargs_SYS_fstat;
+
 #define PATH_MAX 256
 typedef struct sargs_SYS_fstatat {
   int dirfd;
