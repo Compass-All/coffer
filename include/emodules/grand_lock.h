@@ -4,8 +4,8 @@
 #include <message/short_message.h>
 
 #ifdef IN_EMOD_MANAGER
-#include "../../coffer_emodules/emod_manager/printf/printf.h"
-#include "../../coffer_emodules/emod_manager/lock/lock.h"
+#include "../../coffer-emodules/emod_manager/printf/printf.h"
+#include "../../coffer-emodules/emod_manager/lock/lock.h"
 #define try_lock spin_trylock_grand
 #define unlock spin_unlock_grand
 #else

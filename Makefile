@@ -18,11 +18,11 @@ LINUX_IMAGE_DIR = $(LINUX_DIR)/build
 LINUX_IMAGE = $(LINUX_IMAGE_DIR)/Image
 LINUX_SRC = /root/linux-5.14
 
-EMOD_SRC = coffer_emodules
-EMOD_MANAGER_SRC = coffer_emodules/emod_manager
+EMOD_SRC = coffer-emodules
+EMOD_MANAGER_SRC = $(EMOD_SRC)/emod_manager
 EMOD_MANAGER_BIN = $(BUILD_DIR)/emodules/emod_manager/emod_manager.bin
 
-OPENSBI_SRC = opensbi
+OPENSBI_SRC = coffer-opensbi
 FW_DIR = $(shell pwd)/$(BUILD_DIR)/opensbi
 FW_DYNAMIC_BIN = $(FW_DIR)/fw_dynamic.bin
 FW_DYNAMIC_ELF = $(FW_DIR)/fw_dynamic.elf
@@ -133,7 +133,8 @@ clean:
 	rm -rf $(BUILD_DIR)
 
 clean_all: clean clean_log
-	make clean -C opensbi
+	make clean -C $(OPENSBI_SRC)
+	make clean -C $(EMOD_SRC)
 	make clean -C user_mode
 	make clean -C $(UBOOT_SRC)
 	make clean -C tools/sign
