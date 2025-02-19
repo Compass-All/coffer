@@ -1,6 +1,6 @@
-[submodule "opensbi"]
-	path = opensbi
-	url = git@github.com:GartonChan/opensbi.git
-[submodule "coffer_emodules"]
-	path = coffer_emodules
-	url = git@github.com:GartonChan/coffer_emodules.git
+[submodule "coffer-opensbi"]
+	path = coffer-opensbi
+	url = git@github.com:Compass-All/coffer-opensbi.git
+[submodule "coffer-emodules"]
+	path = coffer-emodules
+	url = git@github.com:Compass-All/coffer-emodules.git
