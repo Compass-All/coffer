@@ -206,7 +206,7 @@ clangbuild-darwin-fat: clean
 	mv programs/zstd programs/zstd_x64
 	lipo -create programs/zstd_x64 programs/zstd_arm64 -output programs/zstd
 
-.PHONY: gcc5build gcc6build gcc7build clangbuild m32build armbuild aarch64build ppcbuild ppc64build
+.PHONY: gcc5build gcc6build gcc7build clangbuild m32build armbuild aarch64build riscv64build ppcbuild ppc64build
 gcc5build: clean
 	gcc-5 -v
 	CC=gcc-5 $(MAKE) all MOREFLAGS="-Werror $(MOREFLAGS)"
@@ -232,6 +232,14 @@ armbuild: clean
 
 aarch64build: clean
 	CC=aarch64-linux-gnu-gcc CFLAGS="-Werror -O0" $(MAKE) allzstd
+
+riscv64build: clean
+#   CC=riscv64-unknown-elf-gcc CFLAGS="-Werror -O0" $(MAKE) allzstd
+	CC=riscv64-linux-musl-gcc \
+	CFLAGS="-static -g -Os" \
+	LDFLAGS="-static -g -pthread" \
+	$(MAKE) -C $(PRGDIR) all
+#	$(MAKE) allzstd
 
 ppcbuild: clean
 	CC=powerpc-linux-gnu-gcc CFLAGS="-m32 -Wno-attributes -Werror" $(MAKE) -j allzstd
