@@ -43,7 +43,7 @@ ENCLAVE_CFLAG = $(CFLAGS)
 ENCLAVE_CFLAG += -I$(ENCLAVE_INCLUDE_DIR)
 
 # ---------------
-all: host_apps enclave_apps zstd
+all: host_apps enclave_apps
 
 clean:
 	rm -rf $(BUILD_DIR)
@@ -51,6 +51,7 @@ clean:
 	make clean -C $(ENCLAVE_SRC_DIR)/sqlite-bench
 	make clean -C $(ENCLAVE_SRC_DIR)/stress-ng
 	make clean -C $(ENCLAVE_SRC_DIR)/musl_eapp
+	make clean -C $(ENCLAVE_SRC_DIR)/zstd
 
 # ---------------
 host_dir:
@@ -84,12 +85,11 @@ $(ENCLAVE_BUILD_DIR)/% : $(ENCLAVE_SRC_DIR)/%.c $(ENCLAVE_UTIL_OBJ)
 
 subdirs:
 	for subdir in $(ENCLAVE_SRC_SUBDIR) ; do \
-        make -C $$subdir -j; \
+		echo $$subdir; \
+        if [ "$$subdir" = "src/enclave_app/zstd/" ]; then \
+            make riscv64build -C $$subdir -j; \
+			cp $$subdir/programs/zstd $(ENCLAVE_BUILD_DIR)/zstd; \
+        else \
+            make -C $$subdir -j; \
+        fi \
     done
-
-zstd:
-#	make CC=riscv64-linux-musl-gcc DEBUGLEVEL=3
-	make CC=riscv64-linux-musl-gcc \
-	CFLAGS="-static -g -Os" LDFLAGS="-static -g -pthread" \
-	-C src/zstd
-	cp src/zstd/programs/zstd $(ENCLAVE_BUILD_DIR)/zstd
