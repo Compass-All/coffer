@@ -39,10 +39,8 @@ size_t shared_buffer_size = 0;
 
 usize read_file(const char *path, u8 *content[])
 {
-	int read_ret = 1;
 	int fd;
 	usize len;
-	usize offset;
 
 	if (!path) {
 		printf("NULL\n");
@@ -57,26 +55,53 @@ usize read_file(const char *path, u8 *content[])
 
 	len = lseek(fd, 0L, SEEK_END);
 	lseek(fd, 0L, SEEK_SET);
-	*content = (u8 *)memalign(0x1000, len);
+	
+	// printf("[%s]: File %s len: 0x%lx\n", __func__, path, len);
+	// uint64_t read_start = read_csr(cycle);
 
-	offset = 0;
-	while (read_ret) {
-		read_ret = read(fd, *content + offset, 0x400);
-		if (read_ret == -1) {
-			debug("File %s read failed at offset 0x%lx\n",
-				path, offset);
-			perror("Error: ");
+	if(len < (10 * 1<<20)) {  // < 10MB
+		// printf("[%s]: read\n", __func__);
+		int read_ret = 1;
+		*content = (u8 *)memalign(0x1000, len);
+		usize offset = 0;
+		size_t buffer_size = 0x400;  // 64KB
+
+		while (read_ret) {
+			read_ret = read(fd, *content + offset, buffer_size);
+			if (read_ret == -1) {
+				debug("File %s read failed at offset 0x%lx\n",
+					path, offset);
+				perror("Error: ");
+				close(fd);
+				free(*content);
+				exit(-1);
+			}
+			offset += read_ret;
+		}
+	} else {  // >= 10MB
+		// printf("[%s]: mmap\n", __func__);
+		*content = (u8 *)mmap(NULL, len, PROT_READ, MAP_PRIVATE | MAP_POPULATE, fd, 0);
+		if(*content == MAP_FAILED) {
+			debug("File %s mmap failed\n", path);
+			perror("mmap failed");
 			close(fd);
-			free(*content);
 			exit(-1);
 		}
-		offset += read_ret;
+		
+		// 通过 madvise 提前读取文件内容
+		if (madvise(*content, len, MADV_WILLNEED) != 0) {
+			perror("madvise failed");
+			munmap(*content, len);
+			close(fd);
+			exit(-1);
+		}
 	}
+
 	close(fd);
 
-	printf("[%s]: File %s len: 0x%lx\n", __func__, path, offset);
+	printf("[%s]: File %s len: 0x%lx\n", __func__, path, len);
 
-	return offset;
+	return len;
 }
 
 static const char emod_debug_path[] = "/emodules/emod_debug.bin.signed";
