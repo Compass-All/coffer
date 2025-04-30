@@ -4,6 +4,7 @@ A compatible and scalable RISC-V TEE (only with PMP, the generic hardware primit
 ## Quick Start
 ``` shell
 git clone https://github.com/Compass-All/coffer.git
+cd coffer
 git checkout v2
 
 # initialize submodules coffer-opensbi and coffer-emodules
