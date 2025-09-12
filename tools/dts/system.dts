@@ -1,0 +1,101 @@
+/dts-v1/;
+
+/ {
+	#address-cells = <2>;
+	#size-cells = <2>;
+	compatible = "freechips,rocketchip-unknown-dev";
+	model = "freechips,rocketchip-unknown";
+	L19: cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+    	timebase-frequency = <500000>;//50Khz
+		L6: cpu@0 {
+			clock-frequency = <1000000>;
+			compatible = "XiangShan,Nanhu", "riscv";
+			d-cache-block-size = <64>;
+			d-cache-sets = <64>;
+			d-cache-size = <16384>;
+			d-tlb-sets = <1>;
+			d-tlb-size = <32>;
+			device_type = "cpu";
+			i-cache-block-size = <64>;
+			i-cache-sets = <64>;
+			i-cache-size = <16384>;
+			i-tlb-sets = <1>;
+			i-tlb-size = <32>;
+			mmu-type = "riscv,sv39";
+			next-level-cache = <&L11>;
+			reg = <0x0>;
+			riscv,isa = "rv64imafdc";
+			status = "okay";
+			timebase-frequency = <500000>;//50Khz
+			tlb-split;
+			L4: interrupt-controller {
+				#interrupt-cells = <1>;
+				compatible = "riscv,cpu-intc";
+				interrupt-controller;
+			};
+		};
+
+	};
+	L18: soc {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		compatible = "freechips,rocketchip-unknown-soc", "simple-bus";
+		ranges;
+		L3: debug-controller@0 {
+			compatible = "sifive,debug-013", "riscv,debug-013";
+			interrupts-extended = <&L4 65535>;
+			reg = <0x0 0x0 0x0 0x1000>;
+			reg-names = "control";
+		};
+
+        L2: clint@38000000 {
+            compatible = "riscv,clint0";
+            interrupts-extended = <&L4 3 &L4 7>;
+            reg = <0x0 0x38000000 0x0 0x10000>;
+            reg-names = "control";
+            clock-frequency-mhz = <25>;
+        };
+
+        PLIC: interrupt-controller@3c000000 {
+            #interrupt-cells = <1>;
+            compatible = "riscv,plic0";
+            interrupt-controller;
+            //interrupts-extended = <&L4 9 &L4 11 &L5 9 &L5 11>;
+            interrupts-extended = <&L4 0xb &L4 0x9>;
+            //reg = <0 0xc000000 0 0x4000000>;
+            reg = <0 0x3c000000 0 0x4000000>;
+            reg-names = "control";
+            riscv,max-priority = <7>;
+            riscv,ndev = <64>;
+        };
+
+        clkc: misc_clk_0 {
+            #clock-cells = <0>;
+            clock-frequency = <25000000>;
+            compatible = "fixed-clock";
+        };
+		
+	    serial@310B0000 {
+            compatible = "ns16550a";
+            reg = <0x0 0x310B0000 0x0 0x10000>;
+            reg-shift = <0x02>;
+            reg-io-width = <0x04>;
+            interrupt-parent = <&PLIC>;
+            interrupts = <40>;
+            clock-frequency = <50000000>;
+            status = "okay";
+	    };
+    };
+
+    chosen {
+         bootargs = "root=/dev/nvme0n1p2 rootfstype=ext4 rw rootwait console=ttyS0,115200n8 earlycon noinitrd";
+         stdout-path = "/soc/serial@310B0000";
+    };
+
+    L11: memory@100000000 {
+         device_type = "memory";
+         reg = <0x0 0x80000000 0x2 0x00000000>;
+    };
+};
